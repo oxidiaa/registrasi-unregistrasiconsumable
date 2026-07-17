@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 
 use App\Models\Item;
+use App\Models\FormItem;
 use Illuminate\Support\Facades\DB;
 
 class ItemController extends Controller
@@ -127,5 +128,56 @@ class ItemController extends Controller
         ]);
 
         return redirect()->route('dashboard')->with('success', 'Registrasi barang "' . $item->name . '" berhasil dibatalkan (unregistered).');
+    }
+
+    /**
+     * Display the Form Pendaftaran Barang Consumable page.
+     */
+    public function formRegistrasi()
+    {
+        $formItems = FormItem::orderBy('created_at', 'asc')->get();
+        return view('form-registrasi', compact('formItems'));
+    }
+
+    /**
+     * Store a new form item entry.
+     */
+    public function storeFormItem(Request $request)
+    {
+        $validated = $request->validate([
+            'nama_barang'        => 'required|string|max:255',
+            'kode_barang'        => 'nullable|string|max:100',
+            'harga'              => 'nullable|numeric|min:0',
+            'estimasi_usia_pakai'=> 'nullable|string|max:100',
+            'kategori_penggunaan'=> 'nullable|string|max:100',
+            'kategori_ukuran'    => 'nullable|string|max:100',
+            'min'                => 'nullable|integer|min:0',
+            'titik_order'        => 'nullable|integer|min:0',
+            'max'                => 'nullable|integer|min:0',
+            'lead_time'          => 'nullable|string|max:100',
+            'is_b3'              => 'nullable|boolean',
+            'is_non_b3'          => 'nullable|boolean',
+        ]);
+
+        $validated['is_b3']    = $request->has('is_b3');
+        $validated['is_non_b3'] = $request->has('is_non_b3');
+
+        FormItem::create($validated);
+
+        return redirect()->route('form-registrasi')
+            ->with('success', 'Data barang "' . $validated['nama_barang'] . '" berhasil ditambahkan.');
+    }
+
+    /**
+     * Delete a form item entry.
+     */
+    public function deleteFormItem($id)
+    {
+        $item = FormItem::findOrFail($id);
+        $name = $item->nama_barang;
+        $item->delete();
+
+        return redirect()->route('form-registrasi')
+            ->with('success', 'Data "' . $name . '" berhasil dihapus.');
     }
 }
