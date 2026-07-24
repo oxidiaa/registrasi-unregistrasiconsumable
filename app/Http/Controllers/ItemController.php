@@ -154,6 +154,7 @@ class ItemController extends Controller
             'min'                => 'nullable|integer|min:0',
             'titik_order'        => 'nullable|integer|min:0',
             'max'                => 'nullable|integer|min:0',
+            'lead_time'          => 'nullable|string|max:100',
             'is_b3'              => 'nullable|boolean',
             'is_non_b3'          => 'nullable|boolean',
         ]);

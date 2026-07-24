@@ -811,7 +811,7 @@
 </div>
 
 {{-- ===== MODAL: TAMBAH DATA ===== --}}
-<div class="modal no-print" id="addItemModal">
+<div class="modal" id="addItemModal">
     <div class="modal-content" style="max-width: 680px; max-height: 90vh; overflow-y: auto;">
         <div class="modal-header">
             <h3>Tambah Data Barang</h3>
@@ -841,8 +841,8 @@
                     <input type="number" id="fi_harga" name="harga" class="form-control" placeholder="0" min="0" value="{{ old('harga') }}">
                 </div>
                 <div class="form-group" style="margin-bottom:0;">
-                    <label for="fi_usia">Estimasi Usia Pakai (Hari)</label>
-                    <input type="number" id="fi_usia" name="estimasi_usia_pakai" class="form-control" placeholder="Cth: 730" min="0" value="{{ old('estimasi_usia_pakai') }}">
+                    <label for="fi_usia">Estimasi Usia Pakai</label>
+                    <input type="text" id="fi_usia" name="estimasi_usia_pakai" class="form-control" placeholder="Cth: 730 Hari, 6 Bulan, 1 Tahun" value="{{ old('estimasi_usia_pakai') }}">
                 </div>
             </div>
 
@@ -858,8 +858,8 @@
                 </div>
             </div>
 
-            {{-- Row 4: Min, Titik Order, Max --}}
-            <div style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:1rem; margin-bottom:1rem;">
+            {{-- Row 4: Min, Titik Order, Max, Lead Time --}}
+            <div style="display:grid; grid-template-columns:1fr 1fr 1fr 1fr; gap:1rem; margin-bottom:1rem;">
                 <div class="form-group" style="margin-bottom:0;">
                     <label for="fi_min">Min</label>
                     <input type="number" id="fi_min" name="min" class="form-control" placeholder="0" min="0" value="{{ old('min') }}">
@@ -871,6 +871,10 @@
                 <div class="form-group" style="margin-bottom:0;">
                     <label for="fi_max">Max</label>
                     <input type="number" id="fi_max" name="max" class="form-control" placeholder="0" min="0" value="{{ old('max') }}">
+                </div>
+                <div class="form-group" style="margin-bottom:0;">
+                    <label for="fi_lead">Lead Time</label>
+                    <input type="text" id="fi_lead" name="lead_time" class="form-control" placeholder="Cth: 3 Hari" value="{{ old('lead_time') }}">
                 </div>
             </div>
 
@@ -905,7 +909,6 @@
         </form>
     </div>
 </div>
-
 
 @endsection
 
