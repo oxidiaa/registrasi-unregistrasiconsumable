@@ -276,11 +276,11 @@
         <div class="form-reg-meta">
             <div class="form-reg-meta-item">
                 <span class="form-reg-meta-label">TANGGAL :</span>
-                <div class="form-reg-meta-line" id="preview-date">{{ date('d-m-Y') }}</div>
+                <span class="form-reg-meta-line" id="preview-date">{{ date('d-m-Y') }}</span>
             </div>
             <div class="form-reg-meta-item">
                 <span class="form-reg-meta-label">User Dept / Requestor :</span>
-                <div class="form-reg-meta-line" id="preview-requestor">{{ Auth::user()->name ?? 'Production User' }} / Production</div>
+                <span class="form-reg-meta-line" id="preview-requestor">{{ Auth::user()->name ?? 'Production User' }} / {{ Auth::user()->department ?? 'Production' }}</span>
             </div>
         </div>
 
@@ -1094,7 +1094,7 @@
             docNo: 'No Doc : W1-CDS-PP-20/F1 Rev 2 &nbsp;|&nbsp; No. Form: <span style="font-weight:700; color:var(--color-primary);">' + nextFormNo + '</span>',
             formNo: nextFormNo,
             date: todayStr,
-            requestor: '{{ Auth::user()->name ?? "Production User" }} / Production',
+            requestor: '{{ Auth::user()->name ?? "Production User" }} / {{ Auth::user()->department ?? "Production" }}',
             status: 'Draft',
             items: [],
             signatures: {

@@ -975,10 +975,14 @@ textarea.form-control {
 }
 
 .form-reg-meta-line {
-    flex: 1;
-    height: 1px;
-    border-bottom: 1.5px dashed #94a3b8;
-    min-width: 120px;
+    font-size: 0.85rem;
+    font-weight: 700;
+    color: var(--color-primary);
+    padding: 0.3rem 0.75rem;
+    background: rgba(43, 76, 126, 0.06);
+    border-radius: var(--radius-sm);
+    border: 1px solid rgba(43, 76, 126, 0.15);
+    display: inline-block;
 }
 
 /* ---- Table ---- */
