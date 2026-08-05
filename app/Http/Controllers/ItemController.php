@@ -6,6 +6,7 @@ use Illuminate\Http\Request;
 
 use App\Models\Item;
 use App\Models\FormItem;
+use App\Models\User;
 use Illuminate\Support\Facades\DB;
 
 class ItemController extends Controller
@@ -136,7 +137,8 @@ class ItemController extends Controller
     public function formRegistrasi()
     {
         $formItems = FormItem::orderBy('created_at', 'asc')->get();
-        return view('form-registrasi', compact('formItems'));
+        $users = User::orderBy('id', 'asc')->get();
+        return view('form-registrasi', compact('formItems', 'users'));
     }
 
     /**

@@ -635,7 +635,7 @@
                 </div>
                 <div>
                     <span style="font-size: 0.75rem; color: var(--text-muted); font-weight: 600; display: block; text-transform: uppercase;">Total Akun Terdaftar</span>
-                    <span style="font-size: 1.4rem; font-weight: 800; color: var(--text-primary);" id="stat-total-accounts">4 Akun</span>
+                    <span style="font-size: 1.4rem; font-weight: 800; color: var(--text-primary);" id="stat-total-accounts">{{ isset($users) ? $users->count() : 5 }} Akun</span>
                 </div>
             </div>
             
@@ -645,7 +645,7 @@
                 </div>
                 <div>
                     <span style="font-size: 0.75rem; color: var(--text-muted); font-weight: 600; display: block; text-transform: uppercase;">Akun MASTER</span>
-                    <span style="font-size: 1.4rem; font-weight: 800; color: #9333ea;">1 Akun</span>
+                    <span style="font-size: 1.4rem; font-weight: 800; color: #9333ea;" id="stat-master-accounts">{{ isset($users) ? $users->where('role', 'MASTER')->count() : 2 }} Akun</span>
                 </div>
             </div>
             
@@ -655,7 +655,7 @@
                 </div>
                 <div>
                     <span style="font-size: 0.75rem; color: var(--text-muted); font-weight: 600; display: block; text-transform: uppercase;">USER & PEMERIKSA</span>
-                    <span style="font-size: 1.4rem; font-weight: 800; color: var(--text-primary);">2 Akun</span>
+                    <span style="font-size: 1.4rem; font-weight: 800; color: var(--text-primary);" id="stat-user-accounts">{{ isset($users) ? $users->whereIn('role', ['USER', 'PEMERIKSA'])->count() : 2 }} Akun</span>
                 </div>
             </div>
 
@@ -665,7 +665,7 @@
                 </div>
                 <div>
                     <span style="font-size: 0.75rem; color: var(--text-muted); font-weight: 600; display: block; text-transform: uppercase;">WAREHOUSE</span>
-                    <span style="font-size: 1.4rem; font-weight: 800; color: var(--color-success);">1 Akun</span>
+                    <span style="font-size: 1.4rem; font-weight: 800; color: var(--color-success);" id="stat-wh-accounts">{{ isset($users) ? $users->where('role', 'WAREHOUSE')->count() : 1 }} Akun</span>
                 </div>
             </div>
         </div>
@@ -1037,7 +1037,10 @@
         if (activePane) activePane.classList.add('active');
         
         const tabs = Array.from(document.querySelectorAll('.sheet-tab'));
-        const matchingTab = tabs.find(t => t.getAttribute('onclick').includes(`'${tabId}'`));
+        const matchingTab = tabs.find(t => {
+            const attr = t.getAttribute('onclick');
+            return attr && attr.includes(`'${tabId}'`);
+        });
         if (matchingTab) matchingTab.classList.add('active');
 
         const btnTambahData = document.getElementById('btn-tambah-data');
@@ -1333,12 +1336,26 @@
         }
     }
 
-    // ACCOUNT MASTER DATA ENGINE
+    // ACCOUNT MASTER DATA ENGINE - Dynamic from Database
     const userAccounts = [
-        { id: 1, username: 'admin_master', name: 'Admin Master MAI', dept: 'Management / Executive', role: 'MASTER', status: 'Aktif', date: '15-07-2026' },
-        { id: 2, username: 'budi_user', name: 'Budi Santoso', dept: 'Production', role: 'USER', status: 'Aktif', date: '16-07-2026' },
-        { id: 3, username: 'suherman_spv', name: 'Suherman', dept: 'Quality Assurance', role: 'PEMERIKSA', status: 'Aktif', date: '18-07-2026' },
-        { id: 4, username: 'joko_wh', name: 'Joko Widodo', dept: 'Warehouse Logistik', role: 'WAREHOUSE', status: 'Aktif', date: '20-07-2026' }
+        @if(isset($users) && $users->count() > 0)
+            @foreach($users as $u)
+            {
+                id: {{ $u->id }},
+                username: '{{ $u->email }}',
+                name: '{{ $u->name }}',
+                dept: '{{ $u->department ?? "Production" }}',
+                role: '{{ strtoupper($u->role ?? "USER") }}',
+                status: '{{ $u->status ?? "Aktif" }}',
+                date: '{{ $u->created_at ? $u->created_at->format("d-m-Y") : date("d-m-Y") }}'
+            },
+            @endforeach
+        @else
+            { id: 1, username: 'admin_master', name: 'Admin Master MAI', dept: 'Management / Executive', role: 'MASTER', status: 'Aktif', date: '15-07-2026' },
+            { id: 2, username: 'budi_user', name: 'Budi Santoso', dept: 'Production', role: 'USER', status: 'Aktif', date: '16-07-2026' },
+            { id: 3, username: 'suherman_spv', name: 'Suherman', dept: 'Quality Assurance', role: 'PEMERIKSA', status: 'Aktif', date: '18-07-2026' },
+            { id: 4, username: 'joko_wh', name: 'Joko Widodo', dept: 'Warehouse Logistik', role: 'WAREHOUSE', status: 'Aktif', date: '20-07-2026' }
+        @endif
     ];
 
     function renderAccountTable() {
@@ -1346,28 +1363,36 @@
         if (!tbody) return;
 
         let html = '';
+        let masterCount = 0;
+        let userSpvCount = 0;
+        let whCount = 0;
+
         userAccounts.forEach((acc, index) => {
             let roleBadge = '';
             if (acc.role === 'MASTER') {
+                masterCount++;
                 roleBadge = `<span style="background-color: rgba(168, 85, 247, 0.15); color: #9333ea; padding: 0.25rem 0.6rem; border-radius: 4px; font-weight: 700; font-size: 0.75rem;">AKUN MASTER</span>`;
             } else if (acc.role === 'USER') {
+                userSpvCount++;
                 roleBadge = `<span style="background-color: rgba(59, 130, 246, 0.15); color: rgb(29, 78, 216); padding: 0.25rem 0.6rem; border-radius: 4px; font-weight: 700; font-size: 0.75rem;">USER (PEMBUAT)</span>`;
             } else if (acc.role === 'PEMERIKSA') {
+                userSpvCount++;
                 roleBadge = `<span style="background-color: var(--color-warning-light); color: var(--color-warning); padding: 0.25rem 0.6rem; border-radius: 4px; font-weight: 700; font-size: 0.75rem;">PEMERIKSA</span>`;
             } else if (acc.role === 'WAREHOUSE') {
+                whCount++;
                 roleBadge = `<span style="background-color: var(--color-success-light); color: var(--color-success); padding: 0.25rem 0.6rem; border-radius: 4px; font-weight: 700; font-size: 0.75rem;">WAREHOUSE</span>`;
             }
 
             html += `
                 <tr>
                     <td class="td-center td-no">${index + 1}</td>
-                    <td style="font-weight: 700; color: var(--text-primary); padding: 0 0.8rem;">${acc.username}</td>
+                    <td style="font-weight: 700; color: var(--text-primary); padding: 0 0.8rem;">${acc.username} <span style="font-size:0.75rem; color:var(--text-muted); font-weight:normal;">(${acc.name})</span></td>
                     <td style="padding: 0 0.8rem; font-size: 0.85rem; font-weight: 600;">${acc.dept}</td>
                     <td class="td-center">${roleBadge}</td>
                     <td class="td-center"><span style="background-color: var(--color-success-light); color: var(--color-success); padding: 0.2rem 0.5rem; border-radius: 4px; font-weight: 700; font-size: 0.7rem;">${acc.status}</span></td>
                     <td class="td-center" style="font-size: 0.85rem;">${acc.date}</td>
                     <td class="td-center">
-                        <button class="btn btn-secondary btn-sm" onclick="alert('Detail akun ${acc.username} (Role: ${acc.role}, Dept: ${acc.dept})')" style="padding: 0.25rem 0.55rem; font-size: 0.75rem; border-radius: 4px;">Detail</button>
+                        <button class="btn btn-secondary btn-sm" onclick="alert('Detail akun ${acc.username} (${acc.name} - Role: ${acc.role}, Dept: ${acc.dept})')" style="padding: 0.25rem 0.55rem; font-size: 0.75rem; border-radius: 4px;">Detail</button>
                     </td>
                 </tr>
             `;
@@ -1376,6 +1401,15 @@
 
         const statTotal = document.getElementById('stat-total-accounts');
         if (statTotal) statTotal.innerText = `${userAccounts.length} Akun`;
+
+        const statMaster = document.getElementById('stat-master-accounts');
+        if (statMaster) statMaster.innerText = `${masterCount} Akun`;
+
+        const statUser = document.getElementById('stat-user-accounts');
+        if (statUser) statUser.innerText = `${userSpvCount} Akun`;
+
+        const statWh = document.getElementById('stat-wh-accounts');
+        if (statWh) statWh.innerText = `${whCount} Akun`;
     }
 
     function submitNewAccount(event) {

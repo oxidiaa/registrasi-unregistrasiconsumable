@@ -15,12 +15,54 @@ class DatabaseSeeder extends Seeder
      */
     public function run(): void
     {
-        // User::factory(10)->create();
+        // 1. Admin Master
+        User::create([
+            'name'       => 'Admin Master MAI',
+            'email'      => 'admin_master',
+            'department' => 'Management / Executive',
+            'role'       => 'MASTER',
+            'status'     => 'Aktif',
+            'password'   => bcrypt('admin'),
+        ]);
 
-        User::factory()->create([
-            'name' => 'Admin Consumable',
-            'email' => 'admin',
-            'password' => bcrypt('admin'),
+        // 2. Budi User (Production)
+        User::create([
+            'name'       => 'Budi Santoso',
+            'email'      => 'budi_user',
+            'department' => 'Production',
+            'role'       => 'USER',
+            'status'     => 'Aktif',
+            'password'   => bcrypt('user'),
+        ]);
+
+        // 3. Suherman (Pemeriksa)
+        User::create([
+            'name'       => 'Suherman',
+            'email'      => 'suherman_spv',
+            'department' => 'Quality Assurance',
+            'role'       => 'PEMERIKSA',
+            'status'     => 'Aktif',
+            'password'   => bcrypt('pemeriksa'),
+        ]);
+
+        // 4. Joko Widodo (Warehouse)
+        User::create([
+            'name'       => 'Joko Widodo',
+            'email'      => 'joko_wh',
+            'department' => 'Warehouse Logistik',
+            'role'       => 'WAREHOUSE',
+            'status'     => 'Aktif',
+            'password'   => bcrypt('warehouse'),
+        ]);
+
+        // 5. Admin Consumable (Default login)
+        User::create([
+            'name'       => 'Admin Consumable',
+            'email'      => 'admin',
+            'department' => 'Production',
+            'role'       => 'MASTER',
+            'status'     => 'Aktif',
+            'password'   => bcrypt('admin'),
         ]);
     }
 }
