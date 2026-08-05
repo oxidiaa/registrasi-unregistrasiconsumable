@@ -1088,53 +1088,7 @@ textarea.form-control {
     margin: 0 auto;
 }
 
-/* ---- Print Styles ---- */
-@media print {
-    .sidebar,
-    .header .btn,
-    .toast-container,
-    .bg-glow-1,
-    .bg-glow-2 {
-        display: none !important;
-    }
-
-    .main-content {
-        margin-left: 0 !important;
-        padding: 0 !important;
-        max-width: 100% !important;
-    }
-
-    .header {
-        margin-bottom: 0 !important;
-    }
-
-    .header-title h1,
-    .header-title p {
-        display: none !important;
-    }
-
-    body {
-        background: white !important;
-    }
-
-    .form-reg-card {
-        box-shadow: none !important;
-        border: 1px solid #ccc !important;
-        border-radius: 0 !important;
-        backdrop-filter: none !important;
-        background: white !important;
-    }
-
-    .form-reg-table {
-        font-size: 0.65rem;
-    }
-
-    .form-reg-table thead th {
-        background: #1e293b !important;
-        -webkit-print-color-adjust: exact;
-        print-color-adjust: exact;
-    }
-}
+/* ---- Print Styles ---- (defined at end of file) */
 
 /* ---- Delete Icon Button ---- */
 .btn-icon-danger {
@@ -1203,10 +1157,277 @@ textarea.form-control {
     transform: rotate(45deg) translateY(-1px);
 }
 
-/* ---- No-print utility ---- */
+/* ================================================================
+   COMPREHENSIVE PRINT STYLES
+   ================================================================ */
 @media print {
-    .no-print {
+    @page {
+        size: A4 landscape;
+        margin: 6mm 8mm;
+    }
+
+    *,
+    *::before,
+    *::after {
+        box-shadow: none !important;
+        text-shadow: none !important;
+        -webkit-print-color-adjust: exact !important;
+        print-color-adjust: exact !important;
+    }
+
+    html, body {
+        background: #ffffff !important;
+        color: #000000 !important;
+        font-family: Arial, 'Plus Jakarta Sans', sans-serif !important;
+        width: 100% !important;
+        height: auto !important;
+        margin: 0 !important;
+        padding: 0 !important;
+        overflow: visible !important;
+    }
+
+    /* Hide non-printable elements */
+    .sidebar,
+    .header,
+    .sheet-tabs-container,
+    .toast-container,
+    .bg-glow-1,
+    .bg-glow-2,
+    .no-print,
+    .tab-pane:not(#print-preview-pane),
+    #btn-tambah-data,
+    #btn-form-baru,
+    .modal {
         display: none !important;
     }
+
+    /* Main layout reset */
+    .main-content {
+        margin: 0 !important;
+        padding: 0 !important;
+        width: 100% !important;
+        max-width: 100% !important;
+        background: transparent !important;
+    }
+
+    /* Force print preview pane visible */
+    #print-preview-pane {
+        display: block !important;
+        width: 100% !important;
+        margin: 0 !important;
+        padding: 0 !important;
+        opacity: 1 !important;
+        visibility: visible !important;
+    }
+
+    /* Form card container */
+    .form-reg-card {
+        border: 1.5px solid #000000 !important;
+        border-radius: 0 !important;
+        box-shadow: none !important;
+        background: #ffffff !important;
+        margin: 0 !important;
+        padding: 0 !important;
+        width: 100% !important;
+        overflow: visible !important;
+        backdrop-filter: none !important;
+    }
+
+    /* Form header */
+    .form-reg-header {
+        border-bottom: 2px solid #000000 !important;
+        background: #ffffff !important;
+        padding: 8px 12px !important;
+        display: grid !important;
+        grid-template-columns: 1.2fr 2fr 1fr !important;
+        align-items: center !important;
+        gap: 0.5rem !important;
+    }
+
+    .form-reg-company strong {
+        color: #000000 !important;
+        font-size: 0.82rem !important;
+    }
+
+    .form-reg-company span {
+        color: #111111 !important;
+        font-size: 0.65rem !important;
+        line-height: 1.25 !important;
+    }
+
+    .form-reg-title {
+        color: #000000 !important;
+        font-size: 1.05rem !important;
+        font-weight: 800 !important;
+        letter-spacing: 0.02em !important;
+        margin-bottom: 2px !important;
+    }
+
+    .form-reg-nodoc {
+        color: #111111 !important;
+        font-size: 0.72rem !important;
+        font-weight: 600 !important;
+    }
+
+    .form-reg-nodoc span {
+        color: #000000 !important;
+        font-weight: 800 !important;
+    }
+
+    /* Meta Info row */
+    .form-reg-meta {
+        border-bottom: 1.5px solid #000000 !important;
+        background: #ffffff !important;
+        padding: 6px 12px !important;
+        display: flex !important;
+        justify-content: space-between !important;
+    }
+
+    .form-reg-meta-label {
+        color: #000000 !important;
+        font-size: 0.76rem !important;
+        font-weight: 700 !important;
+    }
+
+    .form-reg-meta-line {
+        color: #000000 !important;
+        background: transparent !important;
+        border: none !important;
+        padding: 0 !important;
+        font-size: 0.78rem !important;
+        font-weight: 700 !important;
+    }
+
+    /* Table styling & font overflow fixes */
+    .form-reg-table-wrap {
+        overflow: visible !important;
+        width: 100% !important;
+    }
+
+    .form-reg-table {
+        width: 100% !important;
+        min-width: 0 !important;
+        border-collapse: collapse !important;
+        border: 1.5px solid #000000 !important;
+        table-layout: auto !important;
+    }
+
+    /* Table header cells */
+    .form-reg-table thead th {
+        background: #e2e8f0 !important;
+        color: #000000 !important;
+        border: 1px solid #000000 !important;
+        padding: 5px 3px !important;
+        font-size: 0.65rem !important;
+        font-weight: 800 !important;
+        text-align: center !important;
+        vertical-align: middle !important;
+        line-height: 1.2 !important;
+        height: auto !important;
+    }
+
+    /* Table body cells - fixes font clipping / sinking */
+    .form-reg-table tbody td {
+        border: 1px solid #000000 !important;
+        height: 24px !important;
+        min-height: 24px !important;
+        padding: 3px 4px !important;
+        font-size: 0.68rem !important;
+        line-height: 1.25 !important;
+        color: #000000 !important;
+        vertical-align: middle !important;
+        background: #ffffff !important;
+    }
+
+    /* Override all nested text inside table cells to be crisp black */
+    .form-reg-table tbody td,
+    .form-reg-table tbody td *,
+    .form-reg-table tbody td span,
+    .form-reg-table tbody td div {
+        color: #000000 !important;
+        font-size: 0.68rem !important;
+        line-height: 1.25 !important;
+        font-family: Arial, 'Plus Jakarta Sans', sans-serif !important;
+    }
+
+    .td-no,
+    .td-center {
+        text-align: center !important;
+        font-weight: 600 !important;
+    }
+
+    .td-no {
+        font-weight: 700 !important;
+        background: #ffffff !important;
+    }
+
+    .td-input,
+    .tr-even .td-input,
+    .tr-even td {
+        background: #ffffff !important;
+    }
+
+    /* Asset badges & icons in print */
+    .form-reg-table span {
+        background: transparent !important;
+        color: #000000 !important;
+        font-weight: 700 !important;
+        border: none !important;
+        padding: 0 !important;
+        font-size: 0.65rem !important;
+    }
+
+    .form-reg-table svg {
+        stroke: #000000 !important;
+        width: 13px !important;
+        height: 13px !important;
+    }
+
+    /* Signature section */
+    .form-reg-signature {
+        border-top: 1.5px solid #000000 !important;
+        background: #ffffff !important;
+        display: grid !important;
+        grid-template-columns: repeat(3, 1fr) !important;
+    }
+
+    .sig-box {
+        border-right: 1px solid #000000 !important;
+        padding: 8px 10px !important;
+        text-align: center !important;
+    }
+
+    .sig-box:last-child {
+        border-right: none !important;
+    }
+
+    .sig-label {
+        color: #000000 !important;
+        font-weight: 800 !important;
+        font-size: 0.7rem !important;
+        margin-bottom: 4px !important;
+    }
+
+    .sig-space {
+        height: 48px !important;
+        display: flex !important;
+        flex-direction: column !important;
+        align-items: center !important;
+        justify-content: center !important;
+    }
+
+    .sig-space div,
+    .sig-space span {
+        color: #000000 !important;
+        font-weight: 700 !important;
+        font-size: 0.68rem !important;
+    }
+
+    .sig-line {
+        border-top: 1.5px solid #000000 !important;
+        width: 80% !important;
+        margin: 0 auto !important;
+    }
 }
+
 

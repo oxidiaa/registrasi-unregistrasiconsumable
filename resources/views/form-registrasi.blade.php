@@ -267,7 +267,7 @@
             </div>
             <div class="form-reg-header-center">
                 <h2 class="form-reg-title">FORM PENDAFTARAN BARANG CONSUMABLE</h2>
-                <p class="form-reg-nodoc" id="preview-docno">No Doc : W1-CDS-PP-20/F1 Rev 2 &nbsp;|&nbsp; No. Form: <span id="form-number-display" style="font-weight: 700; color: var(--color-primary);">01/PR/{{ date('d-m-Y') }}</span></p>
+                <p class="form-reg-nodoc" id="preview-docno">No Doc : W1-CDS-PP-20/F1 Rev 2 &nbsp;|&nbsp; No. Form: <span id="form-number-display" style="font-weight: 700; color: var(--color-primary);">01/{{ strtoupper(Auth::user()->department ?? Auth::user()->name ?? 'PRODUCTION') }}/{{ date('m-Y') }}</span></p>
             </div>
             <div class="form-reg-header-right"></div>
         </div>
@@ -491,63 +491,8 @@
                         <th class="th-center" style="width: 200px;">AKSI</th>
                     </tr>
                 </thead>
-                <tbody>
-                    <tr>
-                        <td class="td-center td-no">1</td>
-                        <td style="font-weight: 700; color: var(--color-primary); padding: 0 0.8rem;">01/PR/{{ date('d-m-Y') }}</td>
-                        <td style="padding: 0 0.8rem; font-size: 0.85rem;">{{ date('d-m-Y') }}</td>
-                        <td style="padding: 0 0.8rem; font-size: 0.85rem; font-weight: 600;" id="dataview-req-004">{{ Auth::user()->name ?? 'Production User' }} / Production</td>
-                        <td class="td-center" style="font-weight: 700;">{{ $formItems->count() }} Item</td>
-                        <td class="td-center">
-                            <span style="background-color: var(--color-warning-light); color: var(--color-warning); padding: 0.25rem 0.5rem; border-radius: 4px; font-weight: 700; font-size: 0.75rem; display: inline-block;">DRAFT</span>
-                        </td>
-                        <td class="td-center" style="padding: 0 0.5rem;">
-                            <button class="btn btn-primary btn-sm" onclick="viewChecksheet('01/PR/{{ date('d-m-Y') }}')" style="padding: 0.35rem 0.75rem; font-size: 0.75rem; font-family: var(--font-body); font-weight: 600; border-radius: 6px;">Lihat Preview</button>
-                            <button class="btn btn-secondary btn-sm" onclick="printChecksheet('01/PR/{{ date('d-m-Y') }}')" style="padding: 0.35rem 0.75rem; font-size: 0.75rem; margin-left: 0.25rem; font-family: var(--font-body); font-weight: 600; border-radius: 6px;">Cetak</button>
-                        </td>
-                    </tr>
-                    <tr>
-                        <td class="td-center td-no">2</td>
-                        <td style="font-weight: 700; color: var(--color-primary); padding: 0 0.8rem;">02/PR/22-07-2026</td>
-                        <td style="padding: 0 0.8rem; font-size: 0.85rem;">22-07-2026</td>
-                        <td style="padding: 0 0.8rem; font-size: 0.85rem; font-weight: 600;">Ahmad Fauzi / Production</td>
-                        <td class="td-center" style="font-weight: 700;">5 Item</td>
-                        <td class="td-center">
-                            <span style="background-color: var(--color-success-light); color: var(--color-success); padding: 0.25rem 0.5rem; border-radius: 4px; font-weight: 700; font-size: 0.75rem; display: inline-block;">APPROVED</span>
-                        </td>
-                        <td class="td-center" style="padding: 0 0.5rem;">
-                            <button class="btn btn-primary btn-sm" onclick="viewChecksheet('02/PR/22-07-2026')" style="padding: 0.35rem 0.75rem; font-size: 0.75rem; font-family: var(--font-body); font-weight: 600; border-radius: 6px;">Lihat Preview</button>
-                            <button class="btn btn-secondary btn-sm" onclick="printChecksheet('02/PR/22-07-2026')" style="padding: 0.35rem 0.75rem; font-size: 0.75rem; margin-left: 0.25rem; font-family: var(--font-body); font-weight: 600; border-radius: 6px;">Cetak</button>
-                        </td>
-                    </tr>
-                    <tr>
-                        <td class="td-center td-no">3</td>
-                        <td style="font-weight: 700; color: var(--color-primary); padding: 0 0.8rem;">01/PC/20-07-2026</td>
-                        <td style="padding: 0 0.8rem; font-size: 0.85rem;">20-07-2026</td>
-                        <td style="padding: 0 0.8rem; font-size: 0.85rem; font-weight: 600;">Siti Rahma / Procurement</td>
-                        <td class="td-center" style="font-weight: 700;">3 Item</td>
-                        <td class="td-center">
-                            <span style="background-color: rgba(59, 130, 246, 0.1); color: rgb(29, 78, 216); padding: 0.25rem 0.5rem; border-radius: 4px; font-weight: 700; font-size: 0.75rem; display: inline-block;">PENDING</span>
-                        </td>
-                        <td class="td-center" style="padding: 0 0.5rem;">
-                            <button class="btn btn-primary btn-sm" onclick="viewChecksheet('01/PC/20-07-2026')" style="padding: 0.35rem 0.75rem; font-size: 0.75rem; font-family: var(--font-body); font-weight: 600; border-radius: 6px;">Lihat Preview</button>
-                            <button class="btn btn-secondary btn-sm" onclick="printChecksheet('01/PC/20-07-2026')" style="padding: 0.35rem 0.75rem; font-size: 0.75rem; margin-left: 0.25rem; font-family: var(--font-body); font-weight: 600; border-radius: 6px;">Cetak</button>
-                        </td>
-                    </tr>
-                    <tr>
-                        <td class="td-center td-no">4</td>
-                        <td style="font-weight: 700; color: var(--color-primary); padding: 0 0.8rem;">01/MT/15-07-2026</td>
-                        <td style="padding: 0 0.8rem; font-size: 0.85rem;">15-07-2026</td>
-                        <td style="padding: 0 0.8rem; font-size: 0.85rem; font-weight: 600;">Eko Prasetyo / Maintenance</td>
-                        <td class="td-center" style="font-weight: 700;">4 Item</td>
-                        <td class="td-center">
-                            <span style="background-color: var(--color-success-light); color: var(--color-success); padding: 0.25rem 0.5rem; border-radius: 4px; font-weight: 700; font-size: 0.75rem; display: inline-block;">APPROVED</span>
-                        </td>
-                        <td class="td-center" style="padding: 0 0.5rem;">
-                            <button class="btn btn-primary btn-sm" onclick="viewChecksheet('01/MT/15-07-2026')" style="padding: 0.35rem 0.75rem; font-size: 0.75rem; font-family: var(--font-body); font-weight: 600; border-radius: 6px;">Lihat Preview</button>
-                            <button class="btn btn-secondary btn-sm" onclick="printChecksheet('01/MT/15-07-2026')" style="padding: 0.35rem 0.75rem; font-size: 0.75rem; margin-left: 0.25rem; font-family: var(--font-body); font-weight: 600; border-radius: 6px;">Cetak</button>
-                        </td>
-                    </tr>
+                <tbody id="dataview-tbody">
+                    <!-- Dynamically rendered via renderDataViewTable() -->
                 </tbody>
             </table>
         </div>
@@ -569,10 +514,7 @@
                 <div class="form-group" style="margin-bottom: 1.5rem; max-width: 400px;">
                     <label for="select-approval-cs" style="font-weight: 600; font-size: 0.875rem; margin-bottom: 0.5rem; display: block;">Pilih No. Formulir:</label>
                     <select id="select-approval-cs" class="form-control" onchange="onSelectApprovalCs(this.value)" style="height: 42px;">
-                        <option value="01/PR/{{ date('d-m-Y') }}" selected>01/PR/{{ date('d-m-Y') }} (Active Form - Draft)</option>
-                        <option value="02/PR/22-07-2026">02/PR/22-07-2026 (Ahmad Fauzi - Approved)</option>
-                        <option value="01/PC/20-07-2026">01/PC/20-07-2026 (Siti Rahma - Pending Warehouse)</option>
-                        <option value="01/MT/15-07-2026">01/MT/15-07-2026 (Eko Prasetyo - Approved)</option>
+                        <option value="01/{{ strtoupper(Auth::user()->department ?? Auth::user()->name ?? 'PRODUCTION') }}/{{ date('m-Y') }}" selected>01/{{ strtoupper(Auth::user()->department ?? Auth::user()->name ?? 'PRODUCTION') }}/{{ date('m-Y') }} (Form Aktif - Draft)</option>
                     </select>
                 </div>
                 
@@ -934,17 +876,19 @@
     @endif
 
     // TAB SYSTEM & MOCK DATA
-    const activeFormNo = '01/PR/{{ date("d-m-Y") }}';
+    const userTag = '{{ strtoupper(Auth::user()->department ?? Auth::user()->name ?? "PRODUCTION") }}';
+    const monthYearStr = '{{ date("m-Y") }}';
+    const activeFormNo = `01/${userTag}/${monthYearStr}`;
     let activeChecksheetHtml = '';
     let selectedChecksheetId = activeFormNo;
     let formCounter = 1;
 
     const checksheets = {
-        '01/PR/{{ date("d-m-Y") }}': {
-            docNo: 'No Doc : W1-CDS-PP-20/F1 Rev 2 &nbsp;|&nbsp; No. Form: <span style="font-weight:700; color:var(--color-primary);">01/PR/{{ date("d-m-Y") }}</span>',
-            formNo: '01/PR/{{ date("d-m-Y") }}',
+        [activeFormNo]: {
+            docNo: 'No Doc : W1-CDS-PP-20/F1 Rev 2 &nbsp;|&nbsp; No. Form: <span style="font-weight:700; color:var(--color-primary);">' + activeFormNo + '</span>',
+            formNo: activeFormNo,
             date: '{{ date("d-m-Y") }}',
-            requestor: '{{ Auth::user()->name ?? "Production User" }} / Production',
+            requestor: '{{ Auth::user()->name ?? "Production User" }} / {{ Auth::user()->department ?? "Production" }}',
             status: 'Draft',
             items: [],
             signatures: {
@@ -957,80 +901,11 @@
                 pemeriksa: '',
                 warehouse: ''
             }
-        },
-        '02/PR/22-07-2026': {
-            docNo: 'No Doc : W1-CDS-PP-20/F1 Rev 2 &nbsp;|&nbsp; No. Form: <span style="font-weight:700; color:var(--color-primary);">02/PR/22-07-2026</span>',
-            formNo: '02/PR/22-07-2026',
-            date: '22-07-2026',
-            requestor: 'Ahmad Fauzi / Production',
-            status: 'Selesai',
-            items: [
-                { no: 1, kode: 'CDS-PRD-01', nama: 'Sarung Tangan Karet', harga: 'Rp 15.000', usia: '7 Hari', katPeng: 'Produksi', katUk: 'Sedang', min: 50, titik: 100, max: 200, aset: 'NO ASET', b3: true, non_b3: false },
-                { no: 2, kode: 'CDS-PRD-02', nama: 'Masker Debu 3M', harga: 'Rp 35.000', usia: '3 Hari', katPeng: 'Produksi', katUk: 'Kecil', min: 100, titik: 150, max: 300, aset: 'NO ASET', b3: false, non_b3: true },
-                { no: 3, kode: 'CDS-PRD-03', nama: 'Kacamata Safety Kings', harga: 'Rp 85.000', usia: '180 Hari', katPeng: 'Produksi', katUk: 'Sedang', min: 10, titik: 20, max: 50, aset: 'NO ASET', b3: false, non_b3: true },
-                { no: 4, kode: 'CDS-PRD-04', nama: 'Earplug Orange', harga: 'Rp 8.000', usia: '5 Hari', katPeng: 'Produksi', katUk: 'Kecil', min: 200, titik: 300, max: 600, aset: 'NO ASET', b3: false, non_b3: true },
-                { no: 5, kode: 'CDS-PRD-05', nama: 'Majun Putih Jahit', harga: 'Rp 12.000', usia: '2 Hari', katPeng: 'Produksi', katUk: 'Besar', min: 15, titik: 30, max: 60, aset: 'NO ASET', b3: false, non_b3: true }
-            ],
-            signatures: {
-                dibuat: 'Ahmad Fauzi (22-07-2026)',
-                diperiksa: 'Suherman (Supervisor - 22-07-2026)',
-                disetujui: 'Joko Widodo (Warehouse - 22-07-2026)'
-            },
-            comments: {
-                user: 'Kebutuhan mendesak alat pelindung diri untuk operator lini produksi A.',
-                pemeriksa: 'APD kacamata kings dan masker 3M memenuhi standar keselamatan kerja perusahaan. Layak digunakan.',
-                warehouse: 'Range barang consumable telah diregistrasikan di SAP dengan prefiks CDS-PRD-xx.'
-            }
-        },
-        '01/PC/20-07-2026': {
-            docNo: 'No Doc : W1-CDS-PP-20/F1 Rev 2 &nbsp;|&nbsp; No. Form: <span style="font-weight:700; color:var(--color-primary);">01/PC/20-07-2026</span>',
-            formNo: '01/PC/20-07-2026',
-            date: '20-07-2026',
-            requestor: 'Siti Rahma / Procurement',
-            status: 'Proses',
-            items: [
-                { no: 1, kode: 'CDS-OFF-01', nama: 'Kertas HVS A4 80gr', harga: 'Rp 54.000', usia: '30 Hari', katPeng: 'Kantor', katUk: 'Sedang', min: 20, titik: 30, max: 80, aset: 'NO ASET', b3: false, non_b3: true },
-                { no: 2, kode: 'CDS-OFF-02', nama: 'Pulpen Pilot Ballliner', harga: 'Rp 15.000', usia: '14 Hari', katPeng: 'Kantor', katUk: 'Kecil', min: 50, titik: 80, max: 150, aset: 'NO ASET', b3: false, non_b3: true },
-                { no: 3, kode: 'CDS-OFF-03', nama: 'Tinta Printer Epson L3110 Black', harga: 'Rp 115.000', usia: '90 Hari', katPeng: 'Kantor', katUk: 'Kecil', min: 5, titik: 10, max: 20, aset: 'NO ASET', b3: false, non_b3: true }
-            ],
-            signatures: {
-                dibuat: 'Siti Rahma (20-07-2026)',
-                diperiksa: 'Hendra (Supervisor - 20-07-2026)',
-                disetujui: '...................'
-            },
-            comments: {
-                user: 'ATK bulanan departemen procurement, stok kertas dan tinta hampir habis.',
-                pemeriksa: 'Jumlah sudah sesuai batas konsumsi bulanan departemen procurement.',
-                warehouse: ''
-            }
-        },
-        '01/MT/15-07-2026': {
-            docNo: 'No Doc : W1-CDS-PP-20/F1 Rev 2 &nbsp;|&nbsp; No. Form: <span style="font-weight:700; color:var(--color-primary);">01/MT/15-07-2026</span>',
-            formNo: '01/MT/15-07-2026',
-            date: '15-07-2026',
-            requestor: 'Eko Prasetyo / Maintenance',
-            status: 'Selesai',
-            items: [
-                { no: 1, kode: 'CDS-MTC-01', nama: 'WD-40 Anti Karat 400ml', harga: 'Rp 65.000', usia: '60 Hari', katPeng: 'Maintenance', katUk: 'Sedang', min: 10, titik: 15, max: 30, aset: 'NO ASET', b3: true, non_b3: false },
-                { no: 2, kode: 'CDS-MTC-02', nama: 'Isolasi Listrik Nitto', harga: 'Rp 12.000', usia: '30 Hari', katPeng: 'Maintenance', katUk: 'Kecil', min: 30, titik: 50, max: 100, aset: 'NO ASET', b3: false, non_b3: true },
-                { no: 3, kode: 'CDS-MTC-03', nama: 'Baterai Panasonic AAA 4pcs', harga: 'Rp 22.000', usia: '180 Hari', katPeng: 'Maintenance', katUk: 'Kecil', min: 15, titik: 25, max: 60, aset: 'NO ASET', b3: false, non_b3: true },
-                { no: 4, kode: 'CDS-MTC-04', nama: 'Gunting Seng Tekiro', harga: 'Rp 125.000', usia: '365 Hari', katPeng: 'Maintenance', katUk: 'Sedang', min: 2, titik: 4, max: 8, aset: 'NO ASET', b3: false, non_b3: true }
-            ],
-            signatures: {
-                dibuat: 'Eko Prasetyo (15-07-2026)',
-                diperiksa: 'Dedi (Supervisor - 15-07-2026)',
-                disetujui: 'Joko Widodo (Warehouse - 16-07-2026)'
-            },
-            comments: {
-                user: 'Pengadaan pelumas karat WD-40 untuk preventive maintenance lini mesin forging.',
-                pemeriksa: 'Sangat direkomendasikan untuk mencegah aus pada cetakan metal.',
-                warehouse: 'Sudah masuk ke database ERP bagian maintenance consumable.'
-            }
         }
     };
 
     const stepperData = {
-        '01/PR/{{ date("d-m-Y") }}': {
+        [activeFormNo]: {
             statusText: 'DRAFT',
             statusClass: 'badge-warning',
             steps: [
@@ -1038,40 +913,57 @@
                 { completed: false, active: true, details: 'Menunggu kelayakan disetujui Pemeriksa...', status: 'Pemeriksaan kelayakan.', color: 'var(--color-primary)' },
                 { completed: false, active: false, details: 'Belum diisi.', status: 'Registrasi oleh Warehouse.', color: 'var(--text-muted)' }
             ]
-        },
-        '02/PR/22-07-2026': {
-            statusText: 'APPROVED',
-            statusClass: 'badge-success',
-            steps: [
-                { completed: true, active: false, details: 'Ahmad Fauzi (Tanggal: 22-07-2026)', status: 'Selesai dibuat dan ditandatangani.', color: 'var(--color-success)' },
-                { completed: true, active: false, details: 'Suherman (Pemeriksa - Tanggal: 22-07-2026)', status: 'Disetujui. Kelayakan barang consumable terverifikasi.', color: 'var(--color-success)' },
-                { completed: true, active: false, details: 'Joko Widodo (Warehouse - Tanggal: 22-07-2026)', status: 'Kode barang berhasil diregistrasikan ke database ERP.', color: 'var(--color-success)' }
-            ]
-        },
-        '01/PC/20-07-2026': {
-            statusText: 'PENDING WAREHOUSE',
-            statusClass: 'badge-info',
-            steps: [
-                { completed: true, active: false, details: 'Siti Rahma (Tanggal: 20-07-2026)', status: 'Selesai dibuat dan ditandatangani.', color: 'var(--color-success)' },
-                { completed: true, active: false, details: 'Hendra (Pemeriksa - Tanggal: 20-07-2026)', status: 'Disetujui. Kelayakan barang consumable terverifikasi.', color: 'var(--color-success)' },
-                { completed: false, active: true, details: 'Menunggu registrasi oleh Warehouse...', status: 'Menunggu input kode barang.', color: 'var(--color-primary)' }
-            ]
-        },
-        '01/MT/15-07-2026': {
-            statusText: 'APPROVED',
-            statusClass: 'badge-success',
-            steps: [
-                { completed: true, active: false, details: 'Eko Prasetyo (Tanggal: 15-07-2026)', status: 'Selesai dibuat dan ditandatangani.', color: 'var(--color-success)' },
-                { completed: true, active: false, details: 'Dedi (Pemeriksa - Tanggal: 15-07-2026)', status: 'Disetujui. Kelayakan barang consumable terverifikasi.', color: 'var(--color-success)' },
-                { completed: true, active: false, details: 'Joko Widodo (Warehouse - Tanggal: 16-07-2026)', status: 'Kode barang berhasil diregistrasikan ke database ERP.', color: 'var(--color-success)' }
-            ]
         }
     };
+
+    function renderDataViewTable() {
+        const tbody = document.getElementById('dataview-tbody');
+        if (!tbody) return;
+
+        let html = '';
+        let no = 1;
+        for (const formNo in checksheets) {
+            const cs = checksheets[formNo];
+            let statusBg = 'var(--color-warning-light)';
+            let statusColor = 'var(--color-warning)';
+            if (cs.status === 'Approved' || cs.status === 'Selesai') {
+                statusBg = 'var(--color-success-light)';
+                statusColor = 'var(--color-success)';
+            } else if (cs.status === 'Proses' || cs.status === 'Pending') {
+                statusBg = 'rgba(59, 130, 246, 0.1)';
+                statusColor = 'rgb(29, 78, 216)';
+            }
+
+            const itemCount = (formNo === activeFormNo) ? '{{ $formItems->count() }} Item' : (cs.items ? cs.items.length + ' Item' : '0 Item');
+
+            html += `
+                <tr>
+                    <td class="td-center td-no">${no}</td>
+                    <td style="font-weight: 700; color: var(--color-primary); padding: 0 0.8rem;">${cs.formNo}</td>
+                    <td style="padding: 0 0.8rem; font-size: 0.85rem;">${cs.date}</td>
+                    <td style="padding: 0 0.8rem; font-size: 0.85rem; font-weight: 600;">${cs.requestor}</td>
+                    <td class="td-center" style="font-weight: 700;">${itemCount}</td>
+                    <td class="td-center">
+                        <span style="background-color: ${statusBg}; color: ${statusColor}; padding: 0.25rem 0.5rem; border-radius: 4px; font-weight: 700; font-size: 0.75rem; display: inline-block;">${cs.status.toUpperCase()}</span>
+                    </td>
+                    <td class="td-center" style="padding: 0 0.5rem;">
+                        <button class="btn btn-primary btn-sm" onclick="viewChecksheet('${cs.formNo}')" style="padding: 0.35rem 0.75rem; font-size: 0.75rem; font-family: var(--font-body); font-weight: 600; border-radius: 6px;">Lihat Preview</button>
+                        <button class="btn btn-secondary btn-sm" onclick="printChecksheet('${cs.formNo}')" style="padding: 0.35rem 0.75rem; font-size: 0.75rem; margin-left: 0.25rem; font-family: var(--font-body); font-weight: 600; border-radius: 6px;">Cetak</button>
+                    </td>
+                </tr>
+            `;
+            no++;
+        }
+        tbody.innerHTML = html;
+    }
 
     document.addEventListener('DOMContentLoaded', function() {
         // Save the active checksheet items HTML structure
         activeChecksheetHtml = document.getElementById('preview-table-body').innerHTML;
         
+        // Render Data View Table dynamically
+        renderDataViewTable();
+
         // Initialize approval stepper view
         updateApprovalStepper(selectedChecksheetId);
 
@@ -1088,7 +980,7 @@
         formCounter++;
         const nextSeq = String(formCounter).padStart(2, '0');
         const todayStr = '{{ date("d-m-Y") }}';
-        const nextFormNo = `${nextSeq}/PR/${todayStr}`;
+        const nextFormNo = `${nextSeq}/${userTag}/${monthYearStr}`;
         
         checksheets[nextFormNo] = {
             docNo: 'No Doc : W1-CDS-PP-20/F1 Rev 2 &nbsp;|&nbsp; No. Form: <span style="font-weight:700; color:var(--color-primary);">' + nextFormNo + '</span>',
@@ -1124,10 +1016,13 @@
         if (select) {
             const opt = document.createElement('option');
             opt.value = nextFormNo;
-            opt.innerText = `${nextFormNo} (Production - Draft Baru)`;
+            opt.innerText = `${nextFormNo} (${userTag} - Draft Baru)`;
             opt.selected = true;
             select.prepend(opt);
         }
+
+        // Update Data View Table
+        renderDataViewTable();
 
         // Switch to Print Preview & view this new form
         viewChecksheet(nextFormNo);
@@ -1251,6 +1146,10 @@
             updateApprovalStepper(csId);
         }
     }
+
+    window.addEventListener('beforeprint', function() {
+        switchSheet('print-preview');
+    });
 
     function printChecksheet(csId) {
         viewChecksheet(csId);
