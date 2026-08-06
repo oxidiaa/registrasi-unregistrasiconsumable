@@ -18,7 +18,7 @@ class DatabaseSeeder extends Seeder
         // 1. Admin Master
         User::create([
             'name'       => 'Admin Master MAI',
-            'email'      => 'admin_master',
+            'email'      => 'admin',
             'department' => 'Management / Executive',
             'role'       => 'MASTER',
             'status'     => 'Aktif',

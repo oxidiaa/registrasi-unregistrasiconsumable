@@ -230,13 +230,31 @@
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="5">
-                                <div class="empty-state">
-                                    <svg viewBox="0 0 24 24" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
-                                        <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path>
-                                    </svg>
-                                    <h3>Tidak Ada Data Barang</h3>
-                                    <p>Belum ada barang yang didaftarkan. Gunakan form di sebelah kiri untuk menambahkan barang.</p>
+                            <td colspan="5" style="padding: 0; border: none;">
+                                <div class="empty-state-wrapper">
+                                    <div class="empty-state-card">
+                                        <div class="empty-state-icon-container">
+                                            <svg viewBox="0 0 24 24" fill="none" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.6">
+                                                <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path>
+                                                <polyline points="3.27 6.96 12 12.01 20.73 6.96"></polyline>
+                                                <line x1="12" y1="22.08" x2="12" y2="12"></line>
+                                            </svg>
+                                            <div class="empty-state-pulse"></div>
+                                        </div>
+                                        <div>
+                                            <h4 class="empty-state-title">Tidak Ada Data Barang Consumable</h4>
+                                            <p class="empty-state-desc">Belum ada barang consumable yang terdaftar dalam sistem. Gunakan form pendaftaran untuk menambahkan barang baru.</p>
+                                        </div>
+                                        <div class="empty-state-actions">
+                                            <a href="{{ route('form-registrasi.index') }}" class="empty-state-btn" style="text-decoration: none;">
+                                                <svg viewBox="0 0 24 24" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                                                    <line x1="12" y1="5" x2="12" y2="19"></line>
+                                                    <line x1="5" y1="12" x2="19" y2="12"></line>
+                                                </svg>
+                                                + Buka Form Pendaftaran
+                                            </a>
+                                        </div>
+                                    </div>
                                 </div>
                             </td>
                         </tr>

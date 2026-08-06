@@ -361,22 +361,75 @@
                         </td>
                     </tr>
                     @empty
-                    <tr>
-                        <td colspan="14" style="text-align:center; padding:3rem 1rem; color:var(--text-muted);">
-                            <div style="display:flex; flex-direction:column; align-items:center; gap:0.75rem;">
-                                <svg viewBox="0 0 24 24" width="40" height="40" stroke="#94a3b8" stroke-width="1.5" fill="none" stroke-linecap="round" stroke-linejoin="round">
-                                    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
-                                    <polyline points="14 2 14 8 20 8"></polyline>
-                                </svg>
-                                <span style="font-weight:600; font-size:0.9rem; color:var(--text-primary);">Belum ada data</span>
-                                <span style="font-size:0.8rem;">Klik tombol <strong>Tambah Data</strong> untuk mengisi form.</span>
+                    <!-- Web View Empty State -->
+                    <tr class="empty-state-row no-print">
+                        <td colspan="14" style="padding: 0; border: none;">
+                            <div class="empty-state-wrapper">
+                                <div class="empty-state-card">
+                                    <div class="empty-state-icon-container">
+                                        <svg viewBox="0 0 24 24" fill="none" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.6">
+                                            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                                            <polyline points="14 2 14 8 20 8"></polyline>
+                                            <line x1="12" y1="18" x2="12" y2="12"></line>
+                                            <line x1="9" y1="15" x2="15" y2="15"></line>
+                                        </svg>
+                                        <div class="empty-state-pulse"></div>
+                                    </div>
+                                    <div>
+                                        <h4 class="empty-state-title">Belum Ada Data Barang Consumable</h4>
+                                        <p class="empty-state-desc">Formulir pendaftaran ini masih kosong. Klik tombol di bawah atau gunakan tombol <strong>Tambah Data</strong> untuk mengisi lembar barang.</p>
+                                    </div>
+                                    <div class="empty-state-actions">
+                                        <button type="button" class="empty-state-btn" onclick="openModal('addItemModal')">
+                                            <svg viewBox="0 0 24 24" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                                                <line x1="12" y1="5" x2="12" y2="19"></line>
+                                                <line x1="5" y1="12" x2="19" y2="12"></line>
+                                            </svg>
+                                            + Tambah Data Pertama
+                                        </button>
+                                    </div>
+                                    <div class="empty-state-pills">
+                                        <div class="empty-state-pill">
+                                            <svg viewBox="0 0 24 24" stroke="var(--color-success)" stroke-width="2.5" fill="none"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                                            Kategori B3 / Non-B3
+                                        </div>
+                                        <div class="empty-state-pill">
+                                            <svg viewBox="0 0 24 24" stroke="var(--color-primary)" stroke-width="2.5" fill="none"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path></svg>
+                                            No. Form Otomatis
+                                        </div>
+                                        <div class="empty-state-pill">
+                                            <svg viewBox="0 0 24 24" stroke="var(--color-warning)" stroke-width="2.5" fill="none"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
+                                            Approval Real-time
+                                        </div>
+                                    </div>
+                                </div>
                             </div>
                         </td>
                     </tr>
+
+                    <!-- Print-only blank lined rows when no data is present -->
+                    @for($p = 0; $p < 13; $p++)
+                    <tr class="print-only-row {{ $p % 2 != 0 ? 'tr-even' : '' }}">
+                        <td class="td-center td-no" style="color:#cbd5e1;">{{ $p + 1 }}</td>
+                        <td class="td-input"></td>
+                        <td class="td-input"></td>
+                        <td class="td-input"></td>
+                        <td class="td-input"></td>
+                        <td class="td-input"></td>
+                        <td class="td-input"></td>
+                        <td class="td-input"></td>
+                        <td class="td-input"></td>
+                        <td class="td-input"></td>
+                        <td class="td-input"></td>
+                        <td class="td-input"></td>
+                        <td class="td-input"></td>
+                        <td class="td-input no-print"></td>
+                    </tr>
+                    @endfor
                     @endforelse
 
-                    {{-- Baris kosong sisa (minimal tampilkan 13 baris total) --}}
-                    @if($formItems->count() < 13)
+                    {{-- Baris kosong sisa jika ada data tetapi kurang dari 13 --}}
+                    @if($formItems->count() > 0 && $formItems->count() < 13)
                         @for($i = $formItems->count(); $i < 13; $i++)
                         <tr class="{{ $i % 2 != 0 ? 'tr-even' : '' }}">
                             <td class="td-center td-no" style="color:#cbd5e1;">{{ $i + 1 }}</td>
@@ -1083,7 +1136,7 @@
         }
 
         const tbody = document.getElementById('preview-table-body');
-        if (csId === activeFormNo && cs.items.length === 0) {
+        if (!cs.items || cs.items.length === 0) {
             tbody.innerHTML = activeChecksheetHtml;
         } else {
             let rowsHtml = '';
