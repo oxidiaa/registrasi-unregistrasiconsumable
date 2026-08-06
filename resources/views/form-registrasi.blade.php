@@ -3,6 +3,15 @@
 @section('title', 'Form Pendaftaran Barang Consumable')
 
 @section('content')
+@php
+    $userDeptTag = strtoupper(Auth::user()->department ?? Auth::user()->name ?? 'PRODUCTION');
+    $defaultFormNo = '01/' . $userDeptTag . '/' . date('m-Y');
+    $currentFormNo = $activeFormNoParam ?? $defaultFormNo;
+    $currentFormItems = $formItems->filter(function($item) use ($currentFormNo, $defaultFormNo) {
+        $itemFormNo = $item->form_number ?: $defaultFormNo;
+        return $itemFormNo === $currentFormNo;
+    });
+@endphp
 <style>
     /* Sheet Tabs Styling */
     .sheet-tabs-container {
@@ -175,7 +184,7 @@
         <h1>Form Pendaftaran Barang</h1>
         <p>Form pendaftaran barang consumable PT. Metalart Astra Indonesia.</p>
     </div>
-    <div style="display: flex; gap: 0.75rem;">
+    <div style="display: flex; gap: 0.75rem; align-items: center;">
         <button class="btn btn-outline" id="btn-form-baru" onclick="createNewForm()" style="border: 1.5px solid var(--color-primary); color: var(--color-primary); background: transparent; font-weight: 600; font-family: var(--font-body); display: inline-flex; align-items: center; gap: 0.4rem; padding: 0.6rem 1rem; border-radius: var(--radius-md); cursor: pointer;">
             <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2.5" fill="none" stroke-linecap="round" stroke-linejoin="round">
                 <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
@@ -192,6 +201,10 @@
             </svg>
             Tambah Data
         </button>
+        <div id="form-finalized-pill" style="display: none; align-items: center; gap: 0.4rem; padding: 0.55rem 0.85rem; background: rgba(16, 185, 129, 0.1); border: 1px solid rgba(16, 185, 129, 0.25); color: #059669; border-radius: var(--radius-md); font-size: 0.78rem; font-weight: 700;">
+            <svg viewBox="0 0 24 24" width="15" height="15" stroke="currentColor" stroke-width="2.5" fill="none"><polyline points="20 6 9 17 4 12"></polyline></svg>
+            Form Terisi (Klik '+ Form Baru' untuk item lain)
+        </div>
         <button class="btn btn-secondary" onclick="printCurrentSheet()">
             <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round">
                 <polyline points="6 9 6 2 18 2 18 9"></polyline>
@@ -309,39 +322,74 @@
                     </tr>
                 </thead>
                 <tbody id="preview-table-body">
-                    @forelse($formItems as $index => $item)
-                    <tr class="{{ $index % 2 != 0 ? 'tr-even' : '' }}">
+                    @forelse($currentFormItems->values() as $index => $item)
+                    <tr class="data-row {{ $index % 2 != 0 ? 'tr-even' : '' }}">
                         <td class="td-center td-no">{{ $index + 1 }}</td>
-                        <td class="td-center" style="font-size:0.72rem; font-weight:600; color:var(--color-primary); padding:0 0.4rem;">
-                            {{ $item->kode_barang ?? '-' }}
+                        <td class="td-center" style="padding:0 0.4rem;">
+                            @if($item->kode_barang)
+                                <span class="item-code-badge">{{ $item->kode_barang }}</span>
+                            @else
+                                <span style="color:var(--text-muted); font-size:0.75rem;">-</span>
+                            @endif
                         </td>
-                        <td style="padding:0 0.6rem; font-weight:600; font-size:0.8rem;">
+                        <td style="padding:0 0.6rem; font-weight:700; font-size:0.82rem; color:var(--text-primary);">
                             {{ $item->nama_barang }}
                         </td>
-                        <td class="td-center" style="font-size:0.75rem;">
-                            {{ $item->harga ? 'Rp ' . number_format($item->harga, 0, ',', '.') : '-' }}
-                        </td>
-                        <td class="td-center" style="font-size:0.75rem;">{{ $item->estimasi_usia_pakai ? $item->estimasi_usia_pakai . ' Hari' : '-' }}</td>
-                        <td class="td-center" style="font-size:0.75rem;">{{ $item->kategori_penggunaan ?? '-' }}</td>
-                        <td class="td-center" style="font-size:0.75rem;">{{ $item->kategori_ukuran ?? '-' }}</td>
-                        <td class="td-center" style="font-size:0.75rem;">{{ $item->min ?? '-' }}</td>
-                        <td class="td-center" style="font-size:0.75rem;">{{ $item->titik_order ?? '-' }}</td>
-                        <td class="td-center" style="font-size:0.75rem;">{{ $item->max ?? '-' }}</td>
-                        <td class="td-center" style="font-size:0.75rem; vertical-align: middle;">
-                            @if($item->kategori_aset === 'ASET')
-                                <span style="background-color: var(--color-success-light); color: var(--color-success); padding: 0.2rem 0.5rem; border-radius: 4px; font-weight: 700; font-size: 0.7rem; display: inline-block;">ASET</span>
+                        <td class="td-center">
+                            @if($item->harga)
+                                <span class="item-price-tag">Rp {{ number_format($item->harga, 0, ',', '.') }}</span>
                             @else
-                                <span style="background-color: #f1f5f9; color: var(--text-muted); padding: 0.2rem 0.5rem; border-radius: 4px; font-weight: 600; font-size: 0.7rem; display: inline-block;">NO ASET</span>
+                                <span style="color:var(--text-muted); font-size:0.75rem;">-</span>
                             @endif
                         </td>
-                        <td class="td-center" style="font-size:0.85rem;">
+                        <td class="td-center" style="font-size:0.75rem; font-weight:600; color:var(--text-muted);">
+                            {{ $item->estimasi_usia_pakai ? $item->estimasi_usia_pakai . ' Hari' : '-' }}
+                        </td>
+                        <td class="td-center" style="font-size:0.75rem; font-weight:600;">{{ $item->kategori_penggunaan ?? '-' }}</td>
+                        <td class="td-center" style="font-size:0.75rem; font-weight:600;">{{ $item->kategori_ukuran ?? '-' }}</td>
+                        <td class="td-center">
+                            @if($item->min !== null && $item->min !== '')
+                                <span class="badge-stock-min">{{ $item->min }}</span>
+                            @else
+                                <span style="color:var(--text-muted); font-size:0.75rem;">-</span>
+                            @endif
+                        </td>
+                        <td class="td-center">
+                            @if($item->titik_order !== null && $item->titik_order !== '')
+                                <span class="badge-stock-titik">{{ $item->titik_order }}</span>
+                            @else
+                                <span style="color:var(--text-muted); font-size:0.75rem;">-</span>
+                            @endif
+                        </td>
+                        <td class="td-center">
+                            @if($item->max !== null && $item->max !== '')
+                                <span class="badge-stock-max">{{ $item->max }}</span>
+                            @else
+                                <span style="color:var(--text-muted); font-size:0.75rem;">-</span>
+                            @endif
+                        </td>
+                        <td class="td-center" style="vertical-align: middle;">
+                            @if($item->kategori_aset === 'ASET')
+                                <span class="badge-asset-yes">
+                                    <svg viewBox="0 0 24 24" width="11" height="11" stroke="currentColor" stroke-width="3" fill="none"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                                    ASET
+                                </span>
+                            @else
+                                <span class="badge-asset-no">NO ASET</span>
+                            @endif
+                        </td>
+                        <td class="td-center">
                             @if($item->is_b3)
-                                <svg viewBox="0 0 24 24" width="14" height="14" stroke="var(--color-success)" stroke-width="3" fill="none"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                                <div class="check-icon-b3" title="Bahan Berbahaya Beracun">
+                                    <svg viewBox="0 0 24 24" width="13" height="13" stroke="currentColor" stroke-width="3" fill="none"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                                </div>
                             @endif
                         </td>
-                        <td class="td-center" style="font-size:0.85rem;">
+                        <td class="td-center">
                             @if($item->is_non_b3)
-                                <svg viewBox="0 0 24 24" width="14" height="14" stroke="var(--color-success)" stroke-width="3" fill="none"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                                <div class="check-icon-b3" title="NON B3">
+                                    <svg viewBox="0 0 24 24" width="13" height="13" stroke="currentColor" stroke-width="3" fill="none"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                                </div>
                             @endif
                         </td>
                         <td class="td-center no-print">
@@ -349,7 +397,7 @@
                                   onsubmit="return confirm('Hapus data ini?')">
                                 @csrf
                                 @method('DELETE')
-                                <button type="submit" class="btn-icon-danger" title="Hapus">
+                                <button type="submit" class="btn-icon-danger" title="Hapus Barang Ini">
                                     <svg viewBox="0 0 24 24" width="14" height="14" stroke="currentColor" stroke-width="2.5" fill="none" stroke-linecap="round" stroke-linejoin="round">
                                         <polyline points="3 6 5 6 21 6"></polyline>
                                         <path d="M19 6l-1 14H6L5 6"></path>
@@ -429,8 +477,8 @@
                     @endforelse
 
                     {{-- Baris kosong sisa jika ada data tetapi kurang dari 13 --}}
-                    @if($formItems->count() > 0 && $formItems->count() < 13)
-                        @for($i = $formItems->count(); $i < 13; $i++)
+                    @if($currentFormItems->count() > 0 && $currentFormItems->count() < 13)
+                        @for($i = $currentFormItems->count(); $i < 13; $i++)
                         <tr class="{{ $i % 2 != 0 ? 'tr-even' : '' }}">
                             <td class="td-center td-no" style="color:#cbd5e1;">{{ $i + 1 }}</td>
                             <td class="td-input"></td>
@@ -494,7 +542,7 @@
             </div>
             <div>
                 <span style="font-size: 0.8rem; color: var(--text-muted); font-weight: 500; display: block; text-transform: uppercase; letter-spacing: 0.05em;">Total Checksheet</span>
-                <span style="font-size: 1.5rem; font-weight: 800; color: var(--text-primary);">4</span>
+                <span style="font-size: 1.5rem; font-weight: 800; color: var(--text-primary);" id="stat-total-checksheets">0</span>
             </div>
         </div>
         
@@ -507,7 +555,7 @@
             </div>
             <div>
                 <span style="font-size: 0.8rem; color: var(--text-muted); font-weight: 500; display: block; text-transform: uppercase; letter-spacing: 0.05em;">Selesai (Approved)</span>
-                <span style="font-size: 1.5rem; font-weight: 800; color: var(--text-primary);">2</span>
+                <span style="font-size: 1.5rem; font-weight: 800; color: var(--text-primary);" id="stat-approved-checksheets">0</span>
             </div>
         </div>
         
@@ -520,7 +568,7 @@
             </div>
             <div>
                 <span style="font-size: 0.8rem; color: var(--text-muted); font-weight: 500; display: block; text-transform: uppercase; letter-spacing: 0.05em;">Proses Approval</span>
-                <span style="font-size: 1.5rem; font-weight: 800; color: var(--text-primary);">1</span>
+                <span style="font-size: 1.5rem; font-weight: 800; color: var(--text-primary);" id="stat-process-checksheets">0</span>
             </div>
         </div>
     </div>
@@ -815,6 +863,7 @@
 
         <form action="{{ route('form-registrasi.store') }}" method="POST">
             @csrf
+            <input type="hidden" name="form_number" id="modal_form_number" value="{{ $currentFormNo }}">
 
             {{-- Row 1: Kode & Nama --}}
             <div style="display:grid; grid-template-columns:1fr 2fr; gap:1rem; margin-bottom:1rem;">
@@ -910,6 +959,12 @@
 @section('scripts')
 <script>
     function openModal(id) {
+        if (id === 'addItemModal') {
+            const hiddenFormNo = document.getElementById('modal_form_number');
+            if (hiddenFormNo) {
+                hiddenFormNo.value = selectedChecksheetId;
+            }
+        }
         document.getElementById(id).classList.add('show');
     }
     function closeModal(id) {
@@ -928,18 +983,87 @@
         });
     @endif
 
-    // TAB SYSTEM & MOCK DATA
+    // TAB SYSTEM & MULTI-FORM ENGINE
+    const serverFormItems = @json($formItems);
+    const urlFormParam = '{{ $activeFormNoParam ?? "" }}';
     const userTag = '{{ strtoupper(Auth::user()->department ?? Auth::user()->name ?? "PRODUCTION") }}';
     const monthYearStr = '{{ date("m-Y") }}';
-    const activeFormNo = `01/${userTag}/${monthYearStr}`;
+    const defaultFormNo = `01/${userTag}/${monthYearStr}`;
+    const activeFormNo = urlFormParam || defaultFormNo;
+
     let activeChecksheetHtml = '';
     let selectedChecksheetId = activeFormNo;
     let formCounter = 1;
 
+    const emptyTableHtml = `
+        <tr class="empty-state-row no-print">
+            <td colspan="14" style="padding: 0; border: none;">
+                <div class="empty-state-wrapper">
+                    <div class="empty-state-card">
+                        <div class="empty-state-icon-container">
+                            <svg viewBox="0 0 24 24" fill="none" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.6">
+                                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                                <polyline points="14 2 14 8 20 8"></polyline>
+                                <line x1="12" y1="18" x2="12" y2="12"></line>
+                                <line x1="9" y1="15" x2="15" y2="15"></line>
+                            </svg>
+                            <div class="empty-state-pulse"></div>
+                        </div>
+                        <div>
+                            <h4 class="empty-state-title">Belum Ada Data Barang Consumable</h4>
+                            <p class="empty-state-desc">Formulir pendaftaran ini masih kosong. Klik tombol di bawah atau gunakan tombol <strong>Tambah Data</strong> untuk mengisi lembar barang.</p>
+                        </div>
+                        <div class="empty-state-actions">
+                            <button type="button" class="empty-state-btn" onclick="openModal('addItemModal')">
+                                <svg viewBox="0 0 24 24" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                                    <line x1="12" y1="5" x2="12" y2="19"></line>
+                                    <line x1="5" y1="12" x2="19" y2="12"></line>
+                                </svg>
+                                + Tambah Data Pertama
+                            </button>
+                        </div>
+                        <div class="empty-state-pills">
+                            <div class="empty-state-pill">
+                                <svg viewBox="0 0 24 24" stroke="var(--color-success)" stroke-width="2.5" fill="none"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                                Kategori B3 / Non-B3
+                            </div>
+                            <div class="empty-state-pill">
+                                <svg viewBox="0 0 24 24" stroke="var(--color-primary)" stroke-width="2.5" fill="none"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path></svg>
+                                No. Form Otomatis
+                            </div>
+                            <div class="empty-state-pill">
+                                <svg viewBox="0 0 24 24" stroke="var(--color-warning)" stroke-width="2.5" fill="none"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
+                                Approval Real-time
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </td>
+        </tr>
+        ${Array.from({length: 13}, (_, p) => `
+            <tr class="print-only-row ${p % 2 !== 0 ? 'tr-even' : ''}">
+                <td class="td-center td-no" style="color:#cbd5e1;">${p + 1}</td>
+                <td class="td-input"></td>
+                <td class="td-input"></td>
+                <td class="td-input"></td>
+                <td class="td-input"></td>
+                <td class="td-input"></td>
+                <td class="td-input"></td>
+                <td class="td-input"></td>
+                <td class="td-input"></td>
+                <td class="td-input"></td>
+                <td class="td-input"></td>
+                <td class="td-input"></td>
+                <td class="td-input"></td>
+                <td class="td-input no-print"></td>
+            </tr>
+        `).join('')}
+    `;
+
     const checksheets = {
-        [activeFormNo]: {
-            docNo: 'No Doc : W1-CDS-PP-20/F1 Rev 2 &nbsp;|&nbsp; No. Form: <span style="font-weight:700; color:var(--color-primary);">' + activeFormNo + '</span>',
-            formNo: activeFormNo,
+        [defaultFormNo]: {
+            docNo: 'No Doc : W1-CDS-PP-20/F1 Rev 2 &nbsp;|&nbsp; No. Form: <span style="font-weight:700; color:var(--color-primary);">' + defaultFormNo + '</span>',
+            formNo: defaultFormNo,
             date: '{{ date("d-m-Y") }}',
             requestor: '{{ Auth::user()->name ?? "Production User" }} / {{ Auth::user()->department ?? "Production" }}',
             status: 'Draft',
@@ -958,7 +1082,7 @@
     };
 
     const stepperData = {
-        [activeFormNo]: {
+        [defaultFormNo]: {
             statusText: 'DRAFT',
             statusClass: 'badge-warning',
             steps: [
@@ -969,14 +1093,85 @@
         }
     };
 
+    // Populate checksheets dynamically from server database items
+    serverFormItems.forEach(item => {
+        const fNo = item.form_number || defaultFormNo;
+        
+        const parts = fNo.split('/');
+        if (parts.length > 0 && !isNaN(parseInt(parts[0]))) {
+            const num = parseInt(parts[0]);
+            if (num > formCounter) formCounter = num;
+        }
+
+        if (!checksheets[fNo]) {
+            checksheets[fNo] = {
+                docNo: 'No Doc : W1-CDS-PP-20/F1 Rev 2 &nbsp;|&nbsp; No. Form: <span style="font-weight:700; color:var(--color-primary);">' + fNo + '</span>',
+                formNo: fNo,
+                date: '{{ date("d-m-Y") }}',
+                requestor: '{{ Auth::user()->name ?? "Production User" }} / {{ Auth::user()->department ?? "Production" }}',
+                status: 'Draft',
+                items: [],
+                signatures: {
+                    dibuat: '{{ Auth::user()->name ?? "Production User" }} (Tgl: {{ date("d-m-Y") }})',
+                    diperiksa: '...................',
+                    disetujui: '...................'
+                },
+                comments: { user: 'Formulir pendaftaran barang consumable.', pemeriksa: '', warehouse: '' }
+            };
+
+            stepperData[fNo] = {
+                statusText: 'DRAFT',
+                statusClass: 'badge-warning',
+                steps: [
+                    { completed: true, active: false, details: '{{ Auth::user()->name ?? "Production User" }} - Production (Tanggal: {{ date("d-m-Y") }})', status: 'Selesai dibuat.', color: 'var(--color-success)' },
+                    { completed: false, active: true, details: 'Menunggu pemeriksaan Pemeriksa...', status: 'Pemeriksaan kelayakan.', color: 'var(--color-primary)' },
+                    { completed: false, active: false, details: 'Belum diisi.', status: 'Registrasi Warehouse.', color: 'var(--text-muted)' }
+                ]
+            };
+        }
+
+        checksheets[fNo].items.push({
+            no: checksheets[fNo].items.length + 1,
+            kode: item.kode_barang || '-',
+            nama: item.nama_barang,
+            harga: item.harga ? 'Rp ' + Number(item.harga).toLocaleString('id-ID') : '-',
+            usia: item.estimasi_usia_pakai ? item.estimasi_usia_pakai + ' Hari' : '-',
+            katPeng: item.kategori_penggunaan || '-',
+            katUk: item.kategori_ukuran || '-',
+            min: item.min || '-',
+            titik: item.titik_order || '-',
+            max: item.max || '-',
+            aset: item.kategori_aset || 'NO ASET',
+            b3: item.is_b3,
+            non_b3: item.is_non_b3
+        });
+    });
+
     function renderDataViewTable() {
         const tbody = document.getElementById('dataview-tbody');
         if (!tbody) return;
 
         let html = '';
         let no = 1;
+        let totalChecksheets = 0;
+        let approvedChecksheets = 0;
+        let processChecksheets = 0;
+
         for (const formNo in checksheets) {
             const cs = checksheets[formNo];
+
+            // Filter out empty checksheets (0 items) so they don't enter Data View
+            if (!cs.items || cs.items.length === 0) {
+                continue;
+            }
+
+            totalChecksheets++;
+            if (cs.status === 'Approved' || cs.status === 'Selesai') {
+                approvedChecksheets++;
+            } else {
+                processChecksheets++;
+            }
+
             let statusBg = 'var(--color-warning-light)';
             let statusColor = 'var(--color-warning)';
             if (cs.status === 'Approved' || cs.status === 'Selesai') {
@@ -987,7 +1182,7 @@
                 statusColor = 'rgb(29, 78, 216)';
             }
 
-            const itemCount = (formNo === activeFormNo) ? '{{ $formItems->count() }} Item' : (cs.items ? cs.items.length + ' Item' : '0 Item');
+            const itemCount = cs.items.length + ' Item';
 
             html += `
                 <tr>
@@ -1007,23 +1202,51 @@
             `;
             no++;
         }
-        tbody.innerHTML = html;
+
+        if (totalChecksheets === 0) {
+            tbody.innerHTML = `
+                <tr>
+                    <td colspan="7" style="padding: 0; border: none;">
+                        <div class="empty-state-wrapper" style="margin: 1.25rem 0;">
+                            <div class="empty-state-card" style="gap: 0.75rem;">
+                                <div class="empty-state-icon-container" style="width: 60px; height: 60px;">
+                                    <svg viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="currentColor" stroke-width="1.6">
+                                        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                                        <polyline points="14 2 14 8 20 8"></polyline>
+                                    </svg>
+                                </div>
+                                <h4 class="empty-state-title" style="font-size: 1rem;">Belum Ada Form Registrasi Berisi Data</h4>
+                                <p class="empty-state-desc" style="font-size: 0.8rem;">Formulir registrasi akan tampil secara otomatis di sini setelah Anda menambahkan item barang.</p>
+                            </div>
+                        </div>
+                    </td>
+                </tr>
+            `;
+        } else {
+            tbody.innerHTML = html;
+        }
+
+        const statTotal = document.getElementById('stat-total-checksheets');
+        if (statTotal) statTotal.innerText = totalChecksheets;
+
+        const statApproved = document.getElementById('stat-approved-checksheets');
+        if (statApproved) statApproved.innerText = approvedChecksheets;
+
+        const statProcess = document.getElementById('stat-process-checksheets');
+        if (statProcess) statProcess.innerText = processChecksheets;
     }
 
     document.addEventListener('DOMContentLoaded', function() {
-        // Save the active checksheet items HTML structure
         activeChecksheetHtml = document.getElementById('preview-table-body').innerHTML;
-        
-        // Render Data View Table dynamically
         renderDataViewTable();
-
-        // Initialize approval stepper view
         updateApprovalStepper(selectedChecksheetId);
-
-        // Initialize Account Master table view
         renderAccountTable();
+        updateTambahDataButtonVisibility();
 
-        // Check URL hash for sheet navigation
+        if (urlFormParam && urlFormParam !== defaultFormNo) {
+            viewChecksheet(urlFormParam);
+        }
+
         if (window.location.hash === '#account-master') {
             switchSheet('account-master');
         }
@@ -1079,7 +1302,26 @@
 
         // Switch to Print Preview & view this new form
         viewChecksheet(nextFormNo);
-        showToast(`Formulir Baru (${nextFormNo}) Berhasil Dibuat!`, 'success');
+
+        // Auto-open Tambah Data modal for instant 1-click form creation!
+        openModal('addItemModal');
+
+        showToast(`Formulir Baru (${nextFormNo}) Berhasil Dibuat! Silakan isi data barang.`, 'success');
+    }
+
+    function updateTambahDataButtonVisibility() {
+        const btnTambahData = document.getElementById('btn-tambah-data');
+        const finalizedPill = document.getElementById('form-finalized-pill');
+        const cs = checksheets[selectedChecksheetId];
+        const hasItems = cs && cs.items && cs.items.length > 0;
+        const isPrintPreview = document.getElementById('print-preview-pane') ? document.getElementById('print-preview-pane').classList.contains('active') : true;
+
+        if (btnTambahData) {
+            btnTambahData.style.display = (isPrintPreview && !hasItems) ? 'inline-flex' : 'none';
+        }
+        if (finalizedPill) {
+            finalizedPill.style.display = (isPrintPreview && hasItems) ? 'inline-flex' : 'none';
+        }
     }
 
     function switchSheet(tabId) {
@@ -1096,15 +1338,13 @@
         });
         if (matchingTab) matchingTab.classList.add('active');
 
-        const btnTambahData = document.getElementById('btn-tambah-data');
-        if (btnTambahData) {
-            btnTambahData.style.display = (tabId === 'print-preview' && selectedChecksheetId === activeFormNo) ? 'inline-flex' : 'none';
-        }
+        updateTambahDataButtonVisibility();
     }
 
     function viewChecksheet(csId) {
         selectedChecksheetId = csId;
         switchSheet('print-preview');
+        updateTambahDataButtonVisibility();
         
         const cs = checksheets[csId];
         if (!cs) return;
@@ -1137,32 +1377,40 @@
 
         const tbody = document.getElementById('preview-table-body');
         if (!cs.items || cs.items.length === 0) {
-            tbody.innerHTML = activeChecksheetHtml;
+            if (csId === activeFormNo) {
+                tbody.innerHTML = activeChecksheetHtml;
+            } else {
+                tbody.innerHTML = emptyTableHtml;
+            }
         } else {
             let rowsHtml = '';
             cs.items.forEach((item, index) => {
                 const isEven = index % 2 !== 0;
                 const rowClass = isEven ? 'tr-even' : '';
                 rowsHtml += `
-                    <tr class="${rowClass}">
+                    <tr class="data-row ${rowClass}">
                         <td class="td-center td-no">${item.no}</td>
-                        <td class="td-center" style="font-size:0.72rem; font-weight:600; color:var(--color-primary); padding:0 0.4rem;">${item.kode || '-'}</td>
-                        <td style="padding:0 0.6rem; font-weight:600; font-size:0.8rem;">${item.nama}</td>
-                        <td class="td-center" style="font-size:0.75rem;">${item.harga}</td>
-                        <td class="td-center" style="font-size:0.75rem;">${item.usia}</td>
-                        <td class="td-center" style="font-size:0.75rem;">${item.katPeng}</td>
-                        <td class="td-center" style="font-size:0.75rem;">${item.katUk}</td>
-                        <td class="td-center" style="font-size:0.75rem;">${item.min}</td>
-                        <td class="td-center" style="font-size:0.75rem;">${item.titik}</td>
-                        <td class="td-center" style="font-size:0.75rem;">${item.max}</td>
-                        <td class="td-center" style="font-size:0.75rem; vertical-align: middle;">
-                            <span style="background-color: #f1f5f9; color: var(--text-muted); padding: 0.2rem 0.5rem; border-radius: 4px; font-weight: 600; font-size: 0.7rem; display: inline-block;">${item.aset}</span>
+                        <td class="td-center" style="padding:0 0.4rem;">
+                            ${item.kode ? `<span class="item-code-badge">${item.kode}</span>` : '<span style="color:var(--text-muted); font-size:0.75rem;">-</span>'}
                         </td>
-                        <td class="td-center" style="font-size:0.85rem;">
-                            ${item.b3 ? `<svg viewBox="0 0 24 24" width="14" height="14" stroke="var(--color-success)" stroke-width="3" fill="none"><polyline points="20 6 9 17 4 12"></polyline></svg>` : ''}
+                        <td style="padding:0 0.6rem; font-weight:700; font-size:0.82rem; color:var(--text-primary);">${item.nama}</td>
+                        <td class="td-center">
+                            ${item.harga ? `<span class="item-price-tag">${item.harga}</span>` : '<span style="color:var(--text-muted); font-size:0.75rem;">-</span>'}
                         </td>
-                        <td class="td-center" style="font-size:0.85rem;">
-                            ${item.non_b3 ? `<svg viewBox="0 0 24 24" width="14" height="14" stroke="var(--color-success)" stroke-width="3" fill="none"><polyline points="20 6 9 17 4 12"></polyline></svg>` : ''}
+                        <td class="td-center" style="font-size:0.75rem; font-weight:600; color:var(--text-muted);">${item.usia || '-'}</td>
+                        <td class="td-center" style="font-size:0.75rem; font-weight:600;">${item.katPeng || '-'}</td>
+                        <td class="td-center" style="font-size:0.75rem; font-weight:600;">${item.katUk || '-'}</td>
+                        <td class="td-center">${item.min ? `<span class="badge-stock-min">${item.min}</span>` : '-'}</td>
+                        <td class="td-center">${item.titik ? `<span class="badge-stock-titik">${item.titik}</span>` : '-'}</td>
+                        <td class="td-center">${item.max ? `<span class="badge-stock-max">${item.max}</span>` : '-'}</td>
+                        <td class="td-center" style="vertical-align: middle;">
+                            ${item.aset === 'ASET' ? '<span class="badge-asset-yes"><svg viewBox="0 0 24 24" width="11" height="11" stroke="currentColor" stroke-width="3" fill="none"><polyline points="20 6 9 17 4 12"></polyline></svg> ASET</span>' : '<span class="badge-asset-no">NO ASET</span>'}
+                        </td>
+                        <td class="td-center">
+                            ${item.b3 ? `<div class="check-icon-b3" title="B3"><svg viewBox="0 0 24 24" width="13" height="13" stroke="currentColor" stroke-width="3" fill="none"><polyline points="20 6 9 17 4 12"></polyline></svg></div>` : ''}
+                        </td>
+                        <td class="td-center">
+                            ${item.non_b3 ? `<div class="check-icon-b3" title="NON B3"><svg viewBox="0 0 24 24" width="13" height="13" stroke="currentColor" stroke-width="3" fill="none"><polyline points="20 6 9 17 4 12"></polyline></svg></div>` : ''}
                         </td>
                         <td class="td-center no-print"></td>
                     </tr>

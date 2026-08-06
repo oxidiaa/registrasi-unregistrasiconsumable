@@ -7,6 +7,7 @@ use Illuminate\Database\Eloquent\Model;
 class FormItem extends Model
 {
     protected $fillable = [
+        'form_number',
         'kode_barang',
         'nama_barang',
         'harga',

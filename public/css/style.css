@@ -1437,6 +1437,229 @@ textarea.form-control {
     .print-only-row {
         display: table-row !important;
     }
+
+    /* Print overrides for badge tags & animations */
+    .item-code-badge,
+    .item-price-tag,
+    .badge-stock-min,
+    .badge-stock-titik,
+    .badge-stock-max,
+    .badge-asset-yes,
+    .badge-asset-no {
+        background: transparent !important;
+        border: none !important;
+        box-shadow: none !important;
+        color: #000000 !important;
+        padding: 0 !important;
+        font-size: 0.68rem !important;
+    }
+    
+    .form-reg-table tbody tr.data-row {
+        animation: none !important;
+    }
+}
+
+/* ==========================================================================
+   POPULATED DATA TABLE STYLING, ANIMATIONS & INTERACTION
+   ========================================================================== */
+
+/* Keyframe for staggered row entrance animation */
+@keyframes rowFadeSlideIn {
+    0% {
+        opacity: 0;
+        transform: translateY(12px);
+    }
+    100% {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Row entrance animation application */
+.form-reg-table tbody tr.data-row {
+    animation: rowFadeSlideIn 0.35s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+    transition: var(--transition-smooth);
+}
+
+/* Stagger animation delay for first 10 rows */
+.form-reg-table tbody tr.data-row:nth-child(1) { animation-delay: 0.04s; }
+.form-reg-table tbody tr.data-row:nth-child(2) { animation-delay: 0.08s; }
+.form-reg-table tbody tr.data-row:nth-child(3) { animation-delay: 0.12s; }
+.form-reg-table tbody tr.data-row:nth-child(4) { animation-delay: 0.16s; }
+.form-reg-table tbody tr.data-row:nth-child(5) { animation-delay: 0.20s; }
+.form-reg-table tbody tr.data-row:nth-child(6) { animation-delay: 0.24s; }
+.form-reg-table tbody tr.data-row:nth-child(7) { animation-delay: 0.28s; }
+.form-reg-table tbody tr.data-row:nth-child(8) { animation-delay: 0.32s; }
+.form-reg-table tbody tr.data-row:nth-child(9) { animation-delay: 0.36s; }
+.form-reg-table tbody tr.data-row:nth-child(10) { animation-delay: 0.40s; }
+
+/* Table Data Row Hover Styling */
+.form-reg-table tbody tr.data-row:hover {
+    background: linear-gradient(90deg, rgba(79, 70, 229, 0.06) 0%, rgba(99, 102, 241, 0.03) 100%) !important;
+    box-shadow: 0 4px 12px -2px rgba(79, 70, 229, 0.12);
+}
+
+.form-reg-table tbody tr.data-row:hover .td-no {
+    color: var(--color-primary) !important;
+    background: rgba(79, 70, 229, 0.12) !important;
+    font-weight: 800 !important;
+    transform: scale(1.08);
+    transition: var(--transition-smooth);
+}
+
+/* Stylish Item Code Pill Badge */
+.item-code-badge {
+    display: inline-block;
+    padding: 0.2rem 0.55rem;
+    font-family: 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, monospace;
+    font-size: 0.75rem;
+    font-weight: 700;
+    color: var(--color-primary);
+    background: linear-gradient(135deg, rgba(79, 70, 229, 0.1) 0%, rgba(99, 102, 241, 0.05) 100%);
+    border: 1px solid rgba(79, 70, 229, 0.25);
+    border-radius: 6px;
+    letter-spacing: 0.03em;
+    box-shadow: 0 1px 3px rgba(79, 70, 229, 0.08);
+    transition: var(--transition-smooth);
+}
+
+.item-code-badge:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 3px 8px rgba(79, 70, 229, 0.2);
+    border-color: var(--color-primary);
+}
+
+/* Stylish Price Tag Chip */
+.item-price-tag {
+    display: inline-block;
+    font-weight: 700;
+    font-size: 0.76rem;
+    color: #047857;
+    background: rgba(16, 185, 129, 0.1);
+    border: 1px solid rgba(16, 185, 129, 0.25);
+    padding: 0.2rem 0.55rem;
+    border-radius: 6px;
+    letter-spacing: -0.01em;
+}
+
+/* Stock Threshold Pills */
+.badge-stock-min {
+    background: rgba(59, 130, 246, 0.1);
+    color: #1d4ed8;
+    border: 1px solid rgba(59, 130, 246, 0.2);
+    padding: 0.15rem 0.45rem;
+    border-radius: 4px;
+    font-weight: 700;
+    font-size: 0.72rem;
+}
+
+.badge-stock-titik {
+    background: rgba(245, 158, 11, 0.12);
+    color: #b45309;
+    border: 1px solid rgba(245, 158, 11, 0.25);
+    padding: 0.15rem 0.45rem;
+    border-radius: 4px;
+    font-weight: 700;
+    font-size: 0.72rem;
+}
+
+.badge-stock-max {
+    background: rgba(168, 85, 247, 0.1);
+    color: #7e22ce;
+    border: 1px solid rgba(168, 85, 247, 0.2);
+    padding: 0.15rem 0.45rem;
+    border-radius: 4px;
+    font-weight: 700;
+    font-size: 0.72rem;
+}
+
+/* Asset Status Badges */
+.badge-asset-yes {
+    background: linear-gradient(135deg, rgba(16, 185, 129, 0.15) 0%, rgba(16, 185, 129, 0.08) 100%);
+    color: #059669;
+    border: 1px solid rgba(16, 185, 129, 0.3);
+    padding: 0.2rem 0.55rem;
+    border-radius: 6px;
+    font-weight: 800;
+    font-size: 0.7rem;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.25rem;
+}
+
+.badge-asset-no {
+    background: #f1f5f9;
+    color: var(--text-muted);
+    border: 1px solid #cbd5e1;
+    padding: 0.2rem 0.55rem;
+    border-radius: 6px;
+    font-weight: 600;
+    font-size: 0.7rem;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.25rem;
+}
+
+/* Category B3 / Non-B3 Check Icon Glow */
+.check-icon-b3 {
+    width: 22px;
+    height: 22px;
+    background: rgba(16, 185, 129, 0.15);
+    color: var(--color-success);
+    border-radius: 50%;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    transition: var(--transition-smooth);
+}
+
+.check-icon-b3:hover {
+    transform: scale(1.2);
+    background: var(--color-success);
+    color: #ffffff;
+    box-shadow: 0 3px 10px rgba(16, 185, 129, 0.4);
+}
+
+/* Delete Row Action Button */
+.btn-icon-danger {
+    width: 28px;
+    height: 28px;
+    border-radius: 8px;
+    border: 1px solid rgba(239, 68, 68, 0.2);
+    background: rgba(239, 68, 68, 0.08);
+    color: var(--color-danger);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: var(--transition-smooth);
+}
+
+.btn-icon-danger:hover {
+    background: var(--color-danger);
+    color: #ffffff;
+    border-color: var(--color-danger);
+    transform: scale(1.12) rotate(6deg);
+    box-shadow: 0 4px 12px rgba(239, 68, 68, 0.35);
+}
+
+/* Signature Stamp Spring Animation */
+@keyframes stampIn {
+    0% {
+        opacity: 0;
+        transform: scale(1.4) rotate(-5deg);
+    }
+    70% {
+        transform: scale(0.95) rotate(1deg);
+    }
+    100% {
+        opacity: 1;
+        transform: scale(1) rotate(0deg);
+    }
+}
+
+.sig-space div {
+    animation: stampIn 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) both;
 }
 
 /* ==========================================================================

@@ -134,11 +134,12 @@ class ItemController extends Controller
     /**
      * Display the Form Pendaftaran Barang Consumable page.
      */
-    public function formRegistrasi()
+    public function formRegistrasi(Request $request)
     {
         $formItems = FormItem::orderBy('created_at', 'asc')->get();
         $users = User::orderBy('id', 'asc')->get();
-        return view('form-registrasi', compact('formItems', 'users'));
+        $activeFormNoParam = $request->query('form');
+        return view('form-registrasi', compact('formItems', 'users', 'activeFormNoParam'));
     }
 
     /**
@@ -147,6 +148,7 @@ class ItemController extends Controller
     public function storeFormItem(Request $request)
     {
         $validated = $request->validate([
+            'form_number'        => 'nullable|string|max:100',
             'nama_barang'        => 'required|string|max:255',
             'kode_barang'        => 'nullable|string|max:100',
             'harga'              => 'nullable|numeric|min:0',
@@ -161,12 +163,15 @@ class ItemController extends Controller
             'is_non_b3'          => 'nullable|boolean',
         ]);
 
-        $validated['is_b3']    = $request->has('is_b3');
-        $validated['is_non_b3'] = $request->has('is_non_b3');
+        $validated['is_b3']     = $request->has('is_b3');
+        $validated['is_non_b3']  = $request->has('is_non_b3');
 
         FormItem::create($validated);
 
-        return redirect()->route('form-registrasi')
+        $targetForm = $request->input('form_number');
+        $redirectParams = $targetForm ? ['form' => $targetForm] : [];
+
+        return redirect()->route('form-registrasi', $redirectParams)
             ->with('success', 'Data barang "' . $validated['nama_barang'] . '" berhasil ditambahkan.');
     }
 
@@ -177,9 +182,12 @@ class ItemController extends Controller
     {
         $item = FormItem::findOrFail($id);
         $name = $item->nama_barang;
+        $targetForm = $item->form_number;
         $item->delete();
 
-        return redirect()->route('form-registrasi')
+        $redirectParams = $targetForm ? ['form' => $targetForm] : [];
+
+        return redirect()->route('form-registrasi', $redirectParams)
             ->with('success', 'Data "' . $name . '" berhasil dihapus.');
     }
 }
