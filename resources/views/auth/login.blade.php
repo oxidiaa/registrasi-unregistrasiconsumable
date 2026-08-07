@@ -42,6 +42,12 @@
             <!-- Scene Graphic Container -->
             <div class="characters-stage" id="charactersStage">
                 
+                <!-- Floor Shadows for Depth & Organic Grounding -->
+                <div class="char-shadow shadow-orange"></div>
+                <div class="char-shadow shadow-purple"></div>
+                <div class="char-shadow shadow-black"></div>
+                <div class="char-shadow shadow-yellow"></div>
+                
                 <!-- 1. Tall Purple Box Character -->
                 <div class="char-entity char-purple" id="charPurple">
                     <svg viewBox="0 0 140 280" width="140" height="280">
