@@ -3,20 +3,19 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Login | Consumable Registry</title>
+    <title>Log In | Consumable Registry</title>
     <link rel="stylesheet" href="{{ asset('css/style.css') }}">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 </head>
-<body class="login-body">
+<body class="login-page-body">
 
-    <!-- Decorative Background Glows -->
-    <div class="bg-glow-1" style="top: -50px; right: -50px;"></div>
-    <div class="bg-glow-2" style="bottom: -50px; left: -50px;"></div>
-
-    <!-- Toast Notification Container -->
+    <!-- Toast Notifications -->
     <div class="toast-container" id="toastContainer">
         @if(session('success'))
             <div class="toast success" role="alert">
-                <svg viewBox="0 0 24 24" width="24" height="24" stroke="#10b981" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                <svg viewBox="0 0 24 24" width="20" height="20" stroke="#10b981" stroke-width="2.5" fill="none" stroke-linecap="round" stroke-linejoin="round">
                     <polyline points="20 6 9 17 4 12"></polyline>
                 </svg>
                 <div class="toast-message">{{ session('success') }}</div>
@@ -25,7 +24,7 @@
 
         @if(session('error'))
             <div class="toast error" role="alert">
-                <svg viewBox="0 0 24 24" width="24" height="24" stroke="#ef4444" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                <svg viewBox="0 0 24 24" width="20" height="20" stroke="#ef4444" stroke-width="2.5" fill="none" stroke-linecap="round" stroke-linejoin="round">
                     <circle cx="12" cy="12" r="10"></circle>
                     <line x1="15" y1="9" x2="9" y2="15"></line>
                     <line x1="9" y1="9" x2="15" y2="15"></line>
@@ -35,330 +34,337 @@
         @endif
     </div>
 
-    <div class="login-container">
-        <!-- Interactive Animated Characters Header -->
-        <div class="login-characters-container" id="charactersContainer">
-            <!-- Character 1: Purple Bear -->
-            <div class="char-wrapper char-purple" id="charPurple">
-                <svg class="character-svg" viewBox="0 0 100 100" width="86" height="86">
-                    <defs>
-                        <linearGradient id="purpleGrad" x1="0" y1="0" x2="1" y2="1">
-                            <stop offset="0%" stop-color="#6366f1" />
-                            <stop offset="100%" stop-color="#4338ca" />
-                        </linearGradient>
-                    </defs>
-                    <!-- Ears -->
-                    <circle cx="22" cy="22" r="13" fill="url(#purpleGrad)" />
-                    <circle cx="22" cy="22" r="7" fill="#a5b4fc" />
-                    <circle cx="78" cy="22" r="13" fill="url(#purpleGrad)" />
-                    <circle cx="78" cy="22" r="7" fill="#a5b4fc" />
-                    <!-- Body / Head -->
-                    <rect x="12" y="18" width="76" height="76" rx="38" fill="url(#purpleGrad)" />
-                    <!-- Snout -->
-                    <ellipse cx="50" cy="56" rx="22" ry="16" fill="#e0e7ff" />
-                    <ellipse cx="50" cy="48" rx="5.5" ry="3.5" fill="#1e1b4b" />
-                    <path d="M 44 58 Q 50 64 56 58" fill="none" stroke="#1e1b4b" stroke-width="2.5" stroke-linecap="round" />
-                    <!-- Left Eye -->
-                    <g class="eye eye-left">
-                        <circle cx="34" cy="38" r="11" fill="#ffffff" />
-                        <g class="pupil-group">
-                            <circle class="pupil" cx="34" cy="38" r="4.8" fill="#1e1b4b" />
-                            <circle cx="35.8" cy="36.2" r="1.6" fill="#ffffff" />
-                        </g>
-                    </g>
-                    <!-- Right Eye -->
-                    <g class="eye eye-right">
-                        <circle cx="66" cy="38" r="11" fill="#ffffff" />
-                        <g class="pupil-group">
-                            <circle class="pupil" cx="66" cy="38" r="4.8" fill="#1e1b4b" />
-                            <circle cx="67.8" cy="36.2" r="1.6" fill="#ffffff" />
-                        </g>
-                    </g>
-                    <!-- Paws -->
-                    <g class="hand hand-left">
-                        <ellipse cx="22" cy="84" rx="12" ry="16" fill="url(#purpleGrad)" stroke="#4338ca" stroke-width="1.5" />
-                        <ellipse cx="22" cy="81" rx="6" ry="8" fill="#a5b4fc" opacity="0.7" />
-                    </g>
-                    <g class="hand hand-right">
-                        <ellipse cx="78" cy="84" rx="12" ry="16" fill="url(#purpleGrad)" stroke="#4338ca" stroke-width="1.5" />
-                        <ellipse cx="78" cy="81" rx="6" ry="8" fill="#a5b4fc" opacity="0.7" />
-                    </g>
-                </svg>
-            </div>
+    <!-- Main Split Login Container -->
+    <div class="login-split-wrapper">
 
-            <!-- Character 2: Orange Fox -->
-            <div class="char-wrapper char-orange" id="charOrange">
-                <svg class="character-svg" viewBox="0 0 100 100" width="86" height="86">
-                    <defs>
-                        <linearGradient id="orangeGrad" x1="0" y1="0" x2="1" y2="1">
-                            <stop offset="0%" stop-color="#f59e0b" />
-                            <stop offset="100%" stop-color="#ea580c" />
-                        </linearGradient>
-                    </defs>
-                    <!-- Pointed Ears -->
-                    <polygon points="12,38 30,8 42,38" fill="url(#orangeGrad)" />
-                    <polygon points="18,36 30,16 38,36" fill="#fde68a" />
-                    <polygon points="58,38 70,8 88,38" fill="url(#orangeGrad)" />
-                    <polygon points="62,36 70,16 82,36" fill="#fde68a" />
-                    <!-- Head -->
-                    <rect x="14" y="24" width="72" height="72" rx="36" fill="url(#orangeGrad)" />
-                    <!-- White Face Patch -->
-                    <path d="M 14 62 Q 50 82 86 62 Q 76 92 50 94 Q 24 92 14 62 Z" fill="#ffffff" />
-                    <ellipse cx="50" cy="56" rx="5" ry="3.5" fill="#451a03" />
-                    <!-- Blush -->
-                    <circle cx="26" cy="52" r="5" fill="#f87171" opacity="0.4" />
-                    <circle cx="74" cy="52" r="5" fill="#f87171" opacity="0.4" />
-                    <!-- Eyes -->
-                    <g class="eye eye-left">
-                        <circle cx="33" cy="42" r="10" fill="#ffffff" />
-                        <g class="pupil-group">
-                            <circle class="pupil" cx="33" cy="42" r="4.5" fill="#451a03" />
-                            <circle cx="34.5" cy="40.5" r="1.5" fill="#ffffff" />
+        <!-- Left Illustration Panel with Interactive Characters -->
+        <div class="login-illustration-panel" id="illustrationPanel">
+            <!-- Scene Graphic Container -->
+            <div class="characters-stage" id="charactersStage">
+                
+                <!-- 1. Tall Purple Box Character -->
+                <div class="char-entity char-purple" id="charPurple">
+                    <svg viewBox="0 0 140 280" width="140" height="280">
+                        <rect x="0" y="0" width="140" height="280" rx="16" fill="#5b13ec" />
+                        <!-- Normal Left Eye -->
+                        <g class="eye eye-left normal-eye">
+                            <circle cx="36" cy="48" r="13" fill="#ffffff" />
+                            <g class="pupil-group">
+                                <circle class="pupil" cx="36" cy="48" r="5.5" fill="#18181b" />
+                            </g>
                         </g>
-                    </g>
-                    <g class="eye eye-right">
-                        <circle cx="67" cy="42" r="10" fill="#ffffff" />
-                        <g class="pupil-group">
-                            <circle class="pupil" cx="67" cy="42" r="4.5" fill="#451a03" />
-                            <circle cx="68.5" cy="40.5" r="1.5" fill="#ffffff" />
+                        <!-- Normal Right Eye -->
+                        <g class="eye eye-right normal-eye">
+                            <circle cx="88" cy="48" r="13" fill="#ffffff" />
+                            <g class="pupil-group">
+                                <circle class="pupil" cx="88" cy="48" r="5.5" fill="#18181b" />
+                            </g>
                         </g>
-                    </g>
-                    <!-- Paws -->
-                    <g class="hand hand-left">
-                        <ellipse cx="22" cy="84" rx="12" ry="16" fill="url(#orangeGrad)" stroke="#c2410c" stroke-width="1.5" />
-                        <ellipse cx="22" cy="81" rx="6" ry="8" fill="#fde68a" opacity="0.7" />
-                    </g>
-                    <g class="hand hand-right">
-                        <ellipse cx="78" cy="84" rx="12" ry="16" fill="url(#orangeGrad)" stroke="#c2410c" stroke-width="1.5" />
-                        <ellipse cx="78" cy="81" rx="6" ry="8" fill="#fde68a" opacity="0.7" />
-                    </g>
-                </svg>
-            </div>
+                        <!-- Closed Eyes (Shown when password focused) -->
+                        <g class="closed-eyes">
+                            <path d="M 24 48 Q 36 38 48 48" fill="none" stroke="#18181b" stroke-width="4.5" stroke-linecap="round" />
+                            <path d="M 76 48 Q 88 38 100 48" fill="none" stroke="#18181b" stroke-width="4.5" stroke-linecap="round" />
+                        </g>
+                        <!-- Mouth -->
+                        <path class="mouth-open" d="M 54 72 Q 62 80 70 72" fill="none" stroke="#18181b" stroke-width="4" stroke-linecap="round" />
+                        <path class="mouth-surprised" d="M 62 72 A 5 5 0 1 1 62 71.9 Z" fill="#18181b" />
+                    </svg>
+                </div>
 
-            <!-- Character 3: Cyan Robot -->
-            <div class="char-wrapper char-cyan" id="charCyan">
-                <svg class="character-svg" viewBox="0 0 100 100" width="86" height="86">
-                    <defs>
-                        <linearGradient id="cyanGrad" x1="0" y1="0" x2="1" y2="1">
-                            <stop offset="0%" stop-color="#06b6d4" />
-                            <stop offset="100%" stop-color="#0284c7" />
-                        </linearGradient>
-                    </defs>
-                    <!-- Antenna -->
-                    <line x1="50" y1="20" x2="50" y2="8" stroke="#06b6d4" stroke-width="4" stroke-linecap="round" />
-                    <circle cx="50" cy="6" r="6" fill="#38bdf8" />
-                    <!-- Head -->
-                    <rect x="14" y="20" width="72" height="72" rx="24" fill="url(#cyanGrad)" />
-                    <!-- Screen Visor -->
-                    <rect x="22" y="28" width="56" height="42" rx="14" fill="#0f172a" opacity="0.85" />
-                    <!-- Eyes -->
-                    <g class="eye eye-left">
-                        <circle cx="35" cy="48" r="9" fill="#ffffff" />
-                        <g class="pupil-group">
-                            <circle class="pupil" cx="35" cy="48" r="4.2" fill="#0284c7" />
-                            <circle cx="36.5" cy="46.5" r="1.4" fill="#ffffff" />
+                <!-- 2. Black Box Character (Behind) -->
+                <div class="char-entity char-black" id="charBlack">
+                    <svg viewBox="0 0 100 200" width="100" height="200">
+                        <rect x="0" y="0" width="100" height="200" rx="8" fill="#18181b" />
+                        <!-- Normal Eyes -->
+                        <g class="eye eye-left normal-eye">
+                            <circle cx="28" cy="34" r="12" fill="#ffffff" />
+                            <g class="pupil-group">
+                                <circle class="pupil" cx="28" cy="34" r="5" fill="#18181b" />
+                            </g>
                         </g>
-                    </g>
-                    <g class="eye eye-right">
-                        <circle cx="65" cy="48" r="9" fill="#ffffff" />
-                        <g class="pupil-group">
-                            <circle class="pupil" cx="65" cy="48" r="4.2" fill="#0284c7" />
-                            <circle cx="66.5" cy="46.5" r="1.4" fill="#ffffff" />
+                        <g class="eye eye-right normal-eye">
+                            <circle cx="64" cy="34" r="12" fill="#ffffff" />
+                            <g class="pupil-group">
+                                <circle class="pupil" cx="64" cy="34" r="5" fill="#18181b" />
+                            </g>
                         </g>
-                    </g>
-                    <!-- Mouth Visor Line -->
-                    <line x1="42" y1="62" x2="58" y2="62" stroke="#38bdf8" stroke-width="2.5" stroke-linecap="round" opacity="0.8" />
-                    <!-- Paws/Hands -->
-                    <g class="hand hand-left">
-                        <ellipse cx="22" cy="84" rx="12" ry="16" fill="url(#cyanGrad)" stroke="#0369a1" stroke-width="1.5" />
-                        <ellipse cx="22" cy="81" rx="6" ry="8" fill="#7dd3fc" opacity="0.7" />
-                    </g>
-                    <g class="hand hand-right">
-                        <ellipse cx="78" cy="84" rx="12" ry="16" fill="url(#cyanGrad)" stroke="#0369a1" stroke-width="1.5" />
-                        <ellipse cx="78" cy="81" rx="6" ry="8" fill="#7dd3fc" opacity="0.7" />
-                    </g>
-                </svg>
+                        <!-- Closed Eyes -->
+                        <g class="closed-eyes">
+                            <path d="M 18 34 Q 28 26 38 34" fill="none" stroke="#ffffff" stroke-width="3.5" stroke-linecap="round" />
+                            <path d="M 54 34 Q 64 26 74 34" fill="none" stroke="#ffffff" stroke-width="3.5" stroke-linecap="round" />
+                        </g>
+                    </svg>
+                </div>
+
+                <!-- 3. Orange Dome Character (Foreground Left) -->
+                <div class="char-entity char-orange" id="charOrange">
+                    <svg viewBox="0 0 220 145" width="220" height="145">
+                        <!-- Dome Shape -->
+                        <path d="M 0 145 C 0 50 45 0 110 0 C 175 0 220 50 220 145 Z" fill="#f95726" />
+                        <!-- Left Eye -->
+                        <g class="eye eye-left">
+                            <circle class="pupil" cx="72" cy="74" r="7" fill="#18181b" />
+                        </g>
+                        <!-- Right Eye -->
+                        <g class="eye eye-right">
+                            <circle class="pupil" cx="132" cy="74" r="7" fill="#18181b" />
+                        </g>
+                        <!-- Happy Smile Mouth -->
+                        <path class="mouth-smile" d="M 94 92 Q 102 102 110 92" fill="none" stroke="#18181b" stroke-width="4.5" stroke-linecap="round" />
+                        <path class="mouth-gasp" d="M 102 94 A 6 6 0 1 1 102 93.9 Z" fill="#18181b" />
+                        
+                        <!-- Paws (Slide up on password focus) -->
+                        <g class="char-paws">
+                            <ellipse class="paw paw-left" cx="62" cy="140" rx="20" ry="24" fill="#f95726" stroke="#18181b" stroke-width="3" />
+                            <ellipse class="paw paw-right" cx="142" cy="140" rx="20" ry="24" fill="#f95726" stroke="#18181b" stroke-width="3" />
+                        </g>
+                    </svg>
+                </div>
+
+                <!-- 4. Yellow Arch Capsule Character (Right) -->
+                <div class="char-entity char-yellow" id="charYellow">
+                    <svg viewBox="0 0 110 180" width="110" height="180">
+                        <!-- Arch Capsule Shape -->
+                        <path d="M 0 180 L 0 55 C 0 22 25 0 55 0 C 85 0 110 22 110 55 L 110 180 Z" fill="#ffd600" />
+                        <!-- Dot Eye -->
+                        <circle class="pupil" cx="42" cy="52" r="5.5" fill="#18181b" />
+                        <!-- Protruding Line Mouth -->
+                        <line class="mouth-line" x1="8" y1="84" x2="48" y2="84" stroke="#18181b" stroke-width="6" stroke-linecap="round" />
+                    </svg>
+                </div>
+
             </div>
         </div>
 
-        <div class="login-card">
-            <div class="login-header-logo">
-                <svg viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round">
-                    <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path>
-                    <polyline points="3.27 6.96 12 12.01 20.73 6.96"></polyline>
-                    <line x1="12" y1="22.08" x2="12" y2="12"></line>
-                </svg>
-            </div>
-            
-            <h2>Masuk Sistem</h2>
-            <p>Silakan masuk menggunakan akun administrator Anda.</p>
-
-            <form action="{{ url('/login') }}" method="POST">
-                @csrf
-                <div class="form-group" style="text-align: left;">
-                    <label for="username">Username</label>
-                    <input type="text" id="username" name="username" class="form-control @error('username') is-invalid @enderror" placeholder="admin" value="{{ old('username') }}" required autofocus>
-                    @error('username')
-                        <div class="error-text">{{ $message }}</div>
-                    @enderror
+        <!-- Right Form Panel -->
+        <div class="login-form-panel">
+            <div class="login-form-content">
+                
+                <!-- Sparkle Accent Icon -->
+                <div class="sparkle-logo">
+                    <svg viewBox="0 0 40 40" width="36" height="36" fill="#18181b">
+                        <path d="M 20 0 C 20 11 29 20 40 20 C 29 20 20 29 20 40 C 20 29 11 20 0 20 C 11 20 20 11 20 0 Z" />
+                    </svg>
                 </div>
 
-                <div class="form-group" style="text-align: left;">
-                    <label for="password">Password</label>
-                    <div class="password-input-wrapper">
-                        <input type="password" id="password" name="password" class="form-control @error('password') is-invalid @enderror" placeholder="••••••••" required>
-                        <button type="button" class="btn-toggle-password" id="togglePasswordBtn" title="Tampilkan/Sembunyikan Password" tabindex="-1">
-                            <svg class="icon-eye-open" viewBox="0 0 24 24" width="18" height="18" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round">
-                                <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
-                                <circle cx="12" cy="12" r="3"></circle>
-                            </svg>
-                            <svg class="icon-eye-closed d-none" viewBox="0 0 24 24" width="18" height="18" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round">
-                                <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path>
-                                <line x1="1" y1="1" x2="23" y2="23"></line>
-                            </svg>
-                        </button>
+                <h1 class="welcome-heading">Welcome back!</h1>
+                <p class="welcome-subtitle">Please enter your details</p>
+
+                <form action="{{ url('/login') }}" method="POST" id="loginForm">
+                    @csrf
+
+                    <!-- Email / Username Field -->
+                    <div class="form-group-clean">
+                        <label for="username">Email</label>
+                        <input 
+                            type="text" 
+                            id="username" 
+                            name="username" 
+                            class="input-clean @error('username') is-invalid @enderror" 
+                            value="{{ old('username') }}" 
+                            required 
+                            autofocus 
+                            autocomplete="username"
+                        >
+                        @error('username')
+                            <div class="field-error-msg">{{ $message }}</div>
+                        @enderror
                     </div>
-                    @error('password')
-                        <div class="error-text">{{ $message }}</div>
-                    @enderror
-                </div>
 
-                <div class="form-check">
-                    <input type="checkbox" id="remember" name="remember" class="form-check-input" {{ old('remember') ? 'checked' : '' }}>
-                    <label for="remember">Ingat Saya</label>
-                </div>
+                    <!-- Password Field -->
+                    <div class="form-group-clean">
+                        <label for="password">Password</label>
+                        <div class="password-field-wrapper">
+                            <input 
+                                type="password" 
+                                id="password" 
+                                name="password" 
+                                class="input-clean @error('password') is-invalid @enderror" 
+                                required
+                                autocomplete="current-password"
+                            >
+                            <button type="button" class="btn-toggle-eye" id="togglePasswordBtn" title="Toggle password visibility" tabindex="-1">
+                                <!-- Eye Open Icon -->
+                                <svg class="icon-eye-open" viewBox="0 0 24 24" width="20" height="20" stroke="#18181b" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                                    <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+                                    <circle cx="12" cy="12" r="3" fill="#18181b"></circle>
+                                </svg>
+                                <!-- Eye Closed Icon -->
+                                <svg class="icon-eye-closed d-none" viewBox="0 0 24 24" width="20" height="20" stroke="#18181b" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                                    <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path>
+                                    <line x1="1" y1="1" x2="23" y2="23"></line>
+                                </svg>
+                            </button>
+                        </div>
+                        @error('password')
+                            <div class="field-error-msg">{{ $message }}</div>
+                        @enderror
+                    </div>
 
-                <button type="submit" class="btn btn-primary" style="width: 100%;">
-                    Masuk
-                </button>
-            </form>
+                    <!-- Form Options Row -->
+                    <div class="form-options-row">
+                        <label class="remember-label">
+                            <input type="checkbox" id="remember" name="remember" class="custom-checkbox" {{ old('remember') ? 'checked' : '' }}>
+                            <span class="checkbox-text">Remember me for 30 days</span>
+                        </label>
+                        <a href="#" class="forgot-link" onclick="event.preventDefault(); alert('Silakan hubungi Administrator untuk reset password.');">Forgot password?</a>
+                    </div>
+
+                    <!-- Submit Button -->
+                    <button type="submit" class="btn-login-pill">
+                        Log In
+                    </button>
+                </form>
+
+            </div>
         </div>
+
     </div>
 
+    <!-- JavaScript Interactive Logic -->
     <script>
         document.addEventListener('DOMContentLoaded', function () {
-            // Toast Notification Timer
+            // Auto dismiss toast notifications
             const toasts = document.querySelectorAll('.toast');
             toasts.forEach(toast => {
-                setTimeout(() => {
-                    toast.classList.add('show');
-                }, 100);
-
+                setTimeout(() => toast.classList.add('show'), 100);
                 setTimeout(() => {
                     toast.classList.remove('show');
-                    setTimeout(() => {
-                        toast.remove();
-                    }, 350);
+                    setTimeout(() => toast.remove(), 350);
                 }, 5000);
             });
 
-            // Character Eye Tracking & Form Interactive Behavior
-            const container = document.getElementById('charactersContainer');
-            const charWrappers = document.querySelectorAll('.char-wrapper');
-            const eyes = document.querySelectorAll('.eye');
+            // Interactive Character Reactions & Body Parallax
+            const stage = document.getElementById('charactersStage');
+            const charEntities = document.querySelectorAll('.char-entity');
+            const pupils = document.querySelectorAll('.pupil');
             const usernameInput = document.getElementById('username');
             const passwordInput = document.getElementById('password');
             const togglePasswordBtn = document.getElementById('togglePasswordBtn');
 
-            if (container && eyes.length > 0) {
-                // Mouse Movement Tracking for Eyes & 3D Head Parallax
-                window.addEventListener('mousemove', function (e) {
-                    const isPasswordCovered = container.classList.contains('password-active') && !container.classList.contains('password-peek');
+            let keyBounceTimer = null;
 
-                    eyes.forEach(eye => {
-                        const pupilGroup = eye.querySelector('.pupil-group');
-                        if (!pupilGroup) return;
+            // Mouse Movement for Eyes & Body Parallax Leaning
+            window.addEventListener('mousemove', function (e) {
+                const stageRect = stage.getBoundingClientRect();
+                const stageCenterX = stageRect.left + stageRect.width / 2;
+                const stageCenterY = stageRect.top + stageRect.height / 2;
 
-                        if (isPasswordCovered) {
-                            pupilGroup.style.transform = 'translate(0px, 0px)';
-                            return;
-                        }
+                const mouseX = e.clientX;
+                const mouseY = e.clientY;
 
-                        const rect = eye.getBoundingClientRect();
-                        const eyeCenterX = rect.left + rect.width / 2;
-                        const eyeCenterY = rect.top + rect.height / 2;
+                // Parallax shift for body entities
+                const offsetX = (mouseX - stageCenterX) / 35;
+                const offsetY = (mouseY - stageCenterY) / 35;
 
-                        const deltaX = e.clientX - eyeCenterX;
-                        const deltaY = e.clientY - eyeCenterY;
-                        const angle = Math.atan2(deltaY, deltaX);
+                charEntities.forEach(char => {
+                    let factor = 1;
+                    if (char.classList.contains('char-purple')) factor = 1.2;
+                    else if (char.classList.contains('char-orange')) factor = 0.8;
+                    else if (char.classList.contains('char-black')) factor = 1.4;
+                    else if (char.classList.contains('char-yellow')) factor = 0.9;
 
-                        const distance = Math.hypot(deltaX, deltaY);
-                        const maxMove = 4.5;
-                        const moveDist = Math.min(distance / 25, maxMove);
+                    const shiftX = offsetX * factor;
+                    const shiftY = offsetY * factor;
+                    const tilt = Math.max(-6, Math.min(6, shiftX * 0.8));
 
-                        const pupilX = Math.cos(angle) * moveDist;
-                        const pupilY = Math.sin(angle) * moveDist;
-
-                        pupilGroup.style.transform = `translate(${pupilX}px, ${pupilY}px)`;
-                    });
-
-                    charWrappers.forEach(wrapper => {
-                        const rect = wrapper.getBoundingClientRect();
-                        const charX = rect.left + rect.width / 2;
-                        const charY = rect.top + rect.height / 2;
-                        const tiltX = Math.max(-8, Math.min(8, (e.clientX - charX) / 45));
-                        const tiltY = Math.max(-5, Math.min(5, (e.clientY - charY) / 45));
-                        
-                        const svg = wrapper.querySelector('.character-svg');
-                        if (svg) {
-                            svg.style.transform = `rotate(${tiltX * 0.4}deg) translate(${tiltX}px, ${tiltY}px)`;
-                        }
-                    });
+                    char.style.setProperty('--shift-x', `${shiftX}px`);
+                    char.style.setProperty('--shift-y', `${shiftY}px`);
+                    char.style.setProperty('--tilt-deg', `${tilt}deg`);
                 });
 
-                // Username Focus State
-                if (usernameInput) {
-                    usernameInput.addEventListener('focus', () => {
-                        container.classList.add('username-active');
-                    });
-                    usernameInput.addEventListener('blur', () => {
-                        container.classList.remove('username-active');
-                    });
+                // Eye Pupil Tracking
+                if (stage.classList.contains('password-focused') && !stage.classList.contains('password-peeking')) {
+                    pupils.forEach(pupil => pupil.style.transform = 'translate(0px, 0px)');
+                    return;
                 }
 
-                // Password Focus State (Characters Cover Eyes)
-                if (passwordInput) {
-                    passwordInput.addEventListener('focus', () => {
-                        container.classList.add('password-active');
-                    });
-                    passwordInput.addEventListener('blur', () => {
-                        container.classList.remove('password-active');
-                        container.classList.remove('password-peek');
-                        if (togglePasswordBtn) {
-                            const iconOpen = togglePasswordBtn.querySelector('.icon-eye-open');
-                            const iconClosed = togglePasswordBtn.querySelector('.icon-eye-closed');
-                            if (iconOpen && iconClosed) {
-                                iconOpen.classList.remove('d-none');
-                                iconClosed.classList.add('d-none');
-                            }
-                            passwordInput.type = 'password';
-                        }
-                    });
-                }
+                pupils.forEach(pupil => {
+                    const rect = pupil.getBoundingClientRect();
+                    const pupilX = rect.left + rect.width / 2;
+                    const pupilY = rect.top + rect.height / 2;
 
-                // Toggle Password Visibility (Peek State)
-                if (togglePasswordBtn && passwordInput) {
-                    togglePasswordBtn.addEventListener('click', (e) => {
-                        e.preventDefault();
+                    const deltaX = mouseX - pupilX;
+                    const deltaY = mouseY - pupilY;
+                    const angle = Math.atan2(deltaY, deltaX);
+                    const distance = Math.hypot(deltaX, deltaY);
+
+                    const maxMove = 5.5;
+                    const moveDist = Math.min(distance / 25, maxMove);
+
+                    const moveX = Math.cos(angle) * moveDist;
+                    const moveY = Math.sin(angle) * moveDist;
+
+                    pupil.style.transform = `translate(${moveX}px, ${moveY}px)`;
+                });
+            });
+
+            // Focus on Username/Email Field -> Characters lean towards input
+            if (usernameInput) {
+                usernameInput.addEventListener('focus', () => {
+                    stage.classList.add('username-focused');
+                });
+                usernameInput.addEventListener('blur', () => {
+                    stage.classList.remove('username-focused');
+                });
+            }
+
+            // Focus on Password Field -> Cover eyes & tilt bodies dramatically
+            if (passwordInput) {
+                passwordInput.addEventListener('focus', () => {
+                    stage.classList.add('password-focused');
+                });
+
+                passwordInput.addEventListener('input', () => {
+                    // Trigger dynamic bounce pop on keystrokes
+                    stage.classList.add('keystroke-bounce');
+                    clearTimeout(keyBounceTimer);
+                    keyBounceTimer = setTimeout(() => {
+                        stage.classList.remove('keystroke-bounce');
+                    }, 140);
+                });
+
+                passwordInput.addEventListener('blur', () => {
+                    stage.classList.remove('password-focused');
+                    stage.classList.remove('password-peeking');
+                    stage.classList.remove('keystroke-bounce');
+                    if (togglePasswordBtn) {
                         const iconOpen = togglePasswordBtn.querySelector('.icon-eye-open');
                         const iconClosed = togglePasswordBtn.querySelector('.icon-eye-closed');
-
-                        if (passwordInput.type === 'password') {
-                            passwordInput.type = 'text';
-                            container.classList.add('password-peek');
-                            if (iconOpen) iconOpen.classList.add('d-none');
-                            if (iconClosed) iconClosed.classList.remove('d-none');
-                        } else {
-                            passwordInput.type = 'password';
-                            container.classList.remove('password-peek');
-                            if (iconOpen) iconOpen.classList.remove('d-none');
-                            if (iconClosed) iconClosed.classList.add('d-none');
+                        if (iconOpen && iconClosed) {
+                            iconOpen.classList.remove('d-none');
+                            iconClosed.classList.add('d-none');
                         }
-                    });
-                }
+                        passwordInput.type = 'password';
+                    }
+                });
+            }
+
+            // Toggle Password Peek state
+            if (togglePasswordBtn && passwordInput) {
+                togglePasswordBtn.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    const iconOpen = togglePasswordBtn.querySelector('.icon-eye-open');
+                    const iconClosed = togglePasswordBtn.querySelector('.icon-eye-closed');
+
+                    if (passwordInput.type === 'password') {
+                        passwordInput.type = 'text';
+                        stage.classList.add('password-peeking');
+                        if (iconOpen) iconOpen.classList.add('d-none');
+                        if (iconClosed) iconClosed.classList.remove('d-none');
+                    } else {
+                        passwordInput.type = 'password';
+                        stage.classList.remove('password-peeking');
+                        if (iconOpen) iconOpen.classList.remove('d-none');
+                        if (iconClosed) iconClosed.classList.add('d-none');
+                    }
+                });
             }
         });
     </script>
 </body>
 </html>
+</body>
+</html>
+
 

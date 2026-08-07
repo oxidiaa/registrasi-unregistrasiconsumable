@@ -785,277 +785,461 @@ textarea.form-control {
 }
 
 /* Login Page Specific Styling */
-/* Login Page Specific Styling */
-.login-body {
-    background-color: var(--bg-primary);
+/* ================================================================
+   NEW SPLIT LOGIN PAGE & ANIMATED CHARACTERS SYSTEM
+   ================================================================ */
+.login-page-body {
+    background-color: #ffffff;
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    color: #18181b;
     min-height: 100vh;
     width: 100vw;
+    margin: 0;
+    padding: 0;
+    overflow-x: hidden;
+}
+
+.login-split-wrapper {
     display: flex;
-    justify-content: center;
+    min-height: 100vh;
+    width: 100vw;
+}
+
+/* Left Illustration Panel - Centered Vertically & Horizontally */
+.login-illustration-panel {
+    flex: 1;
+    background-color: #ffffff;
+    display: flex;
     align-items: center;
+    justify-content: center;
     position: relative;
+    padding: 3rem 2rem;
+    user-select: none;
     overflow: hidden;
+    border-right: 1px solid #f4f4f5;
 }
 
-.login-container {
-    width: 100%;
-    max-width: 440px;
-    padding: 1.5rem;
-    z-index: 10;
-    position: relative;
-}
-
-/* ================================================================
-   ANIMATED LOGIN CHARACTERS SYSTEM
-   ================================================================ */
-.login-characters-container {
+/* Stage containing all 4 characters centered */
+.characters-stage {
     display: flex;
-    justify-content: space-between;
     align-items: flex-end;
+    justify-content: center;
+    position: relative;
     width: 100%;
-    max-width: 380px;
-    margin: 0 auto -28px auto;
-    padding: 0 15px;
-    position: relative;
-    z-index: 25;
-    pointer-events: none;
+    max-width: 420px;
+    height: 320px;
 }
 
-.char-wrapper {
-    position: relative;
-    transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+.char-entity {
+    position: absolute;
+    bottom: 0;
+    transform-origin: bottom center;
     will-change: transform;
-}
-
-.character-svg {
-    display: block;
-    overflow: visible;
     transition: transform 0.15s ease-out;
-    filter: drop-shadow(0 10px 16px rgba(15, 23, 42, 0.15));
 }
 
-.pupil-group {
-    transition: transform 0.08s ease-out;
-    will-change: transform;
-}
-
-/* Character Idle Floating Animations */
+/* Purple Character */
 .char-purple {
-    animation: charFloat1 4s ease-in-out infinite;
+    left: 80px;
+    z-index: 10;
+    animation: purpleBreathe 3.8s ease-in-out infinite;
 }
 
+@keyframes purpleBreathe {
+    0%, 100% { 
+        transform: translate(var(--shift-x, 0px), var(--shift-y, 0px)) rotate(var(--tilt-deg, 0deg)) scale(1, 1); 
+    }
+    50% { 
+        transform: translate(var(--shift-x, 0px), calc(var(--shift-y, 0px) - 10px)) rotate(calc(var(--tilt-deg, 0deg) - 1.5deg)) scale(0.98, 1.02); 
+    }
+}
+
+/* Black Character (Behind Purple & Yellow) */
+.char-black {
+    left: 200px;
+    z-index: 5;
+    animation: blackBreathe 4.2s ease-in-out infinite 0.5s;
+}
+
+@keyframes blackBreathe {
+    0%, 100% { 
+        transform: translate(var(--shift-x, 0px), var(--shift-y, 0px)) rotate(var(--tilt-deg, 0deg)) scale(1, 1); 
+    }
+    50% { 
+        transform: translate(var(--shift-x, 0px), calc(var(--shift-y, 0px) - 8px)) rotate(calc(var(--tilt-deg, 0deg) - 2deg)) scale(0.99, 1.01); 
+    }
+}
+
+/* Orange Dome Character (Foreground Left) */
 .char-orange {
-    animation: charFloat2 3.6s ease-in-out infinite 0.4s;
+    left: 0px;
+    z-index: 20;
+    animation: orangeBreathe 3.4s ease-in-out infinite 0.2s;
 }
 
-.char-cyan {
-    animation: charFloat3 4.2s ease-in-out infinite 0.8s;
+@keyframes orangeBreathe {
+    0%, 100% { 
+        transform: translate(var(--shift-x, 0px), var(--shift-y, 0px)) rotate(var(--tilt-deg, 0deg)) scale(1, 1); 
+    }
+    50% { 
+        transform: translate(var(--shift-x, 0px), calc(var(--shift-y, 0px) - 12px)) rotate(calc(var(--tilt-deg, 0deg) + 2deg)) scale(1.02, 0.98); 
+    }
 }
 
-@keyframes charFloat1 {
-    0%, 100% { transform: translateY(0); }
-    50% { transform: translateY(-4px); }
+/* Yellow Arch Capsule Character (Right) */
+.char-yellow {
+    left: 270px;
+    z-index: 15;
+    animation: yellowBreathe 4.0s ease-in-out infinite 0.7s;
 }
 
-@keyframes charFloat2 {
-    0%, 100% { transform: translateY(0); }
-    50% { transform: translateY(-6px); }
+@keyframes yellowBreathe {
+    0%, 100% { 
+        transform: translate(var(--shift-x, 0px), var(--shift-y, 0px)) rotate(var(--tilt-deg, 0deg)) scale(1, 1); 
+    }
+    50% { 
+        transform: translate(var(--shift-x, 0px), calc(var(--shift-y, 0px) - 11px)) rotate(calc(var(--tilt-deg, 0deg) + 1.5deg)) scale(1.01, 0.99); 
+    }
 }
 
-@keyframes charFloat3 {
-    0%, 100% { transform: translateY(0); }
-    50% { transform: translateY(-5px); }
+/* Pupil transition */
+.pupil {
+    transition: transform 0.15s cubic-bezier(0.2, 0, 0.2, 1);
 }
 
-/* Paw / Hand animations for password hide/peek */
-.hand {
-    transition: transform 0.38s cubic-bezier(0.34, 1.56, 0.64, 1);
+/* Base transitions for character entities & paws */
+.char-entity {
+    transition: transform 0.55s cubic-bezier(0.34, 1.25, 0.64, 1);
+}
+
+.char-paws {
+    transition: transform 0.5s cubic-bezier(0.34, 1.35, 0.64, 1);
+    transform-origin: bottom center;
+}
+
+.paw {
+    transition: transform 0.5s cubic-bezier(0.34, 1.35, 0.64, 1);
+}
+
+/* Smooth opacity and scale transition for SVG facial features */
+.normal-eye, 
+.closed-eyes, 
+.mouth-open, 
+.mouth-surprised, 
+.mouth-smile, 
+.mouth-gasp {
+    transition: opacity 0.45s cubic-bezier(0.4, 0, 0.2, 1), transform 0.45s cubic-bezier(0.34, 1.2, 0.64, 1);
     transform-origin: center center;
 }
 
-/* Default state: paws resting at bottom */
-.hand-left {
-    transform: translate(0, 0) rotate(0deg);
+.closed-eyes, 
+.mouth-surprised, 
+.mouth-gasp {
+    opacity: 0;
+    transform: scale(0.7);
+    pointer-events: none;
 }
 
-.hand-right {
-    transform: translate(0, 0) rotate(0deg);
+.normal-eye, 
+.mouth-open, 
+.mouth-smile {
+    opacity: 1;
+    transform: scale(1);
 }
 
-/* Password Field Focused: Cover Eyes Completely */
-.password-active .char-purple .hand-left {
-    transform: translate(12px, -46px) rotate(14deg);
+/* ================================================================
+   ULTRA-SMOOTH PASSWORD FOCUS & KEYSTROKE ANIMATIONS
+   ================================================================ */
+
+.password-focused .char-purple {
+    transform: translate(var(--shift-x, 0px), calc(var(--shift-y, 0px) + 12px)) rotate(calc(var(--tilt-deg, 0deg) + 10deg)) scale(0.95) !important;
 }
 
-.password-active .char-purple .hand-right {
-    transform: translate(-12px, -46px) rotate(-14deg);
+.password-focused .char-purple .normal-eye,
+.password-focused .char-purple .mouth-open {
+    opacity: 0;
+    transform: scale(0.7);
 }
 
-.password-active .char-orange .hand-left {
-    transform: translate(11px, -42px) rotate(16deg);
+.password-focused .char-purple .closed-eyes,
+.password-focused .char-purple .mouth-surprised {
+    opacity: 1;
+    transform: scale(1);
 }
 
-.password-active .char-orange .hand-right {
-    transform: translate(-11px, -42px) rotate(-16deg);
+.password-focused .char-black {
+    transform: translate(var(--shift-x, 0px), calc(var(--shift-y, 0px) + 32px)) rotate(calc(var(--tilt-deg, 0deg) - 8deg)) scale(0.93) !important;
 }
 
-.password-active .char-cyan .hand-left {
-    transform: translate(13px, -36px) rotate(12deg);
+.password-focused .char-black .normal-eye {
+    opacity: 0;
+    transform: scale(0.7);
 }
 
-.password-active .char-cyan .hand-right {
-    transform: translate(-13px, -36px) rotate(-12deg);
+.password-focused .char-black .closed-eyes {
+    opacity: 1;
+    transform: scale(1);
+}
+
+.password-focused .char-orange {
+    transform: translate(var(--shift-x, 0px), calc(var(--shift-y, 0px) - 2px)) rotate(calc(var(--tilt-deg, 0deg) - 8deg)) scale(0.92) !important;
+}
+
+.password-focused .char-orange .mouth-smile {
+    opacity: 0;
+    transform: scale(0.7);
+}
+
+.password-focused .char-orange .mouth-gasp {
+    opacity: 1;
+    transform: scale(1);
+}
+
+.password-focused .char-orange .paw-left {
+    transform: translateY(-78px) translateX(12px) rotate(16deg) !important;
+}
+
+.password-focused .char-orange .paw-right {
+    transform: translateY(-78px) translateX(-12px) rotate(-16deg) !important;
+}
+
+.password-focused .char-yellow {
+    transform: translate(var(--shift-x, 0px), calc(var(--shift-y, 0px) + 14px)) rotate(calc(var(--tilt-deg, 0deg) - 14deg)) scale(0.95) !important;
 }
 
 /* Password Peek State (When Show Password toggle is active) */
-.password-peek .char-purple .hand-left {
-    transform: translate(3px, -38px) rotate(42deg);
+.password-peeking .char-purple .normal-eye,
+.password-peeking .char-black .normal-eye {
+    opacity: 1;
+    transform: scale(1);
 }
 
-.password-peek .char-purple .hand-right {
-    transform: translate(-3px, -38px) rotate(-42deg);
+.password-peeking .char-purple .closed-eyes,
+.password-peeking .char-black .closed-eyes {
+    opacity: 0;
+    transform: scale(0.7);
 }
 
-.password-peek .char-orange .hand-left {
-    transform: translate(2px, -34px) rotate(44deg);
+.password-peeking .char-orange .paw-left {
+    transform: translateY(-48px) translateX(24px) rotate(42deg) !important;
 }
 
-.password-peek .char-orange .hand-right {
-    transform: translate(-2px, -34px) rotate(-44deg);
+.password-peeking .char-orange .paw-right {
+    transform: translateY(-48px) translateX(-24px) rotate(-42deg) !important;
 }
 
-.password-peek .char-cyan .hand-left {
-    transform: translate(4px, -28px) rotate(38deg);
+/* Keystroke Pop/Bounce when typing password */
+.keystroke-bounce {
+    animation: typingJiggle 0.14s ease-in-out;
 }
 
-.password-peek .char-cyan .hand-right {
-    transform: translate(-4px, -28px) rotate(-38deg);
+@keyframes typingJiggle {
+    0% { transform: scale(1); }
+    50% { transform: scale(1.03) translateY(-4px); }
+    100% { transform: scale(1); }
 }
 
-/* Username Field Focused: Lean In */
-.username-active .char-wrapper {
-    transform: scale(1.08) translateY(3px);
+.keystroke-bounce .char-orange .paw-left {
+    transform: translateY(-84px) translateX(14px) rotate(20deg) !important;
 }
 
-.login-card {
-    background: rgba(255, 255, 255, 0.75);
-    backdrop-filter: blur(20px);
-    -webkit-backdrop-filter: blur(20px);
-    border: 1px solid rgba(255, 255, 255, 0.6);
-    border-radius: var(--radius-lg);
-    padding: 2.75rem 2.25rem 2.5rem 2.25rem;
-    box-shadow: 0 20px 40px -15px rgba(15, 23, 42, 0.08);
-    text-align: center;
-    position: relative;
-    z-index: 15;
+.keystroke-bounce .char-orange .paw-right {
+    transform: translateY(-84px) translateX(-14px) rotate(-20deg) !important;
 }
 
-.login-header-logo {
-    display: inline-flex;
+.username-focused .char-entity {
+    transform: translate(var(--shift-x, 0px), calc(var(--shift-y, 0px) - 6px)) rotate(var(--tilt-deg, 0deg)) scale(1.04);
+}
+
+/* Right Form Panel */
+.login-form-panel {
+    flex: 1;
+    background-color: #ffffff;
+    display: flex;
     align-items: center;
     justify-content: center;
-    width: 60px;
-    height: 60px;
-    border-radius: var(--radius-md);
-    background: linear-gradient(135deg, var(--color-primary) 0%, #6366f1 100%);
-    color: var(--text-on-dark);
-    margin-bottom: 1.5rem;
-    box-shadow: 0 8px 16px rgba(79, 70, 229, 0.25);
+    padding: 3rem 4rem;
 }
 
-.login-header-logo svg {
-    width: 30px;
-    height: 30px;
+.login-form-content {
+    width: 100%;
+    max-width: 400px;
+    display: flex;
+    flex-direction: column;
 }
 
-.login-card h2 {
-    font-family: var(--font-heading);
-    font-size: 1.75rem;
-    font-weight: 800;
-    margin-bottom: 0.5rem;
-    color: var(--text-primary);
-}
-
-.login-card p {
-    color: var(--text-muted);
-    font-size: 0.9rem;
+.sparkle-logo {
+    display: flex;
+    align-items: center;
+    justify-content: center;
     margin-bottom: 2rem;
 }
 
-/* Password Input Wrapper with Toggle */
-.password-input-wrapper {
+.welcome-heading {
+    font-size: 2.25rem;
+    font-weight: 800;
+    color: #18181b;
+    letter-spacing: -0.03em;
+    margin-bottom: 0.5rem;
+    text-align: center;
+}
+
+.welcome-subtitle {
+    font-size: 0.95rem;
+    color: #71717a;
+    margin-bottom: 2.5rem;
+    text-align: center;
+}
+
+.form-group-clean {
+    margin-bottom: 1.75rem;
+    display: flex;
+    flex-direction: column;
+}
+
+.form-group-clean label {
+    font-size: 0.95rem;
+    font-weight: 700;
+    color: #18181b;
+    margin-bottom: 0.5rem;
+}
+
+.input-clean {
+    width: 100%;
+    border: none;
+    border-bottom: 1.5px solid #e4e4e7;
+    padding: 0.75rem 0;
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    font-size: 1rem;
+    color: #18181b;
+    background: transparent;
+    transition: border-color 0.2s ease;
+    border-radius: 0;
+}
+
+.input-clean:focus {
+    outline: none;
+    border-bottom-color: #18181b;
+}
+
+.password-field-wrapper {
     position: relative;
     display: flex;
     align-items: center;
 }
 
-.password-input-wrapper .form-control {
-    padding-right: 2.75rem;
+.password-field-wrapper .input-clean {
+    padding-right: 2.5rem;
 }
 
-.btn-toggle-password {
+.btn-toggle-eye {
     position: absolute;
-    right: 0.75rem;
+    right: 0;
     background: none;
     border: none;
-    color: var(--text-muted);
     cursor: pointer;
-    padding: 0.35rem;
+    padding: 0.5rem;
     display: flex;
     align-items: center;
     justify-content: center;
-    border-radius: var(--radius-sm);
-    transition: var(--transition-smooth);
-    z-index: 5;
 }
 
-.btn-toggle-password:hover {
-    color: var(--color-primary);
-    background-color: rgba(79, 70, 229, 0.08);
+.form-options-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-top: 0.25rem;
+    margin-bottom: 2.25rem;
+    font-size: 0.875rem;
+}
+
+.remember-label {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    cursor: pointer;
+    color: #3f3f46;
+    font-weight: 500;
+}
+
+.custom-checkbox {
+    width: 17px;
+    height: 17px;
+    accent-color: #18181b;
+    cursor: pointer;
+    border-radius: 4px;
+}
+
+.forgot-link {
+    color: #18181b;
+    font-weight: 600;
+    text-decoration: none;
+    transition: opacity 0.2s ease;
+}
+
+.forgot-link:hover {
+    opacity: 0.7;
+    text-decoration: underline;
+}
+
+.btn-login-pill {
+    width: 100%;
+    background-color: #18181b;
+    color: #ffffff;
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    font-size: 1rem;
+    font-weight: 700;
+    padding: 0.95rem 1.5rem;
+    border-radius: 9999px;
+    border: none;
+    cursor: pointer;
+    transition: transform 0.2s ease, background-color 0.2s ease, box-shadow 0.2s ease;
+    box-shadow: 0 4px 14px rgba(24, 24, 27, 0.15);
+}
+
+.btn-login-pill:hover {
+    background-color: #000000;
+    transform: translateY(-1.5px);
+    box-shadow: 0 6px 20px rgba(24, 24, 27, 0.25);
+}
+
+.btn-login-pill:active {
+    transform: translateY(0);
+}
+
+.field-error-msg {
+    color: #ef4444;
+    font-size: 0.8rem;
+    font-weight: 600;
+    margin-top: 0.4rem;
 }
 
 .d-none {
     display: none !important;
 }
 
-.form-check {
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-    margin-top: 1rem;
-    margin-bottom: 1.5rem;
-    cursor: pointer;
-}
+/* Responsive adjustments */
+@media (max-width: 900px) {
+    .login-split-wrapper {
+        flex-direction: column;
+    }
+    
+    .login-illustration-panel {
+        min-height: 280px;
+        padding: 2rem 1rem 0 1rem;
+        border-right: none;
+        border-bottom: 1px solid #f4f4f5;
+    }
 
-.form-check-input {
-    width: 16px;
-    height: 16px;
-    cursor: pointer;
-}
+    .characters-stage {
+        height: 240px;
+        transform: scale(0.85);
+        transform-origin: bottom center;
+    }
 
-.form-check label {
-    font-size: 0.85rem;
-    color: var(--text-muted);
-    user-select: none;
-    cursor: pointer;
-    font-weight: 500;
-}
-
-.error-text {
-    color: var(--color-danger);
-    font-size: 0.8rem;
-    font-weight: 600;
-    text-align: left;
-    margin-top: 0.35rem;
-}
-
-.form-control.is-invalid {
-    border-color: var(--color-danger);
-    background-color: rgba(239, 68, 68, 0.03);
-}
-
-.form-control.is-invalid:focus {
-    box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.15);
+    .login-form-panel {
+        padding: 2.5rem 1.5rem;
+    }
 }
 
 /* ================================================================
