@@ -29,8 +29,15 @@ class FormItem extends Model
     ];
 
     /**
+     * Accessors to append to array and JSON serialization.
+     */
+    protected $appends = [
+        'kategori_aset',
+    ];
+
+    /**
      * Determine if the item is classified as ASET or NO ASET.
-     * Logic: Harga > Rp 5.000.000 and Estimasi Usia Pakai >= 730 Hari (Per hari).
+     * Logic: Harga > Rp 4.999.999 AND Estimasi Usia Pakai >= 730 Hari (or >= 2 Tahun).
      */
     public function getKategoriAsetAttribute(): string
     {
@@ -45,11 +52,22 @@ class FormItem extends Model
         }
 
         // Normalize decimals (e.g. 730,5 to 730.5)
-        $usia = str_replace(',', '.', $usia);
+        $usiaNorm = str_replace(',', '.', $usia);
 
         // Match the first numeric sequence (integer or float)
-        if (preg_match('/(\d+(?:\.\d+)?)/', $usia, $matches)) {
-            $days = (float) $matches[1];
+        if (preg_match('/(\d+(?:\.\d+)?)/', $usiaNorm, $matches)) {
+            $value = (float) $matches[1];
+            $days = $value;
+
+            // Convert years (tahun / thn) to days
+            if (preg_match('/tahun|thn/i', $usiaNorm)) {
+                $days = $value * 365;
+            }
+            // Convert months (bulan / bln) to days
+            elseif (preg_match('/bulan|bln/i', $usiaNorm)) {
+                $days = $value * 30;
+            }
+
             return $days >= 730 ? 'ASET' : 'NO ASET';
         }
 

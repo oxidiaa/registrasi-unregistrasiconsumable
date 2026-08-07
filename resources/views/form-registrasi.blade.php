@@ -6,7 +6,17 @@
 @php
     $userDeptTag = strtoupper(Auth::user()->department ?? Auth::user()->name ?? 'PRODUCTION');
     $defaultFormNo = '01/' . $userDeptTag . '/' . date('m-Y');
-    $currentFormNo = $activeFormNoParam ?? $defaultFormNo;
+
+    $existingFormNumbers = $formItems->pluck('form_number')->filter()->unique()->values();
+
+    if ($activeFormNoParam && $existingFormNumbers->contains($activeFormNoParam)) {
+        $currentFormNo = $activeFormNoParam;
+    } else if ($existingFormNumbers->isNotEmpty()) {
+        $currentFormNo = $existingFormNumbers->first();
+    } else {
+        $currentFormNo = $activeFormNoParam ?? $defaultFormNo;
+    }
+
     $currentFormItems = $formItems->filter(function($item) use ($currentFormNo, $defaultFormNo) {
         $itemFormNo = $item->form_number ?: $defaultFormNo;
         return $itemFormNo === $currentFormNo;
@@ -332,7 +342,7 @@
                             @endif
                         </td>
                         <td class="td-center" style="font-size:0.75rem; font-weight:600; color:var(--text-muted);">
-                            {{ $item->estimasi_usia_pakai ? $item->estimasi_usia_pakai . ' Hari' : '-' }}
+                            {{ $item->estimasi_usia_pakai ? (is_numeric(trim($item->estimasi_usia_pakai)) ? $item->estimasi_usia_pakai . ' Hari' : $item->estimasi_usia_pakai) : '-' }}
                         </td>
                         <td class="td-center" style="font-size:0.75rem; font-weight:600;">{{ $item->kategori_penggunaan ?? '-' }}</td>
                         <td class="td-center" style="font-size:0.75rem; font-weight:600;">{{ $item->kategori_ukuran ?? '-' }}</td>
@@ -564,8 +574,37 @@
 
     {{-- Checksheet list glass container --}}
     <div class="glass-card" style="padding: 1.5rem;">
-        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.25rem;">
-            <h3 style="font-family: var(--font-heading); font-weight: 700; color: var(--text-primary);">Daftar Form Registrasi (Print Preview)</h3>
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.25rem; flex-wrap: wrap; gap: 1rem;">
+            <h3 style="font-family: var(--font-heading); font-weight: 700; color: var(--text-primary); margin: 0;">Daftar Form Registrasi (Print Preview)</h3>
+            
+            <div style="display: flex; align-items: center; gap: 0.75rem; flex-wrap: wrap;">
+                <span style="font-size: 0.85rem; font-weight: 700; color: var(--text-muted); display: flex; align-items: center; gap: 0.35rem;">
+                    <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
+                    Filter Bulan & Tahun:
+                </span>
+                <div style="display: flex; align-items: center; gap: 0.35rem;">
+                    <select id="filter-month-dataview" class="form-control" style="width: 140px; height: 38px; font-size: 0.85rem; padding: 0 0.6rem;" onchange="renderDataViewTable()">
+                        <option value="">Semua Bulan</option>
+                        <option value="01">Januari</option>
+                        <option value="02">Februari</option>
+                        <option value="03">Maret</option>
+                        <option value="04">April</option>
+                        <option value="05">Mei</option>
+                        <option value="06">Juni</option>
+                        <option value="07">Juli</option>
+                        <option value="08">Agustus</option>
+                        <option value="09">September</option>
+                        <option value="10">Oktober</option>
+                        <option value="11">November</option>
+                        <option value="12">Desember</option>
+                    </select>
+                </div>
+                <div style="display: flex; align-items: center; gap: 0.35rem;">
+                    <select id="filter-year-dataview" class="form-control" style="width: 130px; height: 38px; font-size: 0.85rem; padding: 0 0.6rem;" onchange="renderDataViewTable()">
+                        <option value="">Semua Tahun</option>
+                    </select>
+                </div>
+            </div>
         </div>
         
         <div class="form-reg-table-wrap">
@@ -891,8 +930,8 @@
                 </div>
             </div>
 
-            {{-- Row 4: Min, Titik Order, Max, Lead Time --}}
-            <div style="display:grid; grid-template-columns:1fr 1fr 1fr 1fr; gap:1rem; margin-bottom:1rem;">
+            {{-- Row 4: Min, Titik Order, Max --}}
+            <div style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:1rem; margin-bottom:1rem;">
                 <div class="form-group" style="margin-bottom:0;">
                     <label for="fi_min">Min</label>
                     <input type="number" id="fi_min" name="min" class="form-control" placeholder="0" min="0" value="{{ old('min') }}">
@@ -904,10 +943,6 @@
                 <div class="form-group" style="margin-bottom:0;">
                     <label for="fi_max">Max</label>
                     <input type="number" id="fi_max" name="max" class="form-control" placeholder="0" min="0" value="{{ old('max') }}">
-                </div>
-                <div class="form-group" style="margin-bottom:0;">
-                    <label for="fi_lead">Lead Time</label>
-                    <input type="text" id="fi_lead" name="lead_time" class="form-control" placeholder="Cth: 3 Hari" value="{{ old('lead_time') }}">
                 </div>
             </div>
 
@@ -1013,11 +1048,15 @@
     const userTag = '{{ strtoupper(Auth::user()->department ?? Auth::user()->name ?? "PRODUCTION") }}';
     const monthYearStr = '{{ date("m-Y") }}';
     const defaultFormNo = `01/${userTag}/${monthYearStr}`;
-    const activeFormNo = urlFormParam || defaultFormNo;
+    
+    // Distinct existing form numbers in server items
+    const existingForms = [...new Set(serverFormItems.map(i => i.form_number).filter(Boolean))];
+    const activeFormNo = (urlFormParam && (existingForms.includes(urlFormParam) || serverFormItems.length === 0))
+        ? urlFormParam
+        : (existingForms[0] || defaultFormNo);
 
     let activeChecksheetHtml = '';
     let selectedChecksheetId = activeFormNo;
-    let formCounter = 1;
 
     const emptyTableHtml = `
         <tr class="empty-state-row no-print">
@@ -1084,8 +1123,58 @@
         `).join('')}
     `;
 
-    const checksheets = {
-        [defaultFormNo]: {
+    const checksheets = {};
+    const stepperData = {};
+
+    // Populate checksheets dynamically from server database items
+    if (serverFormItems.length > 0) {
+        serverFormItems.forEach(item => {
+            const fNo = item.form_number || defaultFormNo;
+            if (!checksheets[fNo]) {
+                checksheets[fNo] = {
+                    docNo: 'No Doc : W1-CDS-PP-20/F1 Rev 2 &nbsp;|&nbsp; No. Form: <span style="font-weight:700; color:var(--color-primary);">' + fNo + '</span>',
+                    formNo: fNo,
+                    date: '{{ date("d-m-Y") }}',
+                    requestor: '{{ Auth::user()->name ?? "Production User" }} / {{ Auth::user()->department ?? "Production" }}',
+                    status: 'Draft',
+                    items: [],
+                    signatures: {
+                        dibuat: '{{ Auth::user()->name ?? "Production User" }} (Tgl: {{ date("d-m-Y") }})',
+                        diperiksa: '...................',
+                        disetujui: '...................'
+                    },
+                    comments: { user: 'Formulir pendaftaran barang consumable.', pemeriksa: '', warehouse: '' }
+                };
+
+                stepperData[fNo] = {
+                    statusText: 'DRAFT',
+                    statusClass: 'badge-warning',
+                    steps: [
+                        { completed: true, active: false, details: '{{ Auth::user()->name ?? "Production User" }} - Production (Tanggal: {{ date("d-m-Y") }})', status: 'Selesai dibuat.', color: 'var(--color-success)' },
+                        { completed: false, active: true, details: 'Menunggu pemeriksaan Pemeriksa...', status: 'Pemeriksaan kelayakan.', color: 'var(--color-primary)' },
+                        { completed: false, active: false, details: 'Belum diisi.', status: 'Registrasi Warehouse.', color: 'var(--text-muted)' }
+                    ]
+                };
+            }
+
+            checksheets[fNo].items.push({
+                no: checksheets[fNo].items.length + 1,
+                kode: item.kode_barang || '-',
+                nama: item.nama_barang,
+                harga: item.harga ? 'Rp ' + Number(item.harga).toLocaleString('id-ID') : '-',
+                usia: item.estimasi_usia_pakai ? (!isNaN(Number(item.estimasi_usia_pakai)) ? item.estimasi_usia_pakai + ' Hari' : item.estimasi_usia_pakai) : '-',
+                katPeng: item.kategori_penggunaan || '-',
+                katUk: item.kategori_ukuran || '-',
+                min: item.min || '-',
+                titik: item.titik_order || '-',
+                max: item.max || '-',
+                aset: item.kategori_aset || 'NO ASET',
+                b3: item.is_b3,
+                non_b3: item.is_non_b3
+            });
+        });
+    } else {
+        checksheets[defaultFormNo] = {
             docNo: 'No Doc : W1-CDS-PP-20/F1 Rev 2 &nbsp;|&nbsp; No. Form: <span style="font-weight:700; color:var(--color-primary);">' + defaultFormNo + '</span>',
             formNo: defaultFormNo,
             date: '{{ date("d-m-Y") }}',
@@ -1102,11 +1191,9 @@
                 pemeriksa: '',
                 warehouse: ''
             }
-        }
-    };
+        };
 
-    const stepperData = {
-        [defaultFormNo]: {
+        stepperData[defaultFormNo] = {
             statusText: 'DRAFT',
             statusClass: 'badge-warning',
             steps: [
@@ -1114,66 +1201,84 @@
                 { completed: false, active: true, details: 'Menunggu kelayakan disetujui Pemeriksa...', status: 'Pemeriksaan kelayakan.', color: 'var(--color-primary)' },
                 { completed: false, active: false, details: 'Belum diisi.', status: 'Registrasi oleh Warehouse.', color: 'var(--text-muted)' }
             ]
-        }
+        };
+    }
+
+    const monthNamesIndo = {
+        '01': 'Januari', '02': 'Februari', '03': 'Maret', '04': 'April',
+        '05': 'Mei', '06': 'Juni', '07': 'Juli', '08': 'Agustus',
+        '09': 'September', '10': 'Oktober', '11': 'November', '12': 'Desember'
     };
 
-    // Populate checksheets dynamically from server database items
-    serverFormItems.forEach(item => {
-        const fNo = item.form_number || defaultFormNo;
-        
-        const parts = fNo.split('/');
-        if (parts.length > 0 && !isNaN(parseInt(parts[0]))) {
-            const num = parseInt(parts[0]);
-            if (num > formCounter) formCounter = num;
+    function populateDateFilterOptions() {
+        const yearSelect = document.getElementById('filter-year-dataview');
+        if (!yearSelect) return;
+
+        const currentYearVal = yearSelect.value;
+        const yearsFound = new Set();
+
+        for (const formNo in checksheets) {
+            const cs = checksheets[formNo];
+            if (!cs.items || cs.items.length === 0) continue;
+
+            let y = '';
+            if (cs.date && cs.date.includes('-')) {
+                const parts = cs.date.split('-');
+                if (parts.length === 3) y = parts[2];
+            }
+            if (!y && cs.formNo) {
+                const parts = cs.formNo.split('/');
+                if (parts.length >= 3) {
+                    const myParts = parts[2].split('-');
+                    if (myParts.length === 2) y = myParts[1];
+                }
+            }
+            if (y) yearsFound.add(y);
         }
 
-        if (!checksheets[fNo]) {
-            checksheets[fNo] = {
-                docNo: 'No Doc : W1-CDS-PP-20/F1 Rev 2 &nbsp;|&nbsp; No. Form: <span style="font-weight:700; color:var(--color-primary);">' + fNo + '</span>',
-                formNo: fNo,
-                date: '{{ date("d-m-Y") }}',
-                requestor: '{{ Auth::user()->name ?? "Production User" }} / {{ Auth::user()->department ?? "Production" }}',
-                status: 'Draft',
-                items: [],
-                signatures: {
-                    dibuat: '{{ Auth::user()->name ?? "Production User" }} (Tgl: {{ date("d-m-Y") }})',
-                    diperiksa: '...................',
-                    disetujui: '...................'
-                },
-                comments: { user: 'Formulir pendaftaran barang consumable.', pemeriksa: '', warehouse: '' }
-            };
+        const nowYr = '{{ date("Y") }}';
+        yearsFound.add(nowYr);
 
-            stepperData[fNo] = {
-                statusText: 'DRAFT',
-                statusClass: 'badge-warning',
-                steps: [
-                    { completed: true, active: false, details: '{{ Auth::user()->name ?? "Production User" }} - Production (Tanggal: {{ date("d-m-Y") }})', status: 'Selesai dibuat.', color: 'var(--color-success)' },
-                    { completed: false, active: true, details: 'Menunggu pemeriksaan Pemeriksa...', status: 'Pemeriksaan kelayakan.', color: 'var(--color-primary)' },
-                    { completed: false, active: false, details: 'Belum diisi.', status: 'Registrasi Warehouse.', color: 'var(--text-muted)' }
-                ]
-            };
-        }
+        const sortedYears = Array.from(yearsFound).sort((a, b) => b.localeCompare(a));
 
-        checksheets[fNo].items.push({
-            no: checksheets[fNo].items.length + 1,
-            kode: item.kode_barang || '-',
-            nama: item.nama_barang,
-            harga: item.harga ? 'Rp ' + Number(item.harga).toLocaleString('id-ID') : '-',
-            usia: item.estimasi_usia_pakai ? item.estimasi_usia_pakai + ' Hari' : '-',
-            katPeng: item.kategori_penggunaan || '-',
-            katUk: item.kategori_ukuran || '-',
-            min: item.min || '-',
-            titik: item.titik_order || '-',
-            max: item.max || '-',
-            aset: item.kategori_aset || 'NO ASET',
-            b3: item.is_b3,
-            non_b3: item.is_non_b3
+        yearSelect.innerHTML = '<option value="">Semua Tahun</option>';
+        sortedYears.forEach(yr => {
+            const opt = document.createElement('option');
+            opt.value = yr;
+            opt.innerText = yr;
+            if (yr === currentYearVal) opt.selected = true;
+            yearSelect.appendChild(opt);
         });
-    });
+    }
+
+    function updateApprovalSelect() {
+        const select = document.getElementById('select-approval-cs');
+        if (!select) return;
+
+        select.innerHTML = '';
+        for (const formNo in checksheets) {
+            const cs = checksheets[formNo];
+            if ((cs.items && cs.items.length > 0) || formNo === selectedChecksheetId) {
+                const opt = document.createElement('option');
+                opt.value = formNo;
+                const itemLabel = (cs.items && cs.items.length > 0) ? `${cs.items.length} Item` : 'Draft Baru';
+                opt.innerText = `${formNo} (${userTag} - ${itemLabel})`;
+                if (formNo === selectedChecksheetId) {
+                    opt.selected = true;
+                }
+                select.appendChild(opt);
+            }
+        }
+    }
 
     function renderDataViewTable() {
         const tbody = document.getElementById('dataview-tbody');
         if (!tbody) return;
+
+        const monthSelect = document.getElementById('filter-month-dataview');
+        const yearSelect = document.getElementById('filter-year-dataview');
+        const selectedMonth = monthSelect ? monthSelect.value : '';
+        const selectedYear = yearSelect ? yearSelect.value : '';
 
         let html = '';
         let no = 1;
@@ -1186,6 +1291,35 @@
 
             // Filter out empty checksheets (0 items) so they don't enter Data View
             if (!cs.items || cs.items.length === 0) {
+                continue;
+            }
+
+            // Extract month and year from cs.date or cs.formNo
+            let csM = '';
+            let csY = '';
+            if (cs.date && cs.date.includes('-')) {
+                const parts = cs.date.split('-');
+                if (parts.length === 3) {
+                    csM = parts[1];
+                    csY = parts[2];
+                }
+            }
+            if ((!csM || !csY) && cs.formNo) {
+                const parts = cs.formNo.split('/');
+                if (parts.length >= 3) {
+                    const myParts = parts[2].split('-');
+                    if (myParts.length === 2) {
+                        if (!csM) csM = myParts[0];
+                        if (!csY) csY = myParts[1];
+                    }
+                }
+            }
+
+            // Month and Year filtering
+            if (selectedMonth && csM !== selectedMonth) {
+                continue;
+            }
+            if (selectedYear && csY !== selectedYear) {
                 continue;
             }
 
@@ -1227,6 +1361,8 @@
             no++;
         }
 
+        const isFiltered = Boolean(selectedMonth || selectedYear);
+
         if (totalChecksheets === 0) {
             tbody.innerHTML = `
                 <tr>
@@ -1239,8 +1375,8 @@
                                         <polyline points="14 2 14 8 20 8"></polyline>
                                     </svg>
                                 </div>
-                                <h4 class="empty-state-title" style="font-size: 1rem;">Belum Ada Form Registrasi Berisi Data</h4>
-                                <p class="empty-state-desc" style="font-size: 0.8rem;">Formulir registrasi akan tampil secara otomatis di sini setelah Anda menambahkan item barang.</p>
+                                <h4 class="empty-state-title" style="font-size: 1rem;">${isFiltered ? 'Tidak Ada Form Registrasi pada Periode Ini' : 'Belum Ada Form Registrasi Berisi Data'}</h4>
+                                <p class="empty-state-desc" style="font-size: 0.8rem;">${isFiltered ? 'Tidak ditemukan data formulir pendaftaran barang untuk filter Bulan / Tahun yang dipilih.' : 'Formulir registrasi akan tampil secara otomatis di sini setelah Anda menambahkan item barang.'}</p>
                             </div>
                         </div>
                     </td>
@@ -1262,7 +1398,9 @@
 
     document.addEventListener('DOMContentLoaded', function() {
         activeChecksheetHtml = document.getElementById('preview-table-body').innerHTML;
+        populateDateFilterOptions();
         renderDataViewTable();
+        updateApprovalSelect();
         updateApprovalStepper(selectedChecksheetId);
         renderAccountTable();
 
@@ -1276,8 +1414,16 @@
     });
 
     function createNewForm() {
-        formCounter++;
-        const nextSeq = String(formCounter).padStart(2, '0');
+        // Clean up any empty draft forms that have no items
+        for (const fNo in checksheets) {
+            if (fNo !== activeFormNo && (!checksheets[fNo].items || checksheets[fNo].items.length === 0)) {
+                delete checksheets[fNo];
+                delete stepperData[fNo];
+            }
+        }
+
+        const activeFormsWithItemsCount = Object.keys(checksheets).filter(fNo => checksheets[fNo].items && checksheets[fNo].items.length > 0).length;
+        const nextSeq = String(activeFormsWithItemsCount + 1).padStart(2, '0');
         const todayStr = '{{ date("d-m-Y") }}';
         const nextFormNo = `${nextSeq}/${userTag}/${monthYearStr}`;
         
@@ -1310,23 +1456,9 @@
             ]
         };
 
-        // Update Dropdown in Info Tab
-        const select = document.getElementById('select-approval-cs');
-        if (select) {
-            const opt = document.createElement('option');
-            opt.value = nextFormNo;
-            opt.innerText = `${nextFormNo} (${userTag} - Draft Baru)`;
-            opt.selected = true;
-            select.prepend(opt);
-        }
-
-        // Update Data View Table
+        updateApprovalSelect();
         renderDataViewTable();
-
-        // Switch to Print Preview & view this new form
         viewChecksheet(nextFormNo);
-
-        // Auto-open Tambah Data modal for instant 1-click form creation!
         openModal('addItemModal');
 
         showToast(`Formulir Baru (${nextFormNo}) Berhasil Dibuat! Silakan isi data barang.`, 'success');
@@ -1348,15 +1480,27 @@
     }
 
     function viewChecksheet(csId) {
+        // Clean up previous empty draft form if user switched away without adding items
+        if (selectedChecksheetId && selectedChecksheetId !== csId && selectedChecksheetId !== activeFormNo) {
+            const prevCs = checksheets[selectedChecksheetId];
+            if (prevCs && (!prevCs.items || prevCs.items.length === 0)) {
+                delete checksheets[selectedChecksheetId];
+                delete stepperData[selectedChecksheetId];
+                updateApprovalSelect();
+            }
+        }
+
         selectedChecksheetId = csId;
         switchSheet('print-preview');
         
         const cs = checksheets[csId];
         if (!cs) return;
 
-        document.getElementById('preview-docno').innerHTML = cs.docNo;
-        document.getElementById('preview-date').innerText = cs.date;
-        document.getElementById('preview-requestor').innerText = cs.requestor;
+        const hiddenFormNo = document.getElementById('modal_form_number');
+        if (hiddenFormNo) hiddenFormNo.value = csId;
+
+        const displayEl = document.getElementById('form-number-display');
+        if (displayEl) displayEl.innerText = csId;
         
         const signatureDibuat = document.getElementById('preview-sig-dibuat');
         const signatureDiperiksa = document.getElementById('preview-sig-diperiksa');

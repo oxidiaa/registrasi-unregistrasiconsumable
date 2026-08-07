@@ -132,13 +132,72 @@ class ItemController extends Controller
     }
 
     /**
+     * Re-sequence form numbers so that only forms with items are kept and strictly numbered (01, 02, 03...).
+     * Empty forms (0 items) are eliminated from sequence.
+     */
+    private function resequenceFormNumbers()
+    {
+        $allFormItems = FormItem::orderBy('created_at', 'asc')->orderBy('id', 'asc')->get();
+        if ($allFormItems->isEmpty()) {
+            return [];
+        }
+
+        // Group items by their existing form_number preserving insertion order
+        $grouped = [];
+        foreach ($allFormItems as $item) {
+            $fNo = $item->form_number ?: '01';
+            if (!isset($grouped[$fNo])) {
+                $grouped[$fNo] = [];
+            }
+            $grouped[$fNo][] = $item;
+        }
+
+        $map = [];
+        $seq = 1;
+        $userDeptTag = strtoupper(auth()->user()->department ?? auth()->user()->name ?? 'PRODUCTION');
+        $monthYear = date('m-Y');
+
+        foreach ($grouped as $oldFormNo => $items) {
+            if (count($items) === 0) {
+                continue; // Skip forms with no items (eliminate empty forms)
+            }
+
+            // Extract department tag and month-year if present
+            $parts = explode('/', $oldFormNo);
+            $dept = (count($parts) >= 2 && !empty($parts[1])) ? $parts[1] : $userDeptTag;
+            $my = (count($parts) >= 3 && !empty($parts[2])) ? $parts[2] : $monthYear;
+
+            $newSeqStr = str_pad($seq, 2, '0', STR_PAD_LEFT);
+            $newFormNo = "{$newSeqStr}/{$dept}/{$my}";
+
+            $map[$oldFormNo] = $newFormNo;
+
+            foreach ($items as $item) {
+                if ($item->form_number !== $newFormNo) {
+                    $item->update(['form_number' => $newFormNo]);
+                }
+            }
+
+            $seq++;
+        }
+
+        return $map;
+    }
+
+    /**
      * Display the Form Pendaftaran Barang Consumable page.
      */
     public function formRegistrasi(Request $request)
     {
-        $formItems = FormItem::orderBy('created_at', 'asc')->get();
+        $resequenceMap = $this->resequenceFormNumbers();
+        $formItems = FormItem::orderBy('created_at', 'asc')->orderBy('id', 'asc')->get();
         $users = User::orderBy('id', 'asc')->get();
+
         $activeFormNoParam = $request->query('form');
+        if ($activeFormNoParam && isset($resequenceMap[$activeFormNoParam])) {
+            $activeFormNoParam = $resequenceMap[$activeFormNoParam];
+        }
+
         return view('form-registrasi', compact('formItems', 'users', 'activeFormNoParam'));
     }
 
@@ -166,9 +225,14 @@ class ItemController extends Controller
         $validated['is_b3']     = $request->has('is_b3');
         $validated['is_non_b3']  = $request->has('is_non_b3');
 
+        $targetForm = $request->input('form_number');
         FormItem::create($validated);
 
-        $targetForm = $request->input('form_number');
+        $map = $this->resequenceFormNumbers();
+        if ($targetForm && isset($map[$targetForm])) {
+            $targetForm = $map[$targetForm];
+        }
+
         $redirectParams = $targetForm ? ['form' => $targetForm] : [];
 
         return redirect()->route('form-registrasi', $redirectParams)
@@ -185,6 +249,15 @@ class ItemController extends Controller
         $name = $item->nama_barang;
         $targetForm = $item->form_number;
         $item->delete();
+
+        $map = $this->resequenceFormNumbers();
+        if ($targetForm && isset($map[$targetForm])) {
+            $targetForm = $map[$targetForm];
+        } else {
+            // Form became empty after item deletion. Redirect to first available form with items if any.
+            $firstItem = FormItem::orderBy('created_at', 'asc')->first();
+            $targetForm = $firstItem ? $firstItem->form_number : null;
+        }
 
         $redirectParams = $targetForm ? ['form' => $targetForm] : [];
 
