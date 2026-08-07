@@ -238,14 +238,7 @@
         </svg>
         Data View
     </button>
-    <button class="sheet-tab" onclick="switchSheet('info')">
-        <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round">
-            <circle cx="12" cy="12" r="10"></circle>
-            <line x1="12" y1="16" x2="12" y2="12"></line>
-            <line x1="12" y1="8" x2="12.01" y2="8"></line>
-        </svg>
-        Info
-    </button>
+
     <button class="sheet-tab" onclick="switchSheet('account-master')">
         <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round">
             <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
@@ -311,9 +304,9 @@
                         <th rowspan="2" class="th-center" style="width:50px;">MIN</th>
                         <th rowspan="2" class="th-center" style="width:65px;">TITIK ORDER</th>
                         <th rowspan="2" class="th-center" style="width:50px;">MAX</th>
+                        <th rowspan="2" class="th-center" style="width:75px;">LEAD TIME</th>
                         <th rowspan="2" class="th-center" style="width:95px;">ASET / NO ASET</th>
                         <th colspan="2" class="th-center">KATEGORI</th>
-                        <th rowspan="2" class="th-center no-print" style="width:50px;"></th>
                     </tr>
                     <tr>
                         <th class="th-center" style="width:45px;">B3</th>
@@ -367,6 +360,9 @@
                                 <span style="color:var(--text-muted); font-size:0.75rem;">-</span>
                             @endif
                         </td>
+                        <td class="td-center" style="font-size:0.75rem; font-weight:600;">
+                            {{ $item->lead_time ?? '-' }}
+                        </td>
                         <td class="td-center" style="vertical-align: middle;">
                             @if($item->kategori_aset === 'ASET')
                                 <span class="badge-asset-yes">
@@ -390,21 +386,6 @@
                                     <svg viewBox="0 0 24 24" width="13" height="13" stroke="currentColor" stroke-width="3" fill="none"><polyline points="20 6 9 17 4 12"></polyline></svg>
                                 </div>
                             @endif
-                        </td>
-                        <td class="td-center no-print">
-                            <form action="{{ route('form-registrasi.delete', $item->id) }}" method="POST"
-                                  onsubmit="return confirm('Hapus data ini?')">
-                                @csrf
-                                @method('DELETE')
-                                <button type="submit" class="btn-icon-danger" title="Hapus Barang Ini">
-                                    <svg viewBox="0 0 24 24" width="14" height="14" stroke="currentColor" stroke-width="2.5" fill="none" stroke-linecap="round" stroke-linejoin="round">
-                                        <polyline points="3 6 5 6 21 6"></polyline>
-                                        <path d="M19 6l-1 14H6L5 6"></path>
-                                        <path d="M10 11v6M14 11v6"></path>
-                                        <path d="M9 6V4h6v2"></path>
-                                    </svg>
-                                </button>
-                            </form>
                         </td>
                     </tr>
                     @empty
@@ -470,7 +451,7 @@
                         <td class="td-input"></td>
                         <td class="td-input"></td>
                         <td class="td-input"></td>
-                        <td class="td-input no-print"></td>
+                        <td class="td-input"></td>
                     </tr>
                     @endfor
                     @endforelse
@@ -492,7 +473,7 @@
                             <td class="td-input"></td>
                             <td class="td-input"></td>
                             <td class="td-input"></td>
-                            <td class="td-input no-print"></td>
+                            <td class="td-input"></td>
                         </tr>
                         @endfor
                     @endif
@@ -617,7 +598,8 @@
                         <th>REQUESTOR / DEPT</th>
                         <th class="th-center">JUMLAH BARANG</th>
                         <th class="th-center">STATUS</th>
-                        <th class="th-center" style="width: 200px;">AKSI</th>
+                        <th class="th-center" style="width: 170px;">AKSI</th>
+                        <th class="th-center" style="width: 170px;">HAPUS</th>
                     </tr>
                 </thead>
                 <tbody id="dataview-tbody">
@@ -628,114 +610,7 @@
     </div>
 </div>
 
-{{-- ===== TAB PANE: INFO ===== --}}
-<div id="info-pane" class="tab-pane no-print">
-    <div style="display: grid; grid-template-columns: 3fr 2fr; gap: 1.5rem; max-width: 1200px; margin: 0 auto; align-items: start;">
-        
-        {{-- Left side: Stepper Timeline --}}
-        <div class="glass-card" style="padding: 2rem;">
-            <div style="display: flex; flex-direction: column; gap: 1.5rem;">
-                <div>
-                    <h3 style="font-family: var(--font-heading); font-weight: 700; color: var(--text-primary); margin-bottom: 0.5rem;">Info Status Approval Checksheet</h3>
-                    <p style="color: var(--text-muted); font-size: 0.875rem;">Lacak tahapan persetujuan (approval flow) form pendaftaran consumable barang.</p>
-                </div>
-                
-                <div class="form-group" style="margin-bottom: 1.5rem; max-width: 400px;">
-                    <label for="select-approval-cs" style="font-weight: 600; font-size: 0.875rem; margin-bottom: 0.5rem; display: block;">Pilih No. Formulir:</label>
-                    <select id="select-approval-cs" class="form-control" onchange="onSelectApprovalCs(this.value)" style="height: 42px;">
-                        <option value="01/{{ strtoupper(Auth::user()->department ?? Auth::user()->name ?? 'PRODUCTION') }}/{{ date('m-Y') }}" selected>01/{{ strtoupper(Auth::user()->department ?? Auth::user()->name ?? 'PRODUCTION') }}/{{ date('m-Y') }} (Form Aktif - Draft)</option>
-                    </select>
-                </div>
-                
-                <div style="border-top: 1px solid rgba(0,0,0,0.08); padding-top: 1.5rem;">
-                    <h4 style="font-family: var(--font-heading); font-weight: 700; color: var(--text-primary); margin-bottom: 1.5rem; display: flex; align-items: center; gap: 0.5rem;">
-                        Status Alur Approval: <span id="approval-status-badge" class="badge">DRAFT</span>
-                    </h4>
-                    
-                    <div class="stepper-container">
-                        <!-- Step 1: Pembuatan Form (User) -->
-                        <div class="step-item" id="step-1">
-                            <div class="step-indicator">1</div>
-                            <div style="margin-left: 0.5rem;">
-                                <h5 style="font-weight: 700; color: var(--text-primary); margin-bottom: 0.15rem; font-size: 0.95rem;">1. Pembuatan Form (Role: User)</h5>
-                                <p style="color: var(--text-muted); font-size: 0.85rem;" id="step-1-details">-</p>
-                                <p style="font-size: 0.8rem; font-weight: 600; margin-top: 0.25rem;" id="step-1-status">-</p>
-                                <div class="step-comment-box" id="step-1-comment-box" style="margin-top: 0.5rem; background: rgba(0,0,0,0.02); padding: 0.5rem 0.75rem; border-radius: var(--radius-sm); border-left: 3px solid var(--color-primary); font-size: 0.8rem; display: none;">
-                                    <strong>Catatan User:</strong> <span id="step-1-comment-text"></span>
-                                </div>
-                            </div>
-                        </div>
-                        
-                        <!-- Step 2: Pemeriksaan & Persetujuan (Pemeriksa) -->
-                        <div class="step-item" id="step-2">
-                            <div class="step-indicator">2</div>
-                            <div style="margin-left: 0.5rem;">
-                                <h5 style="font-weight: 700; color: var(--text-primary); margin-bottom: 0.15rem; font-size: 0.95rem;">2. Persetujuan Kelayakan (Role: Pemeriksa)</h5>
-                                <p style="color: var(--text-muted); font-size: 0.85rem;" id="step-2-details">-</p>
-                                <p style="font-size: 0.8rem; font-weight: 600; margin-top: 0.25rem;" id="step-2-status">-</p>
-                                <div class="step-comment-box" id="step-2-comment-box" style="margin-top: 0.5rem; background: rgba(0,0,0,0.02); padding: 0.5rem 0.75rem; border-radius: var(--radius-sm); border-left: 3px solid var(--color-primary); font-size: 0.8rem; display: none;">
-                                    <strong>Catatan Pemeriksa:</strong> <span id="step-2-comment-text"></span>
-                                </div>
-                            </div>
-                        </div>
-                        
-                        <!-- Step 3: Registrasi Kode Barang (Warehouse) -->
-                        <div class="step-item" id="step-3">
-                            <div class="step-indicator">3</div>
-                            <div style="margin-left: 0.5rem;">
-                                <h5 style="font-weight: 700; color: var(--text-primary); margin-bottom: 0.15rem; font-size: 0.95rem;">3. Registrasi Kode Barang (Role: Warehouse)</h5>
-                                <p style="color: var(--text-muted); font-size: 0.85rem;" id="step-3-details">-</p>
-                                <p style="font-size: 0.8rem; font-weight: 600; margin-top: 0.25rem;" id="step-3-status">-</p>
-                                <div class="step-comment-box" id="step-3-comment-box" style="margin-top: 0.5rem; background: rgba(0,0,0,0.02); padding: 0.5rem 0.75rem; border-radius: var(--radius-sm); border-left: 3px solid var(--color-primary); font-size: 0.8rem; display: none;">
-                                    <strong>Catatan Warehouse:</strong> <span id="step-3-comment-text"></span>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
 
-        {{-- Right side: Simulation Verification & Comments --}}
-        <div class="glass-card" style="padding: 2rem;">
-            <h4 style="font-family: var(--font-heading); font-weight: 700; color: var(--text-primary); margin-bottom: 1rem; display: flex; align-items: center; gap: 0.5rem;">
-                <svg viewBox="0 0 24 24" width="18" height="18" stroke="currentColor" stroke-width="2.5" fill="none"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 1 1 3 3L12 15l-4 1 1-4z"></path></svg>
-                Tulis Catatan & Tanda Tangan
-            </h4>
-            
-            <div id="simulation-notice" style="background-color: var(--color-primary-light); color: var(--color-primary); padding: 0.75rem; border-radius: var(--radius-sm); font-size: 0.8rem; font-weight: 600; margin-bottom: 1.25rem;">
-                Silakan isi data tanda tangan dan berikan komentar di bawah untuk mensimulasikan persetujuan secara real-time pada checksheet yang aktif.
-            </div>
-            
-            <form id="form-simulation-approval" onsubmit="submitSimulatedApproval(event)">
-                <div class="form-group" style="margin-bottom: 1rem;">
-                    <label for="sim-role" style="font-weight: 600; font-size: 0.8rem; margin-bottom: 0.35rem; display: block;">Pilih Peran Anda (Role):</label>
-                    <select id="sim-role" class="form-control" style="height: 42px;" onchange="onChangeSimRole(this.value)">
-                        <option value="user">User (Pembuat Form)</option>
-                        <option value="pemeriksa">Pemeriksa (Penyetuju)</option>
-                        <option value="warehouse">Warehouse (Pendaftar Kode)</option>
-                    </select>
-                </div>
-                
-                <div class="form-group" style="margin-bottom: 1rem;">
-                    <label for="sim-name" style="font-weight: 600; font-size: 0.8rem; margin-bottom: 0.35rem; display: block;">Nama Penandatangan:</label>
-                    <input type="text" id="sim-name" class="form-control" placeholder="Masukkan nama pemeriksa/user..." required style="height: 42px;">
-                </div>
-                
-                <div class="form-group" style="margin-bottom: 1.25rem;">
-                    <label for="sim-comment" style="font-weight: 600; font-size: 0.8rem; margin-bottom: 0.35rem; display: block;">Tulis Catatan / Komentar:</label>
-                    <textarea id="sim-comment" class="form-control" placeholder="Tuliskan komentar untuk checksheet ini..." required style="height: 90px; resize: none;"></textarea>
-                </div>
-                
-                <button type="submit" class="btn btn-primary" style="width: 100%; height: 42px; display: flex; align-items: center; justify-content: center; gap: 0.5rem; font-weight: 600; border-radius: var(--radius-md);">
-                    <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2.5" fill="none"><polyline points="20 6 9 17 4 12"></polyline></svg>
-                    Kirim Catatan & Tanda Tangan
-                </button>
-            </form>
-        </div>
-        
-    </div>
-</div>
 
 {{-- ===== TAB PANE: ACCOUNT MASTER ===== --}}
 <div id="account-master-pane" class="tab-pane no-print">
@@ -745,10 +620,10 @@
         <div class="glass-card" style="padding: 1.75rem; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem;">
             <div>
                 <h3 style="font-family: var(--font-heading); font-weight: 700; color: var(--text-primary); margin-bottom: 0.35rem; display: flex; align-items: center; gap: 0.5rem;">
-                    <svg viewBox="0 0 24 24" width="22" height="22" stroke="var(--color-primary)" stroke-width="2.5" fill="none"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>
+                    <svg viewBox="0 0 24 24" width="22" height="22" stroke="var(--color-primary)" stroke-width="2.5" fill="none"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>
                     Account Master Management
                 </h3>
-                <p style="color: var(--text-muted); font-size: 0.875rem;">Kelola data pengguna, hak akses role (MASTER, USER, PEMERIKSA, WAREHOUSE), dan departemen.</p>
+                <p style="color: var(--text-muted); font-size: 0.875rem;">Kelola data pengguna, hak akses role (User, Staff, Accounting, Warehouse Consumable), dan department.</p>
             </div>
             <button class="btn btn-primary" onclick="openModal('addAccountModal')" style="display: inline-flex; align-items: center; gap: 0.5rem; font-weight: 600; padding: 0.65rem 1.25rem; border-radius: var(--radius-md);">
                 <svg viewBox="0 0 24 24" width="18" height="18" stroke="currentColor" stroke-width="2.5" fill="none"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
@@ -764,17 +639,7 @@
                 </div>
                 <div>
                     <span style="font-size: 0.75rem; color: var(--text-muted); font-weight: 600; display: block; text-transform: uppercase;">Total Akun Terdaftar</span>
-                    <span style="font-size: 1.4rem; font-weight: 800; color: var(--text-primary);" id="stat-total-accounts">{{ isset($users) ? $users->count() : 5 }} Akun</span>
-                </div>
-            </div>
-            
-            <div class="dataview-stat-card">
-                <div style="background-color: rgba(168, 85, 247, 0.1); color: #9333ea; padding: 0.75rem; border-radius: var(--radius-md); display: flex; align-items: center; justify-content: center;">
-                    <svg viewBox="0 0 24 24" width="22" height="22" stroke="currentColor" stroke-width="2.5" fill="none"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"></path></svg>
-                </div>
-                <div>
-                    <span style="font-size: 0.75rem; color: var(--text-muted); font-weight: 600; display: block; text-transform: uppercase;">Akun MASTER</span>
-                    <span style="font-size: 1.4rem; font-weight: 800; color: #9333ea;" id="stat-master-accounts">{{ isset($users) ? $users->where('role', 'MASTER')->count() : 2 }} Akun</span>
+                    <span style="font-size: 1.4rem; font-weight: 800; color: var(--text-primary);" id="stat-total-accounts">{{ isset($users) ? $users->count() : 0 }} Akun</span>
                 </div>
             </div>
             
@@ -783,8 +648,18 @@
                     <svg viewBox="0 0 24 24" width="22" height="22" stroke="currentColor" stroke-width="2.5" fill="none"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="8.5" cy="7" r="4"></circle></svg>
                 </div>
                 <div>
-                    <span style="font-size: 0.75rem; color: var(--text-muted); font-weight: 600; display: block; text-transform: uppercase;">USER & PEMERIKSA</span>
-                    <span style="font-size: 1.4rem; font-weight: 800; color: var(--text-primary);" id="stat-user-accounts">{{ isset($users) ? $users->whereIn('role', ['USER', 'PEMERIKSA'])->count() : 2 }} Akun</span>
+                    <span style="font-size: 0.75rem; color: var(--text-muted); font-weight: 600; display: block; text-transform: uppercase;">Akun USER</span>
+                    <span style="font-size: 1.4rem; font-weight: 800; color: rgb(29, 78, 216);" id="stat-user-accounts-count">{{ isset($users) ? $users->where('role', 'User')->count() : 0 }} Akun</span>
+                </div>
+            </div>
+            
+            <div class="dataview-stat-card">
+                <div style="background-color: var(--color-warning-light); color: var(--color-warning); padding: 0.75rem; border-radius: var(--radius-md); display: flex; align-items: center; justify-content: center;">
+                    <svg viewBox="0 0 24 24" width="22" height="22" stroke="currentColor" stroke-width="2.5" fill="none"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"></path></svg>
+                </div>
+                <div>
+                    <span style="font-size: 0.75rem; color: var(--text-muted); font-weight: 600; display: block; text-transform: uppercase;">Akun STAFF</span>
+                    <span style="font-size: 1.4rem; font-weight: 800; color: var(--color-warning);" id="stat-staff-accounts-count">{{ isset($users) ? $users->where('role', 'Staff')->count() : 0 }} Akun</span>
                 </div>
             </div>
 
@@ -793,8 +668,8 @@
                     <svg viewBox="0 0 24 24" width="22" height="22" stroke="currentColor" stroke-width="2.5" fill="none"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path></svg>
                 </div>
                 <div>
-                    <span style="font-size: 0.75rem; color: var(--text-muted); font-weight: 600; display: block; text-transform: uppercase;">WAREHOUSE</span>
-                    <span style="font-size: 1.4rem; font-weight: 800; color: var(--color-success);" id="stat-wh-accounts">{{ isset($users) ? $users->where('role', 'WAREHOUSE')->count() : 1 }} Akun</span>
+                    <span style="font-size: 0.75rem; color: var(--text-muted); font-weight: 600; display: block; text-transform: uppercase;">ACCOUNTING & WH</span>
+                    <span style="font-size: 1.4rem; font-weight: 800; color: var(--color-success);" id="stat-acc-wh-accounts-count">{{ isset($users) ? $users->whereIn('role', ['Accounting', 'Warehouse Consumable'])->count() : 0 }} Akun</span>
                 </div>
             </div>
         </div>
@@ -810,12 +685,12 @@
                     <thead>
                         <tr>
                             <th class="th-center" style="width: 50px;">NO</th>
-                            <th>USERNAME</th>
+                            <th>USER NAME / LOGIN ID</th>
                             <th>DEPARTMENT</th>
                             <th class="th-center">ROLE HAK AKSES</th>
                             <th class="th-center">STATUS AKUN</th>
                             <th class="th-center">TANGGAL DIBUAT</th>
-                            <th class="th-center" style="width: 120px;">AKSI</th>
+                            <th class="th-center" style="width: 140px;">AKSI</th>
                         </tr>
                     </thead>
                     <tbody id="accounts-tbody">
@@ -836,38 +711,48 @@
             <button class="btn-close" onclick="closeModal('addAccountModal')">&times;</button>
         </div>
 
-        <form id="form-add-account" onsubmit="submitNewAccount(event)">
+        <form action="{{ route('users.store') }}" method="POST">
+            @csrf
             <div class="form-group" style="margin-bottom: 1rem;">
-                <label for="acc_username" style="font-weight: 600; font-size: 0.85rem; margin-bottom: 0.35rem; display: block;">Username / Nama Lengkap <span style="color: var(--color-danger);">*</span></label>
-                <input type="text" id="acc_username" class="form-control" placeholder="Masukkan username atau nama..." required style="height: 42px;">
+                <label for="acc_add_name" style="font-weight: 600; font-size: 0.85rem; margin-bottom: 0.35rem; display: block;">User Name <span style="color: var(--color-danger);">*</span></label>
+                <input type="text" id="acc_add_name" name="name" class="form-control" placeholder="Masukkan nama pengguna..." required style="height: 42px;">
             </div>
 
             <div class="form-group" style="margin-bottom: 1rem;">
-                <label for="acc_dept" style="font-weight: 600; font-size: 0.85rem; margin-bottom: 0.35rem; display: block;">Department <span style="color: var(--color-danger);">*</span></label>
-                <select id="acc_dept" class="form-control" style="height: 42px;" required>
-                    <option value="Production" selected>Production (PR)</option>
-                    <option value="IT Department">IT Department (IT)</option>
-                    <option value="Maintenance">Maintenance (MT)</option>
-                    <option value="Procurement">Procurement (PC)</option>
-                    <option value="Quality Assurance">Quality Assurance (QA)</option>
-                    <option value="Warehouse Logistik">Warehouse Logistik (WH)</option>
-                    <option value="Management / Executive">Management / Executive</option>
+                <label for="acc_add_username" style="font-weight: 600; font-size: 0.85rem; margin-bottom: 0.35rem; display: block;">Username / Login ID</label>
+                <input type="text" id="acc_add_username" name="username" class="form-control" placeholder="Cth: budi_santoso (opsional)" style="height: 42px;">
+            </div>
+
+            <div class="form-group" style="margin-bottom: 1rem;">
+                <label for="acc_add_dept" style="font-weight: 600; font-size: 0.85rem; margin-bottom: 0.35rem; display: block;">Department <span style="color: var(--color-danger);">*</span></label>
+                <select id="acc_add_dept" name="department" class="form-control" style="height: 42px;" required>
+                    <option value="" disabled selected>-- Pilih Department --</option>
+                    <option value="HRGA">HRGA</option>
+                    <option value="PPIC Finish Good">PPIC Finish Good</option>
+                    <option value="PPIC Warehouse">PPIC Warehouse</option>
+                    <option value="QA">QA</option>
+                    <option value="QC">QC</option>
+                    <option value="Production">Production</option>
+                    <option value="Die Shop">Die Shop</option>
+                    <option value="Dies Assy">Dies Assy</option>
+                    <option value="Maintenance">Maintenance</option>
                 </select>
             </div>
 
             <div class="form-group" style="margin-bottom: 1rem;">
-                <label for="acc_role" style="font-weight: 600; font-size: 0.85rem; margin-bottom: 0.35rem; display: block;">Role Hak Akses <span style="color: var(--color-danger);">*</span></label>
-                <select id="acc_role" class="form-control" style="height: 42px;" required>
-                    <option value="MASTER">Akun MASTER (Akses Penuh)</option>
-                    <option value="USER" selected>USER (Pembuat Form)</option>
-                    <option value="PEMERIKSA">PEMERIKSA (Penyetuju Kelayakan)</option>
-                    <option value="WAREHOUSE">WAREHOUSE (Pendaftar Kode Barang)</option>
+                <label for="acc_add_role" style="font-weight: 600; font-size: 0.85rem; margin-bottom: 0.35rem; display: block;">Role Hak Akses <span style="color: var(--color-danger);">*</span></label>
+                <select id="acc_add_role" name="role" class="form-control" style="height: 42px;" required>
+                    <option value="" disabled selected>-- Pilih Role --</option>
+                    <option value="User">User</option>
+                    <option value="Staff">Staff</option>
+                    <option value="Accounting">Accounting</option>
+                    <option value="Warehouse Consumable">Warehouse Consumable</option>
                 </select>
             </div>
 
             <div class="form-group" style="margin-bottom: 1.5rem;">
-                <label for="acc_password" style="font-weight: 600; font-size: 0.85rem; margin-bottom: 0.35rem; display: block;">Password <span style="color: var(--color-danger);">*</span></label>
-                <input type="password" id="acc_password" class="form-control" placeholder="Masukkan password akun..." required style="height: 42px;">
+                <label for="acc_add_password" style="font-weight: 600; font-size: 0.85rem; margin-bottom: 0.35rem; display: block;">Password <span style="color: var(--color-danger);">*</span></label>
+                <input type="password" id="acc_add_password" name="password" class="form-control" placeholder="Masukkan password akun..." required style="height: 42px;">
             </div>
 
             <div style="display: flex; gap: 0.75rem; justify-content: flex-end;">
@@ -875,6 +760,69 @@
                 <button type="submit" class="btn btn-primary" style="display: flex; align-items: center; gap: 0.4rem;">
                     <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2.5" fill="none"><polyline points="20 6 9 17 4 12"></polyline></svg>
                     Simpan Akun
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+{{-- ===== MODAL: EDIT AKUN ===== --}}
+<div class="modal no-print" id="editAccountModal">
+    <div class="modal-content" style="max-width: 520px;">
+        <div class="modal-header">
+            <h3>Edit Akun Pengguna</h3>
+            <button class="btn-close" onclick="closeModal('editAccountModal')">&times;</button>
+        </div>
+
+        <form id="form-edit-account" action="" method="POST">
+            @csrf
+            @method('PUT')
+            
+            <div class="form-group" style="margin-bottom: 1rem;">
+                <label for="acc_edit_name" style="font-weight: 600; font-size: 0.85rem; margin-bottom: 0.35rem; display: block;">User Name <span style="color: var(--color-danger);">*</span></label>
+                <input type="text" id="acc_edit_name" name="name" class="form-control" required style="height: 42px;">
+            </div>
+
+            <div class="form-group" style="margin-bottom: 1rem;">
+                <label for="acc_edit_username" style="font-weight: 600; font-size: 0.85rem; margin-bottom: 0.35rem; display: block;">Username / Login ID</label>
+                <input type="text" id="acc_edit_username" name="username" class="form-control" style="height: 42px;">
+            </div>
+
+            <div class="form-group" style="margin-bottom: 1rem;">
+                <label for="acc_edit_dept" style="font-weight: 600; font-size: 0.85rem; margin-bottom: 0.35rem; display: block;">Department <span style="color: var(--color-danger);">*</span></label>
+                <select id="acc_edit_dept" name="department" class="form-control" style="height: 42px;" required>
+                    <option value="HRGA">HRGA</option>
+                    <option value="PPIC Finish Good">PPIC Finish Good</option>
+                    <option value="PPIC Warehouse">PPIC Warehouse</option>
+                    <option value="QA">QA</option>
+                    <option value="QC">QC</option>
+                    <option value="Production">Production</option>
+                    <option value="Die Shop">Die Shop</option>
+                    <option value="Dies Assy">Dies Assy</option>
+                    <option value="Maintenance">Maintenance</option>
+                </select>
+            </div>
+
+            <div class="form-group" style="margin-bottom: 1rem;">
+                <label for="acc_edit_role" style="font-weight: 600; font-size: 0.85rem; margin-bottom: 0.35rem; display: block;">Role Hak Akses <span style="color: var(--color-danger);">*</span></label>
+                <select id="acc_edit_role" name="role" class="form-control" style="height: 42px;" required>
+                    <option value="User">User</option>
+                    <option value="Staff">Staff</option>
+                    <option value="Accounting">Accounting</option>
+                    <option value="Warehouse Consumable">Warehouse Consumable</option>
+                </select>
+            </div>
+
+            <div class="form-group" style="margin-bottom: 1.5rem;">
+                <label for="acc_edit_password" style="font-weight: 600; font-size: 0.85rem; margin-bottom: 0.35rem; display: block;">Password Baru <span style="color: var(--text-muted); font-size: 0.75rem;">(Opsional)</span></label>
+                <input type="password" id="acc_edit_password" name="password" class="form-control" placeholder="Kosongkan jika tidak ingin mengubah password" style="height: 42px;">
+            </div>
+
+            <div style="display: flex; gap: 0.75rem; justify-content: flex-end;">
+                <button type="button" class="btn btn-secondary" onclick="closeModal('editAccountModal')">Batal</button>
+                <button type="submit" class="btn btn-primary" style="display: flex; align-items: center; gap: 0.4rem;">
+                    <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2.5" fill="none"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                    Simpan Perubahan
                 </button>
             </div>
         </form>
@@ -896,8 +844,9 @@
             {{-- Row 1: Kode & Nama --}}
             <div style="display:grid; grid-template-columns:1fr 2fr; gap:1rem; margin-bottom:1rem;">
                 <div class="form-group" style="margin-bottom:0;">
-                    <label for="fi_kode">Kode Barang</label>
-                    <input type="text" id="fi_kode" name="kode_barang" class="form-control" placeholder="Cth: CDS-001" value="{{ old('kode_barang') }}">
+                    <label for="fi_kode">Kode Barang <span style="color:var(--color-danger);">*</span></label>
+                    <input type="text" id="fi_kode" name="kode_barang" class="form-control @error('kode_barang') is-invalid @enderror" placeholder="Cth: CDS-001" value="{{ old('kode_barang') }}" required>
+                    @error('kode_barang')<div class="error-text">{{ $message }}</div>@enderror
                 </div>
                 <div class="form-group" style="margin-bottom:0;">
                     <label for="fi_nama">Nama Barang <span style="color:var(--color-danger);">*</span></label>
@@ -909,46 +858,58 @@
             {{-- Row 2: Harga & Estimasi Usia --}}
             <div style="display:grid; grid-template-columns:1fr 1fr; gap:1rem; margin-bottom:1rem;">
                 <div class="form-group" style="margin-bottom:0;">
-                    <label for="fi_harga">Harga (Rp)</label>
-                    <input type="number" id="fi_harga" name="harga" class="form-control" placeholder="0" min="0" value="{{ old('harga') }}">
+                    <label for="fi_harga">Harga (Rp) <span style="color:var(--color-danger);">*</span></label>
+                    <input type="number" id="fi_harga" name="harga" class="form-control @error('harga') is-invalid @enderror" placeholder="0" min="0" value="{{ old('harga') }}" required>
+                    @error('harga')<div class="error-text">{{ $message }}</div>@enderror
                 </div>
                 <div class="form-group" style="margin-bottom:0;">
-                    <label for="fi_usia">Estimasi Usia Pakai</label>
-                    <input type="text" id="fi_usia" name="estimasi_usia_pakai" class="form-control" placeholder="Cth: 730 Hari, 6 Bulan, 1 Tahun" value="{{ old('estimasi_usia_pakai') }}">
+                    <label for="fi_usia">Estimasi Usia Pakai <span style="color:var(--color-danger);">*</span></label>
+                    <input type="text" id="fi_usia" name="estimasi_usia_pakai" class="form-control @error('estimasi_usia_pakai') is-invalid @enderror" placeholder="Cth: 730 Hari, 6 Bulan, 1 Tahun" value="{{ old('estimasi_usia_pakai') }}" required>
+                    @error('estimasi_usia_pakai')<div class="error-text">{{ $message }}</div>@enderror
                 </div>
             </div>
 
             {{-- Row 3: Kategori Penggunaan & Ukuran --}}
             <div style="display:grid; grid-template-columns:1fr 1fr; gap:1rem; margin-bottom:1rem;">
                 <div class="form-group" style="margin-bottom:0;">
-                    <label for="fi_katpenggunaan">Kategori Penggunaan</label>
-                    <input type="text" id="fi_katpenggunaan" name="kategori_penggunaan" class="form-control" placeholder="Cth: Produksi, Kantor" value="{{ old('kategori_penggunaan') }}">
+                    <label for="fi_katpenggunaan">Kategori Penggunaan <span style="color:var(--color-danger);">*</span></label>
+                    <input type="text" id="fi_katpenggunaan" name="kategori_penggunaan" class="form-control @error('kategori_penggunaan') is-invalid @enderror" placeholder="Cth: Produksi, Kantor" value="{{ old('kategori_penggunaan') }}" required>
+                    @error('kategori_penggunaan')<div class="error-text">{{ $message }}</div>@enderror
                 </div>
                 <div class="form-group" style="margin-bottom:0;">
-                    <label for="fi_katukuran">Kategori Ukuran</label>
-                    <input type="text" id="fi_katukuran" name="kategori_ukuran" class="form-control" placeholder="Cth: Kecil, Sedang, Besar" value="{{ old('kategori_ukuran') }}">
+                    <label for="fi_katukuran">Kategori Ukuran <span style="color:var(--color-danger);">*</span></label>
+                    <input type="text" id="fi_katukuran" name="kategori_ukuran" class="form-control @error('kategori_ukuran') is-invalid @enderror" placeholder="Cth: Kecil, Sedang, Besar" value="{{ old('kategori_ukuran') }}" required>
+                    @error('kategori_ukuran')<div class="error-text">{{ $message }}</div>@enderror
                 </div>
             </div>
 
-            {{-- Row 4: Min, Titik Order, Max --}}
-            <div style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:1rem; margin-bottom:1rem;">
+            {{-- Row 4: Min, Titik Order, Max, Lead Time --}}
+            <div style="display:grid; grid-template-columns:1fr 1fr 1fr 1fr; gap:1rem; margin-bottom:1rem;">
                 <div class="form-group" style="margin-bottom:0;">
-                    <label for="fi_min">Min</label>
-                    <input type="number" id="fi_min" name="min" class="form-control" placeholder="0" min="0" value="{{ old('min') }}">
+                    <label for="fi_min">Min <span style="color:var(--color-danger);">*</span></label>
+                    <input type="number" id="fi_min" name="min" class="form-control @error('min') is-invalid @enderror" placeholder="0" min="0" value="{{ old('min') }}" required>
+                    @error('min')<div class="error-text">{{ $message }}</div>@enderror
                 </div>
                 <div class="form-group" style="margin-bottom:0;">
-                    <label for="fi_titik">Titik Order</label>
-                    <input type="number" id="fi_titik" name="titik_order" class="form-control" placeholder="0" min="0" value="{{ old('titik_order') }}">
+                    <label for="fi_titik">Titik Order <span style="color:var(--color-danger);">*</span></label>
+                    <input type="number" id="fi_titik" name="titik_order" class="form-control @error('titik_order') is-invalid @enderror" placeholder="0" min="0" value="{{ old('titik_order') }}" required>
+                    @error('titik_order')<div class="error-text">{{ $message }}</div>@enderror
                 </div>
                 <div class="form-group" style="margin-bottom:0;">
-                    <label for="fi_max">Max</label>
-                    <input type="number" id="fi_max" name="max" class="form-control" placeholder="0" min="0" value="{{ old('max') }}">
+                    <label for="fi_max">Max <span style="color:var(--color-danger);">*</span></label>
+                    <input type="number" id="fi_max" name="max" class="form-control @error('max') is-invalid @enderror" placeholder="0" min="0" value="{{ old('max') }}" required>
+                    @error('max')<div class="error-text">{{ $message }}</div>@enderror
+                </div>
+                <div class="form-group" style="margin-bottom:0;">
+                    <label for="fi_lead">Lead Time <span style="color:var(--color-danger);">*</span></label>
+                    <input type="text" id="fi_lead" name="lead_time" class="form-control @error('lead_time') is-invalid @enderror" placeholder="Cth: 3 Hari" value="{{ old('lead_time') }}" required>
+                    @error('lead_time')<div class="error-text">{{ $message }}</div>@enderror
                 </div>
             </div>
 
             {{-- Row 5: Kategori B3 / NON B3 --}}
             <div style="margin-bottom:1.5rem;">
-                <label style="display:block; font-size:0.875rem; font-weight:600; margin-bottom:0.75rem;">Kategori</label>
+                <label style="display:block; font-size:0.875rem; font-weight:600; margin-bottom:0.75rem;">Kategori <span style="color:var(--color-danger);">*</span></label>
                 <div style="display:flex; gap:2rem;">
                     <label class="fi-checkbox-label">
                         <input type="checkbox" name="is_b3" value="1" class="fi-checkbox" {{ old('is_b3') ? 'checked' : '' }}>
@@ -961,6 +922,7 @@
                         <span>NON B3</span>
                     </label>
                 </div>
+                @error('kategori')<div class="error-text" style="margin-top:0.35rem;">{{ $message }}</div>@enderror
             </div>
 
             <div style="display:flex; gap:0.75rem; justify-content:flex-end;">
@@ -1060,7 +1022,7 @@
 
     const emptyTableHtml = `
         <tr class="empty-state-row no-print">
-            <td colspan="14" style="padding: 0; border: none;">
+            <td colspan="15" style="padding: 0; border: none;">
                 <div class="empty-state-wrapper">
                     <div class="empty-state-card">
                         <div class="empty-state-icon-container">
@@ -1118,7 +1080,7 @@
                 <td class="td-input"></td>
                 <td class="td-input"></td>
                 <td class="td-input"></td>
-                <td class="td-input no-print"></td>
+                <td class="td-input"></td>
             </tr>
         `).join('')}
     `;
@@ -1168,6 +1130,7 @@
                 min: item.min || '-',
                 titik: item.titik_order || '-',
                 max: item.max || '-',
+                lead: item.lead_time || '-',
                 aset: item.kategori_aset || 'NO ASET',
                 b3: item.is_b3,
                 non_b3: item.is_non_b3
@@ -1289,7 +1252,7 @@
         for (const formNo in checksheets) {
             const cs = checksheets[formNo];
 
-            // Filter out empty checksheets (0 items) so they don't enter Data View
+            // Filter out empty checksheets (0 items)
             if (!cs.items || cs.items.length === 0) {
                 continue;
             }
@@ -1324,23 +1287,33 @@
             }
 
             totalChecksheets++;
-            if (cs.status === 'Approved' || cs.status === 'Selesai') {
-                approvedChecksheets++;
-            } else {
-                processChecksheets++;
-            }
 
             let statusBg = 'var(--color-warning-light)';
             let statusColor = 'var(--color-warning)';
+            let displayStatus = cs.status.toUpperCase();
+
             if (cs.status === 'Approved' || cs.status === 'Selesai') {
                 statusBg = 'var(--color-success-light)';
                 statusColor = 'var(--color-success)';
-            } else if (cs.status === 'Proses' || cs.status === 'Pending') {
+                approvedChecksheets++;
+            } else {
                 statusBg = 'rgba(59, 130, 246, 0.1)';
                 statusColor = 'rgb(29, 78, 216)';
+                processChecksheets++;
             }
 
             const itemCount = cs.items.length + ' Item';
+
+            const actionButtonsHtml = `
+                <button class="btn btn-primary btn-sm" onclick="viewChecksheet('${cs.formNo}')" style="padding: 0.35rem 0.75rem; font-size: 0.75rem; font-family: var(--font-body); font-weight: 600; border-radius: 6px;">Lihat Preview</button>
+                <button class="btn btn-secondary btn-sm" onclick="printChecksheet('${cs.formNo}')" style="padding: 0.35rem 0.75rem; font-size: 0.75rem; margin-left: 0.25rem; font-family: var(--font-body); font-weight: 600; border-radius: 6px;">Cetak</button>
+            `;
+            const deleteColumnHtml = `
+                <button class="btn btn-sm" onclick="deleteChecksheetForm('${cs.formNo}')" style="padding: 0.35rem 0.75rem; font-size: 0.75rem; font-family: var(--font-body); font-weight: 600; border-radius: 6px; background-color: #ef4444; color: white; border: none; cursor: pointer; display: inline-flex; align-items: center; gap: 0.25rem;">
+                    <svg viewBox="0 0 24 24" width="13" height="13" stroke="currentColor" stroke-width="2.5" fill="none"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6l-1 14H6L5 6"></path><path d="M10 11v6M14 11v6"></path><path d="M9 6V4h6v2"></path></svg>
+                    Hapus Form
+                </button>
+            `;
 
             html += `
                 <tr>
@@ -1350,12 +1323,10 @@
                     <td style="padding: 0 0.8rem; font-size: 0.85rem; font-weight: 600;">${cs.requestor}</td>
                     <td class="td-center" style="font-weight: 700;">${itemCount}</td>
                     <td class="td-center">
-                        <span style="background-color: ${statusBg}; color: ${statusColor}; padding: 0.25rem 0.5rem; border-radius: 4px; font-weight: 700; font-size: 0.75rem; display: inline-block;">${cs.status.toUpperCase()}</span>
+                        <span style="background-color: ${statusBg}; color: ${statusColor}; padding: 0.25rem 0.5rem; border-radius: 4px; font-weight: 700; font-size: 0.75rem; display: inline-block;">${displayStatus}</span>
                     </td>
-                    <td class="td-center" style="padding: 0 0.5rem;">
-                        <button class="btn btn-primary btn-sm" onclick="viewChecksheet('${cs.formNo}')" style="padding: 0.35rem 0.75rem; font-size: 0.75rem; font-family: var(--font-body); font-weight: 600; border-radius: 6px;">Lihat Preview</button>
-                        <button class="btn btn-secondary btn-sm" onclick="printChecksheet('${cs.formNo}')" style="padding: 0.35rem 0.75rem; font-size: 0.75rem; margin-left: 0.25rem; font-family: var(--font-body); font-weight: 600; border-radius: 6px;">Cetak</button>
-                    </td>
+                    <td class="td-center" style="padding: 0 0.5rem;">${actionButtonsHtml}</td>
+                    <td class="td-center" style="padding: 0 0.5rem;">${deleteColumnHtml}</td>
                 </tr>
             `;
             no++;
@@ -1366,7 +1337,7 @@
         if (totalChecksheets === 0) {
             tbody.innerHTML = `
                 <tr>
-                    <td colspan="7" style="padding: 0; border: none;">
+                    <td colspan="8" style="padding: 0; border: none;">
                         <div class="empty-state-wrapper" style="margin: 1.25rem 0;">
                             <div class="empty-state-card" style="gap: 0.75rem;">
                                 <div class="empty-state-icon-container" style="width: 60px; height: 60px;">
@@ -1396,6 +1367,43 @@
         if (statProcess) statProcess.innerText = processChecksheets;
     }
 
+    function deleteChecksheetForm(formNo) {
+        if (!confirm(`Apakah Anda yakin ingin menghapus PERMANEN seluruh Form Registrasi "${formNo}" ini?`)) {
+            return;
+        }
+
+        const form = document.createElement('form');
+        form.method = 'POST';
+        form.action = '{{ route("form-registrasi.delete-checksheet") }}';
+
+        const csrf = document.createElement('input');
+        csrf.type = 'hidden';
+        csrf.name = '_token';
+        csrf.value = '{{ csrf_token() }}';
+        form.appendChild(csrf);
+
+        const method = document.createElement('input');
+        method.type = 'hidden';
+        method.name = '_method';
+        method.value = 'DELETE';
+        form.appendChild(method);
+
+        const input = document.createElement('input');
+        input.type = 'hidden';
+        input.name = 'form_number';
+        input.value = formNo;
+        form.appendChild(input);
+
+        const tabInput = document.createElement('input');
+        tabInput.type = 'hidden';
+        tabInput.name = 'tab';
+        tabInput.value = 'data-view';
+        form.appendChild(tabInput);
+
+        document.body.appendChild(form);
+        form.submit();
+    }
+
     document.addEventListener('DOMContentLoaded', function() {
         activeChecksheetHtml = document.getElementById('preview-table-body').innerHTML;
         populateDateFilterOptions();
@@ -1404,11 +1412,16 @@
         updateApprovalStepper(selectedChecksheetId);
         renderAccountTable();
 
-        if (urlFormParam && urlFormParam !== defaultFormNo) {
+        const urlParams = new URLSearchParams(window.location.search);
+        const activeTabParam = urlParams.get('tab') || '{{ request()->query("tab") }}';
+
+        if (urlFormParam && urlFormParam !== defaultFormNo && activeTabParam !== 'data-view') {
             viewChecksheet(urlFormParam);
         }
 
-        if (window.location.hash === '#account-master') {
+        if (activeTabParam === 'data-view' || window.location.hash === '#data-view') {
+            switchSheet('data-view');
+        } else if (activeTabParam === 'account-master' || window.location.hash === '#account-master') {
             switchSheet('account-master');
         }
     });
@@ -1422,8 +1435,8 @@
             }
         }
 
-        const activeFormsWithItemsCount = Object.keys(checksheets).filter(fNo => checksheets[fNo].items && checksheets[fNo].items.length > 0).length;
-        const nextSeq = String(activeFormsWithItemsCount + 1).padStart(2, '0');
+        const totalFormsCount = Object.keys(checksheets).length;
+        const nextSeq = String(totalFormsCount + 1).padStart(2, '0');
         const todayStr = '{{ date("d-m-Y") }}';
         const nextFormNo = `${nextSeq}/${userTag}/${monthYearStr}`;
         
@@ -1552,6 +1565,7 @@
                         <td class="td-center">${item.min ? `<span class="badge-stock-min">${item.min}</span>` : '-'}</td>
                         <td class="td-center">${item.titik ? `<span class="badge-stock-titik">${item.titik}</span>` : '-'}</td>
                         <td class="td-center">${item.max ? `<span class="badge-stock-max">${item.max}</span>` : '-'}</td>
+                        <td class="td-center" style="font-size:0.75rem; font-weight:600;">${item.lead || '-'}</td>
                         <td class="td-center" style="vertical-align: middle;">
                             ${item.aset === 'ASET' ? '<span class="badge-asset-yes"><svg viewBox="0 0 24 24" width="11" height="11" stroke="currentColor" stroke-width="3" fill="none"><polyline points="20 6 9 17 4 12"></polyline></svg> ASET</span>' : '<span class="badge-asset-no">NO ASET</span>'}
                         </td>
@@ -1561,7 +1575,6 @@
                         <td class="td-center">
                             ${item.non_b3 ? `<div class="check-icon-b3" title="NON B3"><svg viewBox="0 0 24 24" width="13" height="13" stroke="currentColor" stroke-width="3" fill="none"><polyline points="20 6 9 17 4 12"></polyline></svg></div>` : ''}
                         </td>
-                        <td class="td-center no-print"></td>
                     </tr>
                 `;
             });
@@ -1585,7 +1598,7 @@
                             <td class="td-input"></td>
                             <td class="td-input"></td>
                             <td class="td-input"></td>
-                            <td class="td-input no-print"></td>
+                            <td class="td-input"></td>
                         </tr>
                     `;
                 }
@@ -1795,16 +1808,11 @@
                 username: '{{ $u->email }}',
                 name: '{{ $u->name }}',
                 dept: '{{ $u->department ?? "Production" }}',
-                role: '{{ strtoupper($u->role ?? "USER") }}',
+                role: '{{ $u->role ?? "User" }}',
                 status: '{{ $u->status ?? "Aktif" }}',
                 date: '{{ $u->created_at ? $u->created_at->format("d-m-Y") : date("d-m-Y") }}'
             },
             @endforeach
-        @else
-            { id: 1, username: 'admin_master', name: 'Admin Master MAI', dept: 'Management / Executive', role: 'MASTER', status: 'Aktif', date: '15-07-2026' },
-            { id: 2, username: 'budi_user', name: 'Budi Santoso', dept: 'Production', role: 'USER', status: 'Aktif', date: '16-07-2026' },
-            { id: 3, username: 'suherman_spv', name: 'Suherman', dept: 'Quality Assurance', role: 'PEMERIKSA', status: 'Aktif', date: '18-07-2026' },
-            { id: 4, username: 'joko_wh', name: 'Joko Widodo', dept: 'Warehouse Logistik', role: 'WAREHOUSE', status: 'Aktif', date: '20-07-2026' }
         @endif
     ];
 
@@ -1813,82 +1821,94 @@
         if (!tbody) return;
 
         let html = '';
-        let masterCount = 0;
-        let userSpvCount = 0;
+        let userCount = 0;
+        let staffCount = 0;
+        let accCount = 0;
         let whCount = 0;
 
         userAccounts.forEach((acc, index) => {
             let roleBadge = '';
-            if (acc.role === 'MASTER') {
-                masterCount++;
-                roleBadge = `<span style="background-color: rgba(168, 85, 247, 0.15); color: #9333ea; padding: 0.25rem 0.6rem; border-radius: 4px; font-weight: 700; font-size: 0.75rem;">AKUN MASTER</span>`;
-            } else if (acc.role === 'USER') {
-                userSpvCount++;
-                roleBadge = `<span style="background-color: rgba(59, 130, 246, 0.15); color: rgb(29, 78, 216); padding: 0.25rem 0.6rem; border-radius: 4px; font-weight: 700; font-size: 0.75rem;">USER (PEMBUAT)</span>`;
-            } else if (acc.role === 'PEMERIKSA') {
-                userSpvCount++;
-                roleBadge = `<span style="background-color: var(--color-warning-light); color: var(--color-warning); padding: 0.25rem 0.6rem; border-radius: 4px; font-weight: 700; font-size: 0.75rem;">PEMERIKSA</span>`;
-            } else if (acc.role === 'WAREHOUSE') {
+            const rLower = (acc.role || '').toLowerCase();
+
+            if (rLower === 'user') {
+                userCount++;
+                roleBadge = `<span style="background-color: rgba(59, 130, 246, 0.15); color: rgb(29, 78, 216); padding: 0.25rem 0.6rem; border-radius: 4px; font-weight: 700; font-size: 0.75rem;">User</span>`;
+            } else if (rLower === 'staff') {
+                staffCount++;
+                roleBadge = `<span style="background-color: var(--color-warning-light); color: var(--color-warning); padding: 0.25rem 0.6rem; border-radius: 4px; font-weight: 700; font-size: 0.75rem;">Staff</span>`;
+            } else if (rLower === 'accounting') {
+                accCount++;
+                roleBadge = `<span style="background-color: rgba(168, 85, 247, 0.15); color: #9333ea; padding: 0.25rem 0.6rem; border-radius: 4px; font-weight: 700; font-size: 0.75rem;">Accounting</span>`;
+            } else if (rLower === 'warehouse consumable' || rLower === 'warehouse') {
                 whCount++;
-                roleBadge = `<span style="background-color: var(--color-success-light); color: var(--color-success); padding: 0.25rem 0.6rem; border-radius: 4px; font-weight: 700; font-size: 0.75rem;">WAREHOUSE</span>`;
+                roleBadge = `<span style="background-color: var(--color-success-light); color: var(--color-success); padding: 0.25rem 0.6rem; border-radius: 4px; font-weight: 700; font-size: 0.75rem;">Warehouse Consumable</span>`;
+            } else {
+                roleBadge = `<span style="background-color: rgba(100, 116, 139, 0.15); color: #475569; padding: 0.25rem 0.6rem; border-radius: 4px; font-weight: 700; font-size: 0.75rem;">${acc.role}</span>`;
             }
+
+            const jsonAcc = JSON.stringify(acc).replace(/'/g, "&apos;").replace(/"/g, "&quot;");
 
             html += `
                 <tr>
                     <td class="td-center td-no">${index + 1}</td>
-                    <td style="font-weight: 700; color: var(--text-primary); padding: 0 0.8rem;">${acc.username} <span style="font-size:0.75rem; color:var(--text-muted); font-weight:normal;">(${acc.name})</span></td>
+                    <td style="font-weight: 700; color: var(--text-primary); padding: 0 0.8rem;">
+                        ${acc.name}
+                        <div style="font-size:0.75rem; color:var(--text-muted); font-weight:normal;">Username: <strong>${acc.username}</strong></div>
+                    </td>
                     <td style="padding: 0 0.8rem; font-size: 0.85rem; font-weight: 600;">${acc.dept}</td>
                     <td class="td-center">${roleBadge}</td>
                     <td class="td-center"><span style="background-color: var(--color-success-light); color: var(--color-success); padding: 0.2rem 0.5rem; border-radius: 4px; font-weight: 700; font-size: 0.7rem;">${acc.status}</span></td>
                     <td class="td-center" style="font-size: 0.85rem;">${acc.date}</td>
-                    <td class="td-center">
-                        <button class="btn btn-secondary btn-sm" onclick="alert('Detail akun ${acc.username} (${acc.name} - Role: ${acc.role}, Dept: ${acc.dept})')" style="padding: 0.25rem 0.55rem; font-size: 0.75rem; border-radius: 4px;">Detail</button>
+                    <td class="td-center" style="padding: 0 0.5rem;">
+                        <button class="btn btn-secondary btn-sm" onclick="openEditUserModal(${jsonAcc})" style="padding: 0.25rem 0.55rem; font-size: 0.75rem; border-radius: 4px;">Edit</button>
+                        <form action="/users/${acc.id}" method="POST" style="display:inline;" onsubmit="return confirm('Apakah Anda yakin ingin menghapus akun user &quot;${acc.name}&quot;?')">
+                            @csrf
+                            @method('DELETE')
+                            <button type="submit" class="btn btn-danger btn-sm" style="padding: 0.25rem 0.55rem; font-size: 0.75rem; border-radius: 4px; background-color: #ef4444; color: white; border: none; margin-left: 0.2rem;">Hapus</button>
+                        </form>
                     </td>
                 </tr>
             `;
         });
-        tbody.innerHTML = html;
+
+        if (userAccounts.length === 0) {
+            tbody.innerHTML = `
+                <tr>
+                    <td colspan="7" style="text-align: center; padding: 1.5rem; color: var(--text-muted);">Belum ada akun pengguna terdaftar. Klik "+ Buat Akun Baru" untuk menambahkan pengguna.</td>
+                </tr>
+            `;
+        } else {
+            tbody.innerHTML = html;
+        }
 
         const statTotal = document.getElementById('stat-total-accounts');
         if (statTotal) statTotal.innerText = `${userAccounts.length} Akun`;
 
-        const statMaster = document.getElementById('stat-master-accounts');
-        if (statMaster) statMaster.innerText = `${masterCount} Akun`;
+        const statUser = document.getElementById('stat-user-accounts-count');
+        if (statUser) statUser.innerText = `${userCount} Akun`;
 
-        const statUser = document.getElementById('stat-user-accounts');
-        if (statUser) statUser.innerText = `${userSpvCount} Akun`;
+        const statStaff = document.getElementById('stat-staff-accounts-count');
+        if (statStaff) statStaff.innerText = `${staffCount} Akun`;
 
-        const statWh = document.getElementById('stat-wh-accounts');
-        if (statWh) statWh.innerText = `${whCount} Akun`;
+        const statAccWh = document.getElementById('stat-acc-wh-accounts-count');
+        if (statAccWh) statAccWh.innerText = `${accCount + whCount} Akun`;
     }
 
-    function submitNewAccount(event) {
-        event.preventDefault();
-        const username = document.getElementById('acc_username').value.trim();
-        const dept = document.getElementById('acc_dept').value;
-        const role = document.getElementById('acc_role').value;
-        const pass = document.getElementById('acc_password').value;
+    function openEditUserModal(acc) {
+        const form = document.getElementById('form-edit-account');
+        if (!form) return;
+        form.action = `/users/${acc.id}`;
+        document.getElementById('acc_edit_name').value = acc.name || '';
+        document.getElementById('acc_edit_username').value = acc.username || '';
 
-        if (!username || !pass) {
-            alert('Harap lengkapi username dan password!');
-            return;
-        }
+        const deptSelect = document.getElementById('acc_edit_dept');
+        if (deptSelect) deptSelect.value = acc.dept || 'Production';
 
-        const newAcc = {
-            id: userAccounts.length + 1,
-            username: username,
-            name: username,
-            dept: dept,
-            role: role,
-            status: 'Aktif',
-            date: '{{ date("d-m-Y") }}'
-        };
+        const roleSelect = document.getElementById('acc_edit_role');
+        if (roleSelect) roleSelect.value = acc.role || 'User';
 
-        userAccounts.push(newAcc);
-        renderAccountTable();
-        closeModal('addAccountModal');
-        document.getElementById('form-add-account').reset();
-        showToast(`Akun '${username}' dengan Role [${role}] berhasil dibuat!`, 'success');
+        document.getElementById('acc_edit_password').value = '';
+        openModal('editAccountModal');
     }
 </script>
 @endsection

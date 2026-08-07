@@ -159,7 +159,7 @@ class ItemController extends Controller
 
         foreach ($grouped as $oldFormNo => $items) {
             if (count($items) === 0) {
-                continue; // Skip forms with no items (eliminate empty forms)
+                continue;
             }
 
             // Extract department tag and month-year if present
@@ -206,20 +206,35 @@ class ItemController extends Controller
      */
     public function storeFormItem(Request $request)
     {
+        if (!$request->has('is_b3') && !$request->has('is_non_b3')) {
+            return back()->withErrors(['kategori' => 'Pilih setidaknya satu kategori (B3 atau NON B3).'])->withInput();
+        }
+
         $validated = $request->validate([
             'form_number'        => 'nullable|string|max:100',
+            'kode_barang'        => 'required|string|max:100',
             'nama_barang'        => 'required|string|max:255',
-            'kode_barang'        => 'nullable|string|max:100',
-            'harga'              => 'nullable|numeric|min:0',
-            'estimasi_usia_pakai'=> 'nullable|string|max:100',
-            'kategori_penggunaan'=> 'nullable|string|max:100',
-            'kategori_ukuran'    => 'nullable|string|max:100',
-            'min'                => 'nullable|integer|min:0',
-            'titik_order'        => 'nullable|integer|min:0',
-            'max'                => 'nullable|integer|min:0',
-            'lead_time'          => 'nullable|string|max:100',
+            'harga'              => 'required|numeric|min:0',
+            'estimasi_usia_pakai'=> 'required|string|max:100',
+            'kategori_penggunaan'=> 'required|string|max:100',
+            'kategori_ukuran'    => 'required|string|max:100',
+            'min'                => 'required|integer|min:0',
+            'titik_order'        => 'required|integer|min:0',
+            'max'                => 'required|integer|min:0',
+            'lead_time'          => 'required|string|max:100',
             'is_b3'              => 'nullable|boolean',
             'is_non_b3'          => 'nullable|boolean',
+        ], [
+            'kode_barang.required'         => 'Kode barang wajib diisi.',
+            'nama_barang.required'         => 'Nama barang wajib diisi.',
+            'harga.required'               => 'Harga wajib diisi.',
+            'estimasi_usia_pakai.required' => 'Estimasi usia pakai wajib diisi.',
+            'kategori_penggunaan.required' => 'Kategori penggunaan wajib diisi.',
+            'kategori_ukuran.required'     => 'Kategori ukuran wajib diisi.',
+            'min.required'                 => 'Min wajib diisi.',
+            'titik_order.required'         => 'Titik order wajib diisi.',
+            'max.required'                 => 'Max wajib diisi.',
+            'lead_time.required'           => 'Lead time wajib diisi.',
         ]);
 
         $validated['is_b3']     = $request->has('is_b3');
@@ -241,6 +256,24 @@ class ItemController extends Controller
     }
 
     /**
+     * Delete an entire form / checksheet permanently.
+     */
+    public function deleteFormChecksheet(Request $request)
+    {
+        $formNo = $request->input('form_number');
+        if (!$formNo) {
+            return redirect()->route('form-registrasi', ['tab' => 'data-view'])->with('error', 'Form number tidak valid.');
+        }
+
+        FormItem::where('form_number', $formNo)->forceDelete();
+
+        $this->resequenceFormNumbers();
+
+        return redirect()->route('form-registrasi', ['tab' => 'data-view'])
+            ->with('success', 'Formulir "' . $formNo . '" berhasil dihapus secara permanen.');
+    }
+
+    /**
      * Delete a form item entry.
      */
     public function deleteFormItem($id)
@@ -248,7 +281,7 @@ class ItemController extends Controller
         $item = FormItem::findOrFail($id);
         $name = $item->nama_barang;
         $targetForm = $item->form_number;
-        $item->delete();
+        $item->forceDelete();
 
         $map = $this->resequenceFormNumbers();
         if ($targetForm && isset($map[$targetForm])) {
@@ -263,5 +296,106 @@ class ItemController extends Controller
 
         return redirect()->route('form-registrasi', $redirectParams)
             ->with('success', 'Data "' . $name . '" berhasil dihapus.');
+    }
+
+    /**
+     * Store a new user account in database.
+     */
+    public function storeUser(Request $request)
+    {
+        $validated = $request->validate([
+            'name'       => 'required|string|max:255',
+            'username'   => 'nullable|string|max:100|unique:users,email',
+            'department' => 'required|string|max:100',
+            'role'       => 'required|string|max:100',
+            'password'   => 'required|string|min:4',
+        ], [
+            'name.required'       => 'User Name wajib diisi.',
+            'department.required' => 'Department wajib diisi.',
+            'role.required'       => 'Role wajib diisi.',
+            'password.required'   => 'Password wajib diisi.',
+            'password.min'        => 'Password minimal 4 karakter.',
+            'username.unique'     => 'Username / Login ID sudah digunakan oleh pengguna lain.',
+        ]);
+
+        $username = trim($request->input('username'));
+        if (!$username) {
+            $username = strtolower(preg_replace('/[^a-zA-Z0-9]/', '_', trim($validated['name'])));
+            $baseUsername = $username;
+            $counter = 1;
+            while (User::where('email', $username)->exists()) {
+                $username = $baseUsername . '_' . $counter;
+                $counter++;
+            }
+        }
+
+        User::create([
+            'name'       => $validated['name'],
+            'email'      => $username,
+            'department' => $validated['department'],
+            'role'       => $validated['role'],
+            'status'     => 'Aktif',
+            'password'   => bcrypt($validated['password']),
+        ]);
+
+        return redirect()->route('form-registrasi', ['tab' => 'account-master'])
+            ->with('success', 'Akun pengguna "' . $validated['name'] . '" berhasil dibuat.');
+    }
+
+    /**
+     * Update an existing user account in database.
+     */
+    public function updateUser(Request $request, $id)
+    {
+        $user = User::findOrFail($id);
+
+        $validated = $request->validate([
+            'name'       => 'required|string|max:255',
+            'username'   => 'nullable|string|max:100|unique:users,email,' . $user->id,
+            'department' => 'required|string|max:100',
+            'role'       => 'required|string|max:100',
+            'password'   => 'nullable|string|min:4',
+        ], [
+            'name.required'       => 'User Name wajib diisi.',
+            'department.required' => 'Department wajib diisi.',
+            'role.required'       => 'Role wajib diisi.',
+            'username.unique'     => 'Username / Login ID sudah digunakan oleh pengguna lain.',
+            'password.min'        => 'Password minimal 4 karakter.',
+        ]);
+
+        $user->name = $validated['name'];
+        if (!empty($validated['username'])) {
+            $user->email = trim($validated['username']);
+        }
+        $user->department = $validated['department'];
+        $user->role = $validated['role'];
+
+        if (!empty($validated['password'])) {
+            $user->password = bcrypt($validated['password']);
+        }
+
+        $user->save();
+
+        return redirect()->route('form-registrasi', ['tab' => 'account-master'])
+            ->with('success', 'Akun pengguna "' . $user->name . '" berhasil diperbarui.');
+    }
+
+    /**
+     * Delete a user account from database.
+     */
+    public function deleteUser($id)
+    {
+        $user = User::findOrFail($id);
+
+        if (auth()->id() === $user->id) {
+            return redirect()->route('form-registrasi', ['tab' => 'account-master'])
+                ->with('error', 'Anda tidak dapat menghapus akun Anda sendiri.');
+        }
+
+        $name = $user->name;
+        $user->delete();
+
+        return redirect()->route('form-registrasi', ['tab' => 'account-master'])
+            ->with('success', 'Akun "' . $name . '" berhasil dihapus.');
     }
 }

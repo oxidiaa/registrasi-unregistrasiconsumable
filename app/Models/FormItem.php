@@ -3,9 +3,11 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
 class FormItem extends Model
 {
+    use SoftDeletes;
     protected $fillable = [
         'form_number',
         'kode_barang',
@@ -33,7 +35,13 @@ class FormItem extends Model
      */
     protected $appends = [
         'kategori_aset',
+        'is_deleted',
     ];
+
+    public function getIsDeletedAttribute(): bool
+    {
+        return $this->trashed();
+    }
 
     /**
      * Determine if the item is classified as ASET or NO ASET.
@@ -42,7 +50,7 @@ class FormItem extends Model
     public function getKategoriAsetAttribute(): string
     {
         $harga = (float) $this->harga;
-        if ($harga <= 4999999) {
+        if ($harga <= 5000000) {
             return 'NO ASET';
         }
 
