@@ -172,7 +172,8 @@ class ItemController extends Controller
         $redirectParams = $targetForm ? ['form' => $targetForm] : [];
 
         return redirect()->route('form-registrasi', $redirectParams)
-            ->with('success', 'Data barang "' . $validated['nama_barang'] . '" berhasil ditambahkan.');
+            ->with('success', 'Data barang "' . $validated['nama_barang'] . '" berhasil ditambahkan.')
+            ->with('show_add_more_prompt', true);
     }
 
     /**

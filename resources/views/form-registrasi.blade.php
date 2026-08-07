@@ -185,7 +185,7 @@
         <p>Form pendaftaran barang consumable PT. Metalart Astra Indonesia.</p>
     </div>
     <div style="display: flex; gap: 0.75rem; align-items: center;">
-        <button class="btn btn-outline" id="btn-form-baru" onclick="createNewForm()" style="border: 1.5px solid var(--color-primary); color: var(--color-primary); background: transparent; font-weight: 600; font-family: var(--font-body); display: inline-flex; align-items: center; gap: 0.4rem; padding: 0.6rem 1rem; border-radius: var(--radius-md); cursor: pointer;">
+        <button class="btn btn-primary" id="btn-form-baru" onclick="createNewForm()" style="font-weight: 600; font-family: var(--font-body); display: inline-flex; align-items: center; gap: 0.4rem; padding: 0.6rem 1.1rem; border-radius: var(--radius-md); cursor: pointer;">
             <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2.5" fill="none" stroke-linecap="round" stroke-linejoin="round">
                 <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
                 <polyline points="14 2 14 8 20 8"></polyline>
@@ -194,17 +194,6 @@
             </svg>
             + Form Baru
         </button>
-        <button class="btn btn-primary" id="btn-tambah-data" onclick="openModal('addItemModal')">
-            <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2.5" fill="none" stroke-linecap="round" stroke-linejoin="round">
-                <line x1="12" y1="5" x2="12" y2="19"></line>
-                <line x1="5" y1="12" x2="19" y2="12"></line>
-            </svg>
-            Tambah Data
-        </button>
-        <div id="form-finalized-pill" style="display: none; align-items: center; gap: 0.4rem; padding: 0.55rem 0.85rem; background: rgba(16, 185, 129, 0.1); border: 1px solid rgba(16, 185, 129, 0.25); color: #059669; border-radius: var(--radius-md); font-size: 0.78rem; font-weight: 700;">
-            <svg viewBox="0 0 24 24" width="15" height="15" stroke="currentColor" stroke-width="2.5" fill="none"><polyline points="20 6 9 17 4 12"></polyline></svg>
-            Form Terisi (Klik '+ Form Baru' untuk item lain)
-        </div>
         <button class="btn btn-secondary" onclick="printCurrentSheet()">
             <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round">
                 <polyline points="6 9 6 2 18 2 18 9"></polyline>
@@ -954,6 +943,32 @@
     </div>
 </div>
 
+{{-- ===== MODAL: KONFIRMASI TAMBAH ITEM LAGI ===== --}}
+<div class="modal" id="addMorePromptModal">
+    <div class="modal-content" style="max-width: 480px; text-align: center; padding: 2.25rem 1.75rem; border-radius: var(--radius-lg);">
+        <div style="width: 68px; height: 68px; border-radius: 50%; background: var(--color-success-light); color: var(--color-success); display: flex; align-items: center; justify-content: center; margin: 0 auto 1.25rem; box-shadow: 0 0 20px rgba(16, 185, 129, 0.2);">
+            <svg viewBox="0 0 24 24" width="36" height="36" stroke="currentColor" stroke-width="2.5" fill="none">
+                <polyline points="20 6 9 17 4 12"></polyline>
+            </svg>
+        </div>
+        <h3 style="font-family: var(--font-heading); font-weight: 700; color: var(--text-primary); margin-bottom: 0.5rem; font-size: 1.3rem;">
+            Data Barang Berhasil Disimpan!
+        </h3>
+        <p style="color: var(--text-muted); font-size: 0.9rem; line-height: 1.5; margin-bottom: 1.75rem;">
+            Apakah Anda ingin menambahkan item barang consumable lainnya ke dalam form ini?
+        </p>
+        <div style="display: flex; gap: 0.75rem; justify-content: center;">
+            <button type="button" class="btn btn-secondary" onclick="closeModal('addMorePromptModal')" style="padding: 0.65rem 1.25rem; font-weight: 600; min-width: 120px;">
+                Tidak, Selesai
+            </button>
+            <button type="button" class="btn btn-primary" onclick="closeModal('addMorePromptModal'); openModal('addItemModal');" style="padding: 0.65rem 1.25rem; font-weight: 700; display: inline-flex; align-items: center; gap: 0.4rem; min-width: 170px;">
+                <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2.5" fill="none"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+                Ya, Tambah Item Lagi
+            </button>
+        </div>
+    </div>
+</div>
+
 @endsection
 
 @section('scripts')
@@ -975,6 +990,15 @@
             e.target.classList.remove('show');
         }
     }
+
+    // Auto-open prompt modal konfirmasi tambah item lagi setelah simpan
+    @if(session('show_add_more_prompt'))
+        document.addEventListener('DOMContentLoaded', function() {
+            setTimeout(function() {
+                openModal('addMorePromptModal');
+            }, 300);
+        });
+    @endif
 
     // Auto-open modal jika ada validation error dari form tambah data
     @if($errors->any())
@@ -1241,7 +1265,6 @@
         renderDataViewTable();
         updateApprovalStepper(selectedChecksheetId);
         renderAccountTable();
-        updateTambahDataButtonVisibility();
 
         if (urlFormParam && urlFormParam !== defaultFormNo) {
             viewChecksheet(urlFormParam);
@@ -1309,21 +1332,6 @@
         showToast(`Formulir Baru (${nextFormNo}) Berhasil Dibuat! Silakan isi data barang.`, 'success');
     }
 
-    function updateTambahDataButtonVisibility() {
-        const btnTambahData = document.getElementById('btn-tambah-data');
-        const finalizedPill = document.getElementById('form-finalized-pill');
-        const cs = checksheets[selectedChecksheetId];
-        const hasItems = cs && cs.items && cs.items.length > 0;
-        const isPrintPreview = document.getElementById('print-preview-pane') ? document.getElementById('print-preview-pane').classList.contains('active') : true;
-
-        if (btnTambahData) {
-            btnTambahData.style.display = (isPrintPreview && !hasItems) ? 'inline-flex' : 'none';
-        }
-        if (finalizedPill) {
-            finalizedPill.style.display = (isPrintPreview && hasItems) ? 'inline-flex' : 'none';
-        }
-    }
-
     function switchSheet(tabId) {
         document.querySelectorAll('.tab-pane').forEach(pane => pane.classList.remove('active'));
         document.querySelectorAll('.sheet-tab').forEach(tab => tab.classList.remove('active'));
@@ -1337,14 +1345,11 @@
             return attr && attr.includes(`'${tabId}'`);
         });
         if (matchingTab) matchingTab.classList.add('active');
-
-        updateTambahDataButtonVisibility();
     }
 
     function viewChecksheet(csId) {
         selectedChecksheetId = csId;
         switchSheet('print-preview');
-        updateTambahDataButtonVisibility();
         
         const cs = checksheets[csId];
         if (!cs) return;

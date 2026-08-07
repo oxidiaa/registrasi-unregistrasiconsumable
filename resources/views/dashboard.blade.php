@@ -246,7 +246,7 @@
                                             <p class="empty-state-desc">Belum ada barang consumable yang terdaftar dalam sistem. Gunakan form pendaftaran untuk menambahkan barang baru.</p>
                                         </div>
                                         <div class="empty-state-actions">
-                                            <a href="{{ route('form-registrasi.index') }}" class="empty-state-btn" style="text-decoration: none;">
+                                            <a href="{{ route('form-registrasi') }}" class="empty-state-btn" style="text-decoration: none;">
                                                 <svg viewBox="0 0 24 24" fill="none" stroke-linecap="round" stroke-linejoin="round">
                                                     <line x1="12" y1="5" x2="12" y2="19"></line>
                                                     <line x1="5" y1="12" x2="19" y2="12"></line>

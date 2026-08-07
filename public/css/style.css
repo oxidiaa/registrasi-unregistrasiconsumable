@@ -785,6 +785,7 @@ textarea.form-control {
 }
 
 /* Login Page Specific Styling */
+/* Login Page Specific Styling */
 .login-body {
     background-color: var(--bg-primary);
     min-height: 100vh;
@@ -798,20 +799,155 @@ textarea.form-control {
 
 .login-container {
     width: 100%;
-    max-width: 420px;
+    max-width: 440px;
     padding: 1.5rem;
     z-index: 10;
+    position: relative;
+}
+
+/* ================================================================
+   ANIMATED LOGIN CHARACTERS SYSTEM
+   ================================================================ */
+.login-characters-container {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+    width: 100%;
+    max-width: 380px;
+    margin: 0 auto -28px auto;
+    padding: 0 15px;
+    position: relative;
+    z-index: 25;
+    pointer-events: none;
+}
+
+.char-wrapper {
+    position: relative;
+    transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+    will-change: transform;
+}
+
+.character-svg {
+    display: block;
+    overflow: visible;
+    transition: transform 0.15s ease-out;
+    filter: drop-shadow(0 10px 16px rgba(15, 23, 42, 0.15));
+}
+
+.pupil-group {
+    transition: transform 0.08s ease-out;
+    will-change: transform;
+}
+
+/* Character Idle Floating Animations */
+.char-purple {
+    animation: charFloat1 4s ease-in-out infinite;
+}
+
+.char-orange {
+    animation: charFloat2 3.6s ease-in-out infinite 0.4s;
+}
+
+.char-cyan {
+    animation: charFloat3 4.2s ease-in-out infinite 0.8s;
+}
+
+@keyframes charFloat1 {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-4px); }
+}
+
+@keyframes charFloat2 {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-6px); }
+}
+
+@keyframes charFloat3 {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-5px); }
+}
+
+/* Paw / Hand animations for password hide/peek */
+.hand {
+    transition: transform 0.38s cubic-bezier(0.34, 1.56, 0.64, 1);
+    transform-origin: center center;
+}
+
+/* Default state: paws resting at bottom */
+.hand-left {
+    transform: translate(0, 0) rotate(0deg);
+}
+
+.hand-right {
+    transform: translate(0, 0) rotate(0deg);
+}
+
+/* Password Field Focused: Cover Eyes Completely */
+.password-active .char-purple .hand-left {
+    transform: translate(12px, -46px) rotate(14deg);
+}
+
+.password-active .char-purple .hand-right {
+    transform: translate(-12px, -46px) rotate(-14deg);
+}
+
+.password-active .char-orange .hand-left {
+    transform: translate(11px, -42px) rotate(16deg);
+}
+
+.password-active .char-orange .hand-right {
+    transform: translate(-11px, -42px) rotate(-16deg);
+}
+
+.password-active .char-cyan .hand-left {
+    transform: translate(13px, -36px) rotate(12deg);
+}
+
+.password-active .char-cyan .hand-right {
+    transform: translate(-13px, -36px) rotate(-12deg);
+}
+
+/* Password Peek State (When Show Password toggle is active) */
+.password-peek .char-purple .hand-left {
+    transform: translate(3px, -38px) rotate(42deg);
+}
+
+.password-peek .char-purple .hand-right {
+    transform: translate(-3px, -38px) rotate(-42deg);
+}
+
+.password-peek .char-orange .hand-left {
+    transform: translate(2px, -34px) rotate(44deg);
+}
+
+.password-peek .char-orange .hand-right {
+    transform: translate(-2px, -34px) rotate(-44deg);
+}
+
+.password-peek .char-cyan .hand-left {
+    transform: translate(4px, -28px) rotate(38deg);
+}
+
+.password-peek .char-cyan .hand-right {
+    transform: translate(-4px, -28px) rotate(-38deg);
+}
+
+/* Username Field Focused: Lean In */
+.username-active .char-wrapper {
+    transform: scale(1.08) translateY(3px);
 }
 
 .login-card {
-    background: rgba(255, 255, 255, 0.7);
+    background: rgba(255, 255, 255, 0.75);
     backdrop-filter: blur(20px);
     -webkit-backdrop-filter: blur(20px);
-    border: 1px solid rgba(255, 255, 255, 0.5);
+    border: 1px solid rgba(255, 255, 255, 0.6);
     border-radius: var(--radius-lg);
-    padding: 2.5rem 2.25rem;
-    box-shadow: var(--shadow-lg);
+    padding: 2.75rem 2.25rem 2.5rem 2.25rem;
+    box-shadow: 0 20px 40px -15px rgba(15, 23, 42, 0.08);
     text-align: center;
+    position: relative;
+    z-index: 15;
 }
 
 .login-header-logo {
@@ -844,6 +980,42 @@ textarea.form-control {
     color: var(--text-muted);
     font-size: 0.9rem;
     margin-bottom: 2rem;
+}
+
+/* Password Input Wrapper with Toggle */
+.password-input-wrapper {
+    position: relative;
+    display: flex;
+    align-items: center;
+}
+
+.password-input-wrapper .form-control {
+    padding-right: 2.75rem;
+}
+
+.btn-toggle-password {
+    position: absolute;
+    right: 0.75rem;
+    background: none;
+    border: none;
+    color: var(--text-muted);
+    cursor: pointer;
+    padding: 0.35rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: var(--radius-sm);
+    transition: var(--transition-smooth);
+    z-index: 5;
+}
+
+.btn-toggle-password:hover {
+    color: var(--color-primary);
+    background-color: rgba(79, 70, 229, 0.08);
+}
+
+.d-none {
+    display: none !important;
 }
 
 .form-check {
