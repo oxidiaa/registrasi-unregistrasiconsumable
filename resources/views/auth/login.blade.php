@@ -250,14 +250,51 @@
 
             let keyBounceTimer = null;
 
-            // Mouse Movement for Eyes & Body Parallax Leaning
+            // Cache static pupil centers to eliminate layout thrashing (reflows) on mousemove
+            let pupilCenters = [];
+
+            function updatePupilCenters() {
+                const currentTransforms = Array.from(pupils).map(p => p.style.transform);
+                pupils.forEach(p => p.style.transform = 'translate(0px, 0px)');
+
+                pupilCenters = Array.from(pupils).map((pupil, index) => {
+                    const rect = pupil.getBoundingClientRect();
+                    return {
+                        element: pupil,
+                        x: rect.left + rect.width / 2,
+                        y: rect.top + rect.height / 2
+                    };
+                });
+
+                pupils.forEach((p, index) => {
+                    if (currentTransforms[index]) p.style.transform = currentTransforms[index];
+                });
+            }
+
+            updatePupilCenters();
+            window.addEventListener('resize', updatePupilCenters);
+
+            // Mouse Movement for Eyes & Body Parallax Leaning using requestAnimationFrame (Instant response)
+            let mouseX = window.innerWidth / 2;
+            let mouseY = window.innerHeight / 2;
+            let ticking = false;
+
             window.addEventListener('mousemove', function (e) {
+                mouseX = e.clientX;
+                mouseY = e.clientY;
+
+                if (!ticking) {
+                    requestAnimationFrame(updateEyeAndBodyPositions);
+                    ticking = true;
+                }
+            });
+
+            function updateEyeAndBodyPositions() {
+                ticking = false;
+
                 const stageRect = stage.getBoundingClientRect();
                 const stageCenterX = stageRect.left + stageRect.width / 2;
                 const stageCenterY = stageRect.top + stageRect.height / 2;
-
-                const mouseX = e.clientX;
-                const mouseY = e.clientY;
 
                 // Parallax shift for body entities
                 const offsetX = (mouseX - stageCenterX) / 35;
@@ -279,19 +316,15 @@
                     char.style.setProperty('--tilt-deg', `${tilt}deg`);
                 });
 
-                // Eye Pupil Tracking
+                // Eye Pupil Tracking - Real-time zero-delay follow cursor
                 if (stage.classList.contains('password-focused') && !stage.classList.contains('password-peeking')) {
                     pupils.forEach(pupil => pupil.style.transform = 'translate(0px, 0px)');
                     return;
                 }
 
-                pupils.forEach(pupil => {
-                    const rect = pupil.getBoundingClientRect();
-                    const pupilX = rect.left + rect.width / 2;
-                    const pupilY = rect.top + rect.height / 2;
-
-                    const deltaX = mouseX - pupilX;
-                    const deltaY = mouseY - pupilY;
+                pupilCenters.forEach(p => {
+                    const deltaX = mouseX - p.x;
+                    const deltaY = mouseY - p.y;
                     const angle = Math.atan2(deltaY, deltaX);
                     const distance = Math.hypot(deltaX, deltaY);
 
@@ -301,9 +334,9 @@
                     const moveX = Math.cos(angle) * moveDist;
                     const moveY = Math.sin(angle) * moveDist;
 
-                    pupil.style.transform = `translate(${moveX}px, ${moveY}px)`;
+                    p.element.style.transform = `translate(${moveX}px, ${moveY}px)`;
                 });
-            });
+            }
 
             // Focus on Username/Email Field -> Characters lean towards input
             if (usernameInput) {

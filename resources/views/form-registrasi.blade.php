@@ -736,6 +736,7 @@
                     <option value="Die Shop">Die Shop</option>
                     <option value="Dies Assy">Dies Assy</option>
                     <option value="Maintenance">Maintenance</option>
+                    <option value="Accounting">Accounting</option>
                 </select>
             </div>
 

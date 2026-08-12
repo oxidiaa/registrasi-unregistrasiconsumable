@@ -796,13 +796,26 @@ textarea.form-control {
     width: 100vw;
     margin: 0;
     padding: 0;
-    overflow-x: hidden;
+    overflow: hidden;
+    position: relative;
+}
+
+.orbit-canvas {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    pointer-events: none;
+    z-index: 100;
 }
 
 .login-split-wrapper {
     display: flex;
     min-height: 100vh;
     width: 100vw;
+    position: relative;
+    z-index: 2;
 }
 
 /* Left Illustration Panel - Centered Vertically & Horizontally */
@@ -817,6 +830,83 @@ textarea.form-control {
     user-select: none;
     overflow: hidden;
     border-right: 1px solid #f4f4f5;
+}
+
+/* Right Form Panel */
+.login-form-panel {
+    flex: 1;
+    background-color: #ffffff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 3rem 4rem;
+}
+
+.login-form-content {
+    width: 100%;
+    max-width: 400px;
+    display: flex;
+    flex-direction: column;
+}
+
+.sparkle-logo {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 2rem;
+}
+
+.sparkle-logo svg {
+    fill: #18181b;
+}
+
+.welcome-heading {
+    font-size: 2.25rem;
+    font-weight: 800;
+    color: #18181b;
+    letter-spacing: -0.03em;
+    margin-bottom: 0.5rem;
+    text-align: center;
+}
+
+.welcome-subtitle {
+    font-size: 0.95rem;
+    color: #71717a;
+    margin-bottom: 2.5rem;
+    text-align: center;
+}
+
+.form-group-clean {
+    margin-bottom: 1.75rem;
+    display: flex;
+    flex-direction: column;
+}
+
+.form-group-clean label {
+    font-size: 0.95rem;
+    font-weight: 700;
+    color: #18181b;
+    margin-bottom: 0.5rem;
+}
+
+.input-clean {
+    width: 100%;
+    border: none;
+    border-bottom: 1.5px solid #e4e4e7;
+    padding: 0.75rem 0;
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    font-size: 1rem;
+    color: #18181b;
+    background: transparent;
+    transition: border-color 0.2s ease;
+    border-radius: 0;
+}
+
+.input-clean:focus {
+    outline: none;
+    background: rgba(255, 255, 255, 0.12);
+    border-color: #818cf8;
+    box-shadow: 0 0 0 4px rgba(129, 140, 248, 0.25);
 }
 
 /* Stage containing all 4 characters centered */
@@ -958,14 +1048,14 @@ textarea.form-control {
     }
 }
 
-/* Pupil transition */
+/* Pupil transition - instant real-time cursor tracking without delay */
 .pupil {
-    transition: transform 0.15s cubic-bezier(0.2, 0, 0.2, 1);
+    transition: none;
 }
 
 /* Base transitions for character entities & paws */
 .char-entity {
-    transition: transform 0.55s cubic-bezier(0.34, 1.25, 0.64, 1);
+    transition: transform 0.08s ease-out;
 }
 
 .char-paws {

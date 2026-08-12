@@ -38,11 +38,11 @@ class DatabaseSeeder extends Seeder
         // 3. Suherman (Pemeriksa)
         User::create([
             'name'       => 'Suherman',
-            'email'      => 'suherman_spv',
+            'email'      => 'suherman',
             'department' => 'Quality Assurance',
             'role'       => 'PEMERIKSA',
             'status'     => 'Aktif',
-            'password'   => bcrypt('pemeriksa'),
+            'password'   => bcrypt('suherman'),
         ]);
 
         // 4. Joko Widodo (Warehouse)
