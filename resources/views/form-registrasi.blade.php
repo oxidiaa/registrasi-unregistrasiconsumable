@@ -234,6 +234,15 @@
         </svg>
         Print Preview
     </button>
+
+    <button class="sheet-tab" onclick="switchSheet('proses-approval')">
+        <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
+            <polyline points="22 4 12 14.01 9 11.01"></polyline>
+        </svg>
+        Proses Approval
+    </button>
+
     <button class="sheet-tab" onclick="switchSheet('data-view')">
         <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round">
             <line x1="8" y1="6" x2="21" y2="6"></line>
@@ -489,24 +498,31 @@
         </div>
 
         {{-- ===== SIGNATURE ===== --}}
-        <div class="form-reg-signature">
+        <div class="form-reg-signature" style="grid-template-columns: repeat(4, 1fr);">
             <div class="sig-box">
-                <div class="sig-label">Dibuat Oleh</div>
+                <div class="sig-label">Dibuat (User)</div>
                 <div class="sig-space" id="preview-sig-dibuat" style="display: flex; flex-direction: column; align-items: center; justify-content: center; height: 64px; font-size: 0.8rem; font-weight: 600;">
                     <span style="color: var(--text-muted); font-size: 0.75rem; font-style: italic;">...................</span>
                 </div>
                 <div class="sig-line"></div>
             </div>
             <div class="sig-box">
-                <div class="sig-label">Diperiksa Oleh</div>
-                <div class="sig-space" id="preview-sig-diperiksa" style="display: flex; flex-direction: column; align-items: center; justify-content: center; height: 64px; font-size: 0.8rem; font-weight: 600;">
+                <div class="sig-label">Approved Staff</div>
+                <div class="sig-space" id="preview-sig-staff" style="display: flex; flex-direction: column; align-items: center; justify-content: center; height: 64px; font-size: 0.8rem; font-weight: 600;">
                     <span style="color: var(--text-muted); font-size: 0.75rem; font-style: italic;">...................</span>
                 </div>
                 <div class="sig-line"></div>
             </div>
             <div class="sig-box">
-                <div class="sig-label">Disetujui Oleh</div>
-                <div class="sig-space" id="preview-sig-disetujui" style="display: flex; flex-direction: column; align-items: center; justify-content: center; height: 64px; font-size: 0.8rem; font-weight: 600;">
+                <div class="sig-label">Approved Accounting</div>
+                <div class="sig-space" id="preview-sig-accounting" style="display: flex; flex-direction: column; align-items: center; justify-content: center; height: 64px; font-size: 0.8rem; font-weight: 600;">
+                    <span style="color: var(--text-muted); font-size: 0.75rem; font-style: italic;">...................</span>
+                </div>
+                <div class="sig-line"></div>
+            </div>
+            <div class="sig-box">
+                <div class="sig-label">Didaftarkan (Warehouse)</div>
+                <div class="sig-space" id="preview-sig-warehouse" style="display: flex; flex-direction: column; align-items: center; justify-content: center; height: 64px; font-size: 0.8rem; font-weight: 600;">
                     <span style="color: var(--text-muted); font-size: 0.75rem; font-style: italic;">...................</span>
                 </div>
                 <div class="sig-line"></div>
@@ -514,6 +530,118 @@
         </div>
 
     </div>
+</div>
+
+{{-- ===== TAB PANE: PROSES APPROVAL ===== --}}
+<div id="proses-approval-pane" class="tab-pane no-print">
+    {{-- Clean Header Stats Row --}}
+    <div class="dataview-stats">
+        <div class="dataview-stat-card">
+            <div style="background-color: var(--color-primary-light); color: var(--color-primary); padding: 0.75rem; border-radius: var(--radius-md); display: flex; align-items: center; justify-content: center;">
+                <svg viewBox="0 0 24 24" width="22" height="22" stroke="currentColor" stroke-width="2.5" fill="none">
+                    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                    <polyline points="14 2 14 8 20 8"></polyline>
+                </svg>
+            </div>
+            <div>
+                <span style="font-size: 0.75rem; color: var(--text-muted); font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em;">Total Form</span>
+                <span style="font-size: 1.4rem; font-weight: 800; color: var(--text-primary);" id="approval-stat-total">0</span>
+            </div>
+        </div>
+
+        <div class="dataview-stat-card">
+            <div style="background-color: rgba(245, 158, 11, 0.1); color: rgb(217, 119, 6); padding: 0.75rem; border-radius: var(--radius-md); display: flex; align-items: center; justify-content: center;">
+                <svg viewBox="0 0 24 24" width="22" height="22" stroke="currentColor" stroke-width="2.5" fill="none">
+                    <circle cx="12" cy="12" r="10"></circle>
+                    <polyline points="12 6 12 12 16 14"></polyline>
+                </svg>
+            </div>
+            <div>
+                <span style="font-size: 0.75rem; color: var(--text-muted); font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em;">Butuh Approval Staff</span>
+                <span style="font-size: 1.4rem; font-weight: 800; color: var(--text-primary);" id="approval-stat-staff">0</span>
+            </div>
+        </div>
+
+        <div class="dataview-stat-card">
+            <div style="background-color: rgba(99, 102, 241, 0.1); color: rgb(79, 70, 229); padding: 0.75rem; border-radius: var(--radius-md); display: flex; align-items: center; justify-content: center;">
+                <svg viewBox="0 0 24 24" width="22" height="22" stroke="currentColor" stroke-width="2.5" fill="none">
+                    <rect x="2" y="7" width="20" height="14" rx="2" ry="2"></rect>
+                    <path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"></path>
+                </svg>
+            </div>
+            <div>
+                <span style="font-size: 0.75rem; color: var(--text-muted); font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em;">Approval Accounting</span>
+                <span style="font-size: 1.4rem; font-weight: 800; color: var(--text-primary);" id="approval-stat-accounting">0</span>
+            </div>
+        </div>
+
+        <div class="dataview-stat-card">
+            <div style="background-color: var(--color-success-light); color: var(--color-success); padding: 0.75rem; border-radius: var(--radius-md); display: flex; align-items: center; justify-content: center;">
+                <svg viewBox="0 0 24 24" width="22" height="22" stroke="currentColor" stroke-width="2.5" fill="none">
+                    <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
+                    <polyline points="22 4 12 14.01 9 11.01"></polyline>
+                </svg>
+            </div>
+            <div>
+                <span style="font-size: 0.75rem; color: var(--text-muted); font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em;">Didaftarkan Warehouse</span>
+                <span style="font-size: 1.4rem; font-weight: 800; color: var(--text-primary);" id="approval-stat-registered">0</span>
+            </div>
+        </div>
+    </div>
+
+    {{-- Simple & Friendly Approval Container Card --}}
+    <div class="glass-card" style="padding: 1.5rem; margin-top: 1.25rem;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.25rem; flex-wrap: wrap; gap: 1rem;">
+            <div>
+                <h3 style="font-family: var(--font-heading); font-weight: 700; color: var(--text-primary); margin: 0; font-size: 1.15rem;">
+                    Daftar Form & Tahap Approval
+                </h3>
+                <p style="color: var(--text-muted); font-size: 0.82rem; margin-top: 0.2rem; margin-bottom: 0;">
+                    Alur persetujuan: <strong>User (Pembuat)</strong> ➔ <strong>Staff</strong> ➔ <strong>Accounting</strong> ➔ <strong>Warehouse Consumable</strong>.
+                </p>
+            </div>
+
+            {{-- Quick Stage Filter Pills --}}
+            <div style="display: flex; gap: 0.4rem; flex-wrap: wrap;" id="approval-filter-pills">
+                <button class="btn btn-sm btn-primary filter-pill-btn active" onclick="filterApprovalStage('', this)" style="border-radius: 20px; font-size: 0.78rem; font-weight: 600; padding: 0.35rem 0.85rem;">
+                    Semua Form
+                </button>
+                <button class="btn btn-sm btn-secondary filter-pill-btn" onclick="filterApprovalStage('staff', this)" style="border-radius: 20px; font-size: 0.78rem; font-weight: 600; padding: 0.35rem 0.85rem;">
+                    Butuh Staff
+                </button>
+                <button class="btn btn-sm btn-secondary filter-pill-btn" onclick="filterApprovalStage('accounting', this)" style="border-radius: 20px; font-size: 0.78rem; font-weight: 600; padding: 0.35rem 0.85rem;">
+                    Accounting
+                </button>
+                <button class="btn btn-sm btn-secondary filter-pill-btn" onclick="filterApprovalStage('warehouse', this)" style="border-radius: 20px; font-size: 0.78rem; font-weight: 600; padding: 0.35rem 0.85rem;">
+                    Warehouse
+                </button>
+                <button class="btn btn-sm btn-secondary filter-pill-btn" onclick="filterApprovalStage('completed', this)" style="border-radius: 20px; font-size: 0.78rem; font-weight: 600; padding: 0.35rem 0.85rem;">
+                    Telah Didaftarkan
+                </button>
+            </div>
+        </div>
+
+        {{-- Clean & Clear Approval Monitoring Table --}}
+        <div class="form-reg-table-wrap">
+            <table class="form-reg-table">
+                <thead>
+                    <tr>
+                        <th class="th-center" style="width: 40px;">NO</th>
+                        <th>NO. CHECKSHEET</th>
+                        <th>PEMBUAT (REQUESTOR)</th>
+                        <th>TANGGAL</th>
+                        <th class="th-center">PROGRESS TAHAP (4-STEP)</th>
+                        <th class="th-center">STATUS</th>
+                        <th class="th-center" style="width: 175px;">AKSI APPROVAL</th>
+                    </tr>
+                </thead>
+                <tbody id="approval-monitoring-tbody">
+                    {{-- Populated by JS renderApprovalMonitoringTable() --}}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
 </div>
 
 {{-- ===== TAB PANE: DATA VIEW ===== --}}
@@ -837,6 +965,23 @@
     </div>
 </div>
 
+{{-- ===== MODAL: QUICK APPROVAL ===== --}}
+<div class="modal" id="quickApprovalModal">
+    <div class="modal-content" style="max-width: 540px; padding: 1.75rem; border-radius: var(--radius-lg);">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.25rem; border-bottom: 1px solid rgba(0,0,0,0.08); padding-bottom: 0.75rem;">
+            <h3 style="font-family: var(--font-heading); font-weight: 700; margin: 0; color: var(--text-primary); font-size: 1.15rem; display: flex; align-items: center; gap: 0.5rem;">
+                <svg viewBox="0 0 24 24" width="20" height="20" stroke="var(--color-primary)" stroke-width="2.5" fill="none"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                Persetujuan Form Registrasi
+            </h3>
+            <button class="btn-close" onclick="closeModal('quickApprovalModal')">&times;</button>
+        </div>
+
+        <div id="quick-approval-modal-body">
+            {{-- Rendered dynamically via openQuickApprovalModal() --}}
+        </div>
+    </div>
+</div>
+
 {{-- ===== MODAL: TAMBAH DATA ===== --}}
 <div class="modal" id="addItemModal">
     <div class="modal-content" style="max-width: 680px; max-height: 90vh; overflow-y: auto;">
@@ -1120,19 +1265,21 @@
                     items: [],
                     signatures: {
                         dibuat: `${reqName} (Tgl: ${createdDateStr})`,
-                        diperiksa: '...................',
-                        disetujui: '...................'
+                        staff: '...................',
+                        accounting: '...................',
+                        warehouse: '...................'
                     },
-                    comments: { user: 'Formulir pendaftaran barang consumable.', pemeriksa: '', warehouse: '' }
+                    comments: { user: 'Formulir pendaftaran barang consumable diajukan.', staff: '', accounting: '', warehouse: '' }
                 };
 
                 stepperData[fNo] = {
-                    statusText: 'DRAFT',
+                    statusText: 'BUTUH APPROVAL STAFF',
                     statusClass: 'badge-warning',
                     steps: [
-                        { completed: true, active: false, details: `${reqName} - ${reqDept} (Tanggal: ${createdDateStr})`, status: 'Selesai dibuat.', color: 'var(--color-success)' },
-                        { completed: false, active: true, details: 'Menunggu pemeriksaan Pemeriksa...', status: 'Pemeriksaan kelayakan.', color: 'var(--color-primary)' },
-                        { completed: false, active: false, details: 'Belum diisi.', status: 'Registrasi Warehouse.', color: 'var(--text-muted)' }
+                        { role: 'user', title: '1. User Membuat Form', completed: true, active: false, details: `${reqName} - ${reqDept} (Tanggal: ${createdDateStr})`, status: 'Selesai dibuat & diajukan.', color: 'var(--color-success)' },
+                        { role: 'staff', title: '2. Approval Staff', completed: false, active: true, details: 'Menunggu persetujuan Staff...', status: 'Butuh Approval Staff.', color: 'var(--color-primary)' },
+                        { role: 'accounting', title: '3. Approval Accounting', completed: false, active: false, details: 'Menunggu persetujuan Accounting...', status: 'Pemeriksaan anggaran.', color: 'var(--text-muted)' },
+                        { role: 'warehouse', title: '4. Didaftarkan Warehouse Consumable', completed: false, active: false, details: 'Menunggu registrasi oleh Warehouse...', status: 'Registrasi database ERP.', color: 'var(--text-muted)' }
                     ]
                 };
             }
@@ -1168,23 +1315,26 @@
             items: [],
             signatures: {
                 dibuat: `${curName} ({{ date("d-m-Y") }})`,
-                diperiksa: '...................',
-                disetujui: '...................'
+                staff: '...................',
+                accounting: '...................',
+                warehouse: '...................'
             },
             comments: {
                 user: `Formulir pendaftaran barang consumable departemen ${curDept}.`,
-                pemeriksa: '',
+                staff: '',
+                accounting: '',
                 warehouse: ''
             }
         };
 
         stepperData[defaultFormNo] = {
-            statusText: 'DRAFT',
+            statusText: 'BUTUH APPROVAL STAFF',
             statusClass: 'badge-warning',
             steps: [
-                { completed: true, active: false, details: `${curName} - ${curDept} (Tanggal: {{ date("d-m-Y") }})`, status: 'Selesai dibuat dan ditandatangani.', color: 'var(--color-success)' },
-                { completed: false, active: true, details: 'Menunggu kelayakan disetujui Pemeriksa...', status: 'Pemeriksaan kelayakan.', color: 'var(--color-primary)' },
-                { completed: false, active: false, details: 'Belum diisi.', status: 'Registrasi oleh Warehouse.', color: 'var(--text-muted)' }
+                { role: 'user', title: '1. User Membuat Form', completed: true, active: false, details: `${curName} - ${curDept} (Tanggal: {{ date("d-m-Y") }})`, status: 'Selesai dibuat dan diajukan.', color: 'var(--color-success)' },
+                { role: 'staff', title: '2. Approval Staff', completed: false, active: true, details: 'Menunggu persetujuan Staff...', status: 'Butuh Approval Staff.', color: 'var(--color-primary)' },
+                { role: 'accounting', title: '3. Approval Accounting', completed: false, active: false, details: 'Menunggu persetujuan Accounting...', status: 'Pemeriksaan anggaran.', color: 'var(--text-muted)' },
+                { role: 'warehouse', title: '4. Didaftarkan Warehouse Consumable', completed: false, active: false, details: 'Menunggu registrasi oleh Warehouse...', status: 'Registrasi database ERP.', color: 'var(--text-muted)' }
             ]
         };
     }
@@ -1434,6 +1584,7 @@
         renderDataViewTable();
         updateApprovalSelect();
         updateApprovalStepper(selectedChecksheetId);
+        renderApprovalMonitoringTable();
         renderAccountTable();
 
         const urlParams = new URLSearchParams(window.location.search);
@@ -1443,7 +1594,9 @@
             viewChecksheet(urlFormParam);
         }
 
-        if (activeTabParam === 'data-view' || window.location.hash === '#data-view') {
+        if (activeTabParam === 'proses-approval' || window.location.hash === '#proses-approval') {
+            switchSheet('proses-approval');
+        } else if (activeTabParam === 'data-view' || window.location.hash === '#data-view') {
             switchSheet('data-view');
         } else if (activeTabParam === 'account-master' || window.location.hash === '#account-master') {
             switchSheet('account-master');
@@ -1483,28 +1636,32 @@
             items: [],
             signatures: {
                 dibuat: '{{ Auth::user()->name ?? "User" }} (Tgl: ' + todayStr + ')',
-                diperiksa: '...................',
-                disetujui: '...................'
+                staff: '...................',
+                accounting: '...................',
+                warehouse: '...................'
             },
             comments: {
                 user: 'Formulir pendaftaran barang consumable baru.',
-                pemeriksa: '',
+                staff: '',
+                accounting: '',
                 warehouse: ''
             }
         };
 
         stepperData[nextFormNo] = {
-            statusText: 'DRAFT',
+            statusText: 'BUTUH APPROVAL STAFF',
             statusClass: 'badge-warning',
             steps: [
-                { completed: true, active: false, details: '{{ Auth::user()->name ?? "User" }} - ' + userTag + ' (Tanggal: ' + todayStr + ')', status: 'Selesai dibuat.', color: 'var(--color-success)' },
-                { completed: false, active: true, details: 'Menunggu pemeriksaan Pemeriksa...', status: 'Pemeriksaan kelayakan.', color: 'var(--color-primary)' },
-                { completed: false, active: false, details: 'Belum diisi.', status: 'Registrasi Warehouse.', color: 'var(--text-muted)' }
+                { role: 'user', title: '1. User Membuat Form', completed: true, active: false, details: '{{ Auth::user()->name ?? "User" }} - ' + userTag + ' (Tanggal: ' + todayStr + ')', status: 'Selesai dibuat & diajukan.', color: 'var(--color-success)' },
+                { role: 'staff', title: '2. Approval Staff', completed: false, active: true, details: 'Menunggu persetujuan Staff...', status: 'Butuh Approval Staff.', color: 'var(--color-primary)' },
+                { role: 'accounting', title: '3. Approval Accounting', completed: false, active: false, details: 'Menunggu persetujuan Accounting...', status: 'Pemeriksaan anggaran.', color: 'var(--text-muted)' },
+                { role: 'warehouse', title: '4. Didaftarkan Warehouse Consumable', completed: false, active: false, details: 'Menunggu registrasi oleh Warehouse...', status: 'Registrasi database ERP.', color: 'var(--text-muted)' }
             ]
         };
 
         updateApprovalSelect();
         renderDataViewTable();
+        renderApprovalMonitoringTable();
         viewChecksheet(nextFormNo);
         openModal('addItemModal');
 
@@ -1550,8 +1707,9 @@
         if (displayEl) displayEl.innerText = csId;
         
         const signatureDibuat = document.getElementById('preview-sig-dibuat');
-        const signatureDiperiksa = document.getElementById('preview-sig-diperiksa');
-        const signatureDisetujui = document.getElementById('preview-sig-disetujui');
+        const signatureStaff = document.getElementById('preview-sig-staff');
+        const signatureAccounting = document.getElementById('preview-sig-accounting');
+        const signatureWarehouse = document.getElementById('preview-sig-warehouse');
         
         if (cs.signatures.dibuat && cs.signatures.dibuat !== '...................') {
             signatureDibuat.innerHTML = `<div style="color: var(--color-success); font-weight: 700; margin-bottom: 0.25rem;">✓ USER SUBMITTED</div><div style="font-size: 0.65rem; color: var(--text-muted);">${cs.signatures.dibuat}</div>`;
@@ -1559,16 +1717,22 @@
             signatureDibuat.innerHTML = `<span style="color: var(--text-muted); font-size: 0.75rem; font-style: italic;">...................</span>`;
         }
 
-        if (cs.signatures.diperiksa && cs.signatures.diperiksa !== '...................') {
-            signatureDiperiksa.innerHTML = `<div style="color: var(--color-success); font-weight: 700; margin-bottom: 0.25rem;">✓ APPROVED BY PEMERIKSA</div><div style="font-size: 0.65rem; color: var(--text-muted);">${cs.signatures.diperiksa}</div>`;
+        if (cs.signatures.staff && cs.signatures.staff !== '...................') {
+            signatureStaff.innerHTML = `<div style="color: var(--color-success); font-weight: 700; margin-bottom: 0.25rem;">✓ APPROVED BY STAFF</div><div style="font-size: 0.65rem; color: var(--text-muted);">${cs.signatures.staff}</div>`;
         } else {
-            signatureDiperiksa.innerHTML = `<span style="color: var(--text-muted); font-size: 0.75rem; font-style: italic;">...................</span>`;
+            signatureStaff.innerHTML = `<span style="color: var(--text-muted); font-size: 0.75rem; font-style: italic;">...................</span>`;
         }
 
-        if (cs.signatures.disetujui && cs.signatures.disetujui !== '...................') {
-            signatureDisetujui.innerHTML = `<div style="color: var(--color-success); font-weight: 700; margin-bottom: 0.25rem;">✓ REGISTERED BY WAREHOUSE</div><div style="font-size: 0.65rem; color: var(--text-muted);">${cs.signatures.disetujui}</div>`;
+        if (cs.signatures.accounting && cs.signatures.accounting !== '...................') {
+            signatureAccounting.innerHTML = `<div style="color: var(--color-success); font-weight: 700; margin-bottom: 0.25rem;">✓ APPROVED ACCOUNTING</div><div style="font-size: 0.65rem; color: var(--text-muted);">${cs.signatures.accounting}</div>`;
         } else {
-            signatureDisetujui.innerHTML = `<span style="color: var(--text-muted); font-size: 0.75rem; font-style: italic;">...................</span>`;
+            signatureAccounting.innerHTML = `<span style="color: var(--text-muted); font-size: 0.75rem; font-style: italic;">...................</span>`;
+        }
+
+        if (cs.signatures.warehouse && cs.signatures.warehouse !== '...................') {
+            signatureWarehouse.innerHTML = `<div style="color: var(--color-success); font-weight: 700; margin-bottom: 0.25rem;">✓ REGISTERED WAREHOUSE</div><div style="font-size: 0.65rem; color: var(--text-muted);">${cs.signatures.warehouse}</div>`;
+        } else {
+            signatureWarehouse.innerHTML = `<span style="color: var(--text-muted); font-size: 0.75rem; font-style: italic;">...................</span>`;
         }
 
         const tbody = document.getElementById('preview-table-body');
@@ -1686,70 +1850,98 @@
         }
 
         if (role === 'user') {
-            cs.requestor = name + ' / Production';
+            cs.requestor = name + ' / ' + cs.requestorDept;
+            cs.requestorName = name;
             cs.signatures.dibuat = name + ' (Tgl: ' + cs.date + ')';
             cs.comments.user = comment;
             
             steps[0].completed = true;
             steps[0].active = false;
-            steps[0].details = name + ' (Tanggal: ' + cs.date + ')';
-            steps[0].status = 'Selesai dibuat dan ditandatangani.';
+            steps[0].details = name + ' - ' + cs.requestorDept + ' (Tanggal: ' + cs.date + ')';
+            steps[0].status = 'Selesai dibuat & diajukan.';
             steps[0].color = 'var(--color-success)';
             
             steps[1].active = true;
-            steps[1].details = 'Menunggu persetujuan Pemeriksa...';
-            steps[1].status = 'Kirim berkas untuk verifikasi kelayakan.';
+            steps[1].details = 'Menunggu persetujuan Staff...';
+            steps[1].status = 'Butuh Approval Staff.';
             steps[1].color = 'var(--color-primary)';
-            
-            const dataviewReq = document.getElementById('dataview-req-004');
-            if (dataviewReq) dataviewReq.innerText = name + ' / Production';
+
+            cs.status = 'Draft';
+            stepperData[selectedChecksheetId].statusText = 'BUTUH APPROVAL STAFF';
+            stepperData[selectedChecksheetId].statusClass = 'badge-warning';
         } 
-        else if (role === 'pemeriksa') {
+        else if (role === 'staff') {
             if (!steps[0].completed) {
-                alert('Role Pembuat (User) harus bertanda tangan terlebih dahulu!');
+                alert('Role Pembuat (User) harus menyelesaikan pengajuan form terlebih dahulu!');
                 return;
             }
-            cs.signatures.diperiksa = name + ' (Tgl: ' + cs.date + ')';
-            cs.comments.pemeriksa = comment;
+            cs.signatures.staff = name + ' (Tgl: ' + cs.date + ')';
+            cs.comments.staff = comment;
             
             steps[1].completed = true;
             steps[1].active = false;
-            steps[1].details = name + ' (Pemeriksa - Tanggal: ' + cs.date + ')';
-            steps[1].status = 'Disetujui. Kelayakan barang consumable terverifikasi.';
+            steps[1].details = name + ' (Staff - Tanggal: ' + cs.date + ')';
+            steps[1].status = 'Disetujui oleh Staff.';
             steps[1].color = 'var(--color-success)';
             
             steps[2].active = true;
-            steps[2].details = 'Menunggu registrasi oleh Warehouse...';
-            steps[2].status = 'Kirim berkas untuk input kode barang.';
+            steps[2].details = 'Menunggu persetujuan Accounting...';
+            steps[2].status = 'Pemeriksaan & Approval Accounting.';
             steps[2].color = 'var(--color-primary)';
+
+            cs.status = 'Pending Accounting';
+            stepperData[selectedChecksheetId].statusText = 'APPROVAL ACCOUNTING';
+            stepperData[selectedChecksheetId].statusClass = 'badge-primary';
         } 
-        else if (role === 'warehouse') {
-            if (!steps[0].completed || !steps[1].completed) {
-                alert('Persetujuan Pemeriksa harus diselesaikan terlebih dahulu!');
+        else if (role === 'accounting') {
+            if (!steps[1].completed) {
+                alert('Approval Staff harus diselesaikan terlebih dahulu!');
                 return;
             }
-            cs.signatures.disetujui = name + ' (Tgl: ' + cs.date + ')';
-            cs.comments.warehouse = comment;
+            cs.signatures.accounting = name + ' (Tgl: ' + cs.date + ')';
+            cs.comments.accounting = comment;
             
             steps[2].completed = true;
             steps[2].active = false;
-            steps[2].details = name + ' (Warehouse - Tanggal: ' + cs.date + ')';
-            steps[2].status = 'Kode barang berhasil diregistrasikan ke database ERP.';
+            steps[2].details = name + ' (Accounting - Tanggal: ' + cs.date + ')';
+            steps[2].status = 'Disetujui oleh Accounting.';
             steps[2].color = 'var(--color-success)';
             
-            cs.status = 'Selesai';
-            stepperData[selectedChecksheetId].statusText = 'APPROVED';
-            stepperData[selectedChecksheetId].statusClass = 'badge-success';
+            steps[3].active = true;
+            steps[3].details = 'Menunggu registrasi oleh Warehouse Consumable...';
+            steps[3].status = 'Proses input kode barang ke ERP oleh Warehouse Consumable.';
+            steps[3].color = 'var(--color-primary)';
+
+            cs.status = 'Pending Warehouse';
+            stepperData[selectedChecksheetId].statusText = 'REGISTRASI WAREHOUSE';
+            stepperData[selectedChecksheetId].statusClass = 'badge-info';
+        }
+        else if (role === 'warehouse') {
+            if (!steps[2].completed) {
+                alert('Approval Accounting harus diselesaikan terlebih dahulu!');
+                return;
+            }
+            cs.signatures.warehouse = name + ' (Tgl: ' + cs.date + ')';
+            cs.comments.warehouse = comment;
             
-            updateDataViewTableStatus(selectedChecksheetId, 'APPROVED', 'var(--color-success-light)', 'var(--color-success)');
+            steps[3].completed = true;
+            steps[3].active = false;
+            steps[3].details = name + ' (Warehouse Consumable - Tanggal: ' + cs.date + ')';
+            steps[3].status = 'Telah didaftarkan oleh Warehouse Consumable.';
+            steps[3].color = 'var(--color-success)';
+            
+            cs.status = 'Selesai';
+            stepperData[selectedChecksheetId].statusText = 'TELAH DIDAFTARKAN';
+            stepperData[selectedChecksheetId].statusClass = 'badge-success';
         }
 
-        document.getElementById('sim-name').value = '';
         document.getElementById('sim-comment').value = '';
         
         viewChecksheet(selectedChecksheetId);
         updateApprovalStepper(selectedChecksheetId);
-        showToast('Catatan verifikasi berhasil dikirim!', 'success');
+        renderApprovalMonitoringTable();
+        renderDataViewTable();
+        showToast(`Catatan approval (${role.toUpperCase()}) berhasil diproses!`, 'success');
     }
 
     function updateDataViewTableStatus(csId, text, bgColor, color) {
@@ -1776,19 +1968,22 @@
         if (badge) {
             badge.innerText = data.statusText;
             badge.className = 'badge';
-            if (data.statusText === 'APPROVED') {
+            if (data.statusText === 'TELAH DIDAFTARKAN' || data.statusText === 'APPROVED') {
                 badge.style.backgroundColor = 'var(--color-success-light)';
                 badge.style.color = 'var(--color-success)';
-            } else if (data.statusText === 'DRAFT') {
+            } else if (data.statusText === 'BUTUH APPROVAL STAFF' || data.statusText === 'DRAFT') {
                 badge.style.backgroundColor = 'var(--color-warning-light)';
                 badge.style.color = 'var(--color-warning)';
-            } else if (data.statusText === 'PENDING WAREHOUSE') {
+            } else if (data.statusText === 'APPROVAL ACCOUNTING') {
+                badge.style.backgroundColor = 'rgba(99, 102, 241, 0.1)';
+                badge.style.color = 'rgb(79, 70, 229)';
+            } else if (data.statusText === 'REGISTRASI WAREHOUSE') {
                 badge.style.backgroundColor = 'rgba(59, 130, 246, 0.1)';
                 badge.style.color = 'rgb(29, 78, 216)';
             }
         }
 
-        for (let i = 1; i <= 3; i++) {
+        for (let i = 1; i <= 4; i++) {
             const stepEl = document.getElementById('step-' + i);
             if (!stepEl) continue;
             const stepData = data.steps[i - 1];
@@ -1807,7 +2002,7 @@
 
             const commentBox = document.getElementById('step-' + i + '-comment-box');
             const commentText = document.getElementById('step-' + i + '-comment-text');
-            const roleKey = i === 1 ? 'user' : (i === 2 ? 'pemeriksa' : 'warehouse');
+            const roleKey = i === 1 ? 'user' : (i === 2 ? 'staff' : (i === 3 ? 'accounting' : 'warehouse'));
             const commentVal = checksheets[csId] && checksheets[csId].comments ? checksheets[csId].comments[roleKey] : '';
 
             if (commentBox && commentText) {
@@ -1831,6 +2026,332 @@
                 if (indicator) indicator.innerHTML = i;
             }
         }
+    }
+
+    let currentApprovalFilterStage = '';
+
+    function filterApprovalStage(stage, btn) {
+        currentApprovalFilterStage = stage;
+
+        const pills = document.querySelectorAll('#approval-filter-pills .filter-pill-btn');
+        pills.forEach(p => {
+            p.classList.remove('btn-primary', 'active');
+            p.classList.add('btn-secondary');
+        });
+
+        if (btn) {
+            btn.classList.remove('btn-secondary');
+            btn.classList.add('btn-primary', 'active');
+        }
+
+        renderApprovalMonitoringTable();
+    }
+
+    function renderApprovalMonitoringTable() {
+        const tbody = document.getElementById('approval-monitoring-tbody');
+        if (!tbody) return;
+
+        let html = '';
+        let no = 1;
+
+        let statTotal = 0;
+        let statStaff = 0;
+        let statAccounting = 0;
+        let statRegistered = 0;
+
+        for (const formNo in checksheets) {
+            const cs = checksheets[formNo];
+            if (!cs.items || cs.items.length === 0) continue;
+
+            const data = stepperData[formNo];
+            if (!data) continue;
+
+            statTotal++;
+
+            const activeStepIndex = data.steps.findIndex(s => s.active);
+            let stageKey = 'completed';
+            let currentStageName = 'Telah Didaftarkan';
+
+            if (activeStepIndex === 0) {
+                stageKey = 'user';
+                currentStageName = 'Pembuatan (User)';
+            } else if (activeStepIndex === 1) {
+                stageKey = 'staff';
+                currentStageName = 'Butuh Staff';
+                statStaff++;
+            } else if (activeStepIndex === 2) {
+                stageKey = 'accounting';
+                currentStageName = 'Accounting';
+                statAccounting++;
+            } else if (activeStepIndex === 3) {
+                stageKey = 'warehouse';
+                currentStageName = 'Warehouse';
+            } else if (cs.status === 'Selesai' || data.statusText === 'TELAH DIDAFTARKAN') {
+                statRegistered++;
+            }
+
+            if (currentApprovalFilterStage && currentApprovalFilterStage !== stageKey) {
+                continue;
+            }
+
+            let badgeBg = 'var(--color-warning-light)';
+            let badgeColor = 'var(--color-warning)';
+            let badgeText = data.statusText;
+
+            if (data.statusText === 'TELAH DIDAFTARKAN' || cs.status === 'Selesai') {
+                badgeBg = 'var(--color-success-light)';
+                badgeColor = 'var(--color-success)';
+                badgeText = 'TELAH DIDAFTARKAN';
+            } else if (data.statusText === 'APPROVAL ACCOUNTING') {
+                badgeBg = 'rgba(99, 102, 241, 0.15)';
+                badgeColor = 'rgb(79, 70, 229)';
+            } else if (data.statusText === 'REGISTRASI WAREHOUSE') {
+                badgeBg = 'rgba(59, 130, 246, 0.15)';
+                badgeColor = 'rgb(29, 78, 216)';
+            }
+
+            // Generate 4-step Horizontal Stepper Visual Pills
+            let stepsHtml = '<div style="display: inline-flex; align-items: center; gap: 0.25rem;">';
+            data.steps.forEach((st, idx) => {
+                let pillStyle = 'background: #f1f5f9; color: #94a3b8; border: 1px solid #cbd5e1;';
+                let pillLabel = idx === 0 ? 'User' : (idx === 1 ? 'Staff' : (idx === 2 ? 'Acc' : 'WH'));
+                
+                if (st.completed) {
+                    pillStyle = 'background: var(--color-success); color: #fff; border: 1px solid var(--color-success);';
+                    pillLabel = '✓ ' + pillLabel;
+                } else if (st.active) {
+                    pillStyle = 'background: var(--color-primary); color: #fff; border: 1px solid var(--color-primary); font-weight: 700; box-shadow: 0 0 0 2px var(--color-primary-light);';
+                }
+
+                stepsHtml += `<span style="font-size: 0.68rem; font-weight: 600; padding: 0.15rem 0.45rem; border-radius: 12px; ${pillStyle}">${pillLabel}</span>`;
+                if (idx < 3) {
+                    stepsHtml += `<span style="color: #cbd5e1; font-size: 0.65rem;">➔</span>`;
+                }
+            });
+            stepsHtml += '</div>';
+
+            // Action button
+            let actionBtnHtml = '';
+            if (stageKey !== 'completed' && cs.status !== 'Selesai') {
+                actionBtnHtml = `
+                    <button class="btn btn-primary btn-sm" onclick="openQuickApprovalModal('${cs.formNo}')" style="padding: 0.35rem 0.75rem; font-size: 0.78rem; font-weight: 700; border-radius: 6px; display: inline-flex; align-items: center; gap: 0.3rem;">
+                        <svg viewBox="0 0 24 24" width="13" height="13" stroke="currentColor" stroke-width="2.5" fill="none"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                        Setujui Form
+                    </button>
+                `;
+            } else {
+                actionBtnHtml = `
+                    <button class="btn btn-secondary btn-sm" onclick="viewChecksheet('${cs.formNo}')" style="padding: 0.35rem 0.65rem; font-size: 0.75rem; border-radius: 6px; display: inline-flex; align-items: center; gap: 0.25rem;">
+                        <svg viewBox="0 0 24 24" width="12" height="12" stroke="currentColor" stroke-width="2" fill="none"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>
+                        Selesai
+                    </button>
+                `;
+            }
+
+            html += `
+                <tr>
+                    <td class="td-center td-no">${no}</td>
+                    <td style="font-weight: 700; color: var(--color-primary); padding: 0 0.8rem;">
+                        <a href="javascript:void(0)" onclick="viewChecksheet('${cs.formNo}')" style="color: var(--color-primary); text-decoration: underline;">${cs.formNo}</a>
+                    </td>
+                    <td style="padding: 0 0.8rem; font-size: 0.85rem; font-weight: 600;">${cs.requestor}</td>
+                    <td style="padding: 0 0.8rem; font-size: 0.85rem;">${cs.date}</td>
+                    <td class="td-center" style="padding: 0 0.4rem;">${stepsHtml}</td>
+                    <td class="td-center">
+                        <span style="background-color: ${badgeBg}; color: ${badgeColor}; padding: 0.25rem 0.6rem; border-radius: 4px; font-weight: 700; font-size: 0.75rem; display: inline-block;">${badgeText}</span>
+                    </td>
+                    <td class="td-center" style="padding: 0 0.5rem;">${actionBtnHtml}</td>
+                </tr>
+            `;
+            no++;
+        }
+
+        if (html === '') {
+            html = `
+                <tr>
+                    <td colspan="7" style="text-align: center; padding: 2.5rem 1rem; color: var(--text-muted); font-size: 0.9rem;">
+                        Tidak ada formulir yang sesuai dengan filter alur approval.
+                    </td>
+                </tr>
+            `;
+        }
+
+        tbody.innerHTML = html;
+
+        const elTotal = document.getElementById('approval-stat-total');
+        if (elTotal) elTotal.innerText = statTotal;
+
+        const elStaff = document.getElementById('approval-stat-staff');
+        if (elStaff) elStaff.innerText = statStaff;
+
+        const elAcc = document.getElementById('approval-stat-accounting');
+        if (elAcc) elAcc.innerText = statAccounting;
+
+        const elReg = document.getElementById('approval-stat-registered');
+        if (elReg) elReg.innerText = statRegistered;
+    }
+
+    function openQuickApprovalModal(csId) {
+        selectedChecksheetId = csId;
+        const cs = checksheets[csId];
+        const data = stepperData[csId];
+        if (!cs || !data) return;
+
+        const activeStepIndex = data.steps.findIndex(s => s.active);
+        let currentRoleKey = 'staff';
+
+        if (activeStepIndex === 2) {
+            currentRoleKey = 'accounting';
+        } else if (activeStepIndex === 3) {
+            currentRoleKey = 'warehouse';
+        } else if (activeStepIndex === 0) {
+            currentRoleKey = 'user';
+        }
+
+        const curUserName = '{{ Auth::user()->name ?? "User" }}';
+        const modalBody = document.getElementById('quick-approval-modal-body');
+
+        if (modalBody) {
+            modalBody.innerHTML = `
+                <div style="background: rgba(79, 70, 229, 0.04); border: 1px solid rgba(79, 70, 229, 0.12); padding: 0.85rem 1rem; border-radius: var(--radius-md); margin-bottom: 1.25rem;">
+                    <div style="display: flex; justify-content: space-between; align-items: center;">
+                        <span style="font-weight: 800; font-size: 1rem; color: var(--color-primary);">${cs.formNo}</span>
+                        <span class="badge" style="background-color: var(--color-warning-light); color: var(--color-warning);">${data.statusText}</span>
+                    </div>
+                    <div style="font-size: 0.8rem; color: var(--text-muted); margin-top: 0.35rem;">
+                        <strong>Requestor:</strong> ${cs.requestor} &nbsp;|&nbsp; <strong>Items:</strong> ${cs.items ? cs.items.length : 0} Item
+                    </div>
+                </div>
+
+                {{-- Horizontal Stepper Visual --}}
+                <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 1.5rem; background: #f8fafc; padding: 0.75rem; border-radius: var(--radius-md);">
+                    ${data.steps.map((st, i) => `
+                        <div style="display: flex; flex-direction: column; align-items: center; gap: 0.2rem; flex: 1; text-align: center;">
+                            <div style="width: 22px; height: 22px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 0.7rem; font-weight: 700; ${st.completed ? 'background: var(--color-success); color: white;' : (st.active ? 'background: var(--color-primary); color: white; box-shadow: 0 0 0 3px var(--color-primary-light);' : 'background: #e2e8f0; color: #64748b;')}">
+                                ${st.completed ? '✓' : (i + 1)}
+                            </div>
+                            <span style="font-size: 0.7rem; font-weight: 600; color: ${st.active ? 'var(--color-primary)' : (st.completed ? 'var(--color-success)' : 'var(--text-muted)')};">${i === 0 ? 'User' : (i === 1 ? 'Staff' : (i === 2 ? 'Accounting' : 'Warehouse'))}</span>
+                        </div>
+                    `).join('<div style="width: 15px; height: 2px; background: #e2e8f0; margin-bottom: 1rem;"></div>')}
+                </div>
+
+                <form onsubmit="submitQuickApproval(event, '${csId}', '${currentRoleKey}')">
+                    <div class="form-group" style="margin-bottom: 1rem;">
+                        <label style="font-weight: 700; font-size: 0.82rem; margin-bottom: 0.3rem; display: block;">Peran Verifikator (Role):</label>
+                        <select id="qa-role" class="form-control" style="height: 38px; font-size: 0.85rem; font-weight: 600;">
+                            <option value="staff" ${currentRoleKey === 'staff' ? 'selected' : ''}>Staff (Approval 1)</option>
+                            <option value="accounting" ${currentRoleKey === 'accounting' ? 'selected' : ''}>Accounting (Approval 2)</option>
+                            <option value="warehouse" ${currentRoleKey === 'warehouse' ? 'selected' : ''}>Warehouse Consumable (Final Registrasi)</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group" style="margin-bottom: 1rem;">
+                        <label style="font-weight: 700; font-size: 0.82rem; margin-bottom: 0.3rem; display: block;">Nama Penandatangan:</label>
+                        <input type="text" id="qa-name" class="form-control" style="height: 38px; font-size: 0.85rem;" value="${curUserName}" required>
+                    </div>
+
+                    <div class="form-group" style="margin-bottom: 1.25rem;">
+                        <label style="font-weight: 700; font-size: 0.82rem; margin-bottom: 0.3rem; display: block;">Catatan Verifikasi (Opsional):</label>
+                        <input type="text" id="qa-comment" class="form-control" style="height: 38px; font-size: 0.85rem;" placeholder="Cth: Disetujui sesuai spesifikasi." value="Disetujui.">
+                    </div>
+
+                    <div style="display: flex; gap: 0.75rem; justify-content: flex-end; margin-top: 1.25rem;">
+                        <button type="button" class="btn btn-secondary" onclick="closeModal('quickApprovalModal')">Batal</button>
+                        <button type="submit" class="btn btn-primary" style="font-weight: 700; padding: 0.6rem 1.2rem; display: flex; align-items: center; gap: 0.4rem;">
+                            <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2.5" fill="none"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                            ✓ Setujui Form
+                        </button>
+                    </div>
+                </form>
+            `;
+        }
+
+        openModal('quickApprovalModal');
+    }
+
+    function submitQuickApproval(event, csId, defaultRoleKey) {
+        event.preventDefault();
+        const cs = checksheets[csId];
+        const steps = stepperData[csId] ? stepperData[csId].steps : null;
+        if (!cs || !steps) return;
+
+        const role = document.getElementById('qa-role').value;
+        const name = document.getElementById('qa-name').value.trim();
+        const comment = document.getElementById('qa-comment').value.trim() || 'Disetujui.';
+
+        if (!name) {
+            alert('Harap isi nama penandatangan!');
+            return;
+        }
+
+        if (role === 'staff') {
+            cs.signatures.staff = name + ' (Tgl: ' + cs.date + ')';
+            cs.comments.staff = comment;
+
+            steps[1].completed = true;
+            steps[1].active = false;
+            steps[1].details = name + ' (Staff - Tanggal: ' + cs.date + ')';
+            steps[1].status = 'Disetujui oleh Staff.';
+            steps[1].color = 'var(--color-success)';
+
+            steps[2].active = true;
+            steps[2].details = 'Menunggu persetujuan Accounting...';
+            steps[2].status = 'Pemeriksaan & Approval Accounting.';
+            steps[2].color = 'var(--color-primary)';
+
+            cs.status = 'Pending Accounting';
+            stepperData[csId].statusText = 'APPROVAL ACCOUNTING';
+            stepperData[csId].statusClass = 'badge-primary';
+        }
+        else if (role === 'accounting') {
+            cs.signatures.accounting = name + ' (Tgl: ' + cs.date + ')';
+            cs.comments.accounting = comment;
+
+            steps[2].completed = true;
+            steps[2].active = false;
+            steps[2].details = name + ' (Accounting - Tanggal: ' + cs.date + ')';
+            steps[2].status = 'Disetujui oleh Accounting.';
+            steps[2].color = 'var(--color-success)';
+
+            steps[3].active = true;
+            steps[3].details = 'Menunggu registrasi oleh Warehouse Consumable...';
+            steps[3].status = 'Proses input kode barang oleh Warehouse.';
+            steps[3].color = 'var(--color-primary)';
+
+            cs.status = 'Pending Warehouse';
+            stepperData[csId].statusText = 'REGISTRASI WAREHOUSE';
+            stepperData[csId].statusClass = 'badge-info';
+        }
+        else if (role === 'warehouse') {
+            cs.signatures.warehouse = name + ' (Tgl: ' + cs.date + ')';
+            cs.comments.warehouse = comment;
+
+            steps[3].completed = true;
+            steps[3].active = false;
+            steps[3].details = name + ' (Warehouse Consumable - Tanggal: ' + cs.date + ')';
+            steps[3].status = 'Telah didaftarkan oleh Warehouse Consumable.';
+            steps[3].color = 'var(--color-success)';
+
+            cs.status = 'Selesai';
+            stepperData[csId].statusText = 'TELAH DIDAFTARKAN';
+            stepperData[csId].statusClass = 'badge-success';
+        }
+
+        closeModal('quickApprovalModal');
+        renderApprovalMonitoringTable();
+        renderDataViewTable();
+        if (selectedChecksheetId === csId) {
+            viewChecksheet(csId);
+        }
+        showToast(`Persetujuan Form ${csId} (${role.toUpperCase()}) Berhasil Disimpan!`, 'success');
+    }
+
+    function selectFormForApproval(csId) {
+        selectedChecksheetId = csId;
+        const select = document.getElementById('select-approval-cs');
+        if (select) select.value = csId;
+        updateApprovalStepper(csId);
+        switchSheet('proses-approval');
     }
 
     // ACCOUNT MASTER DATA ENGINE - Dynamic from Database
