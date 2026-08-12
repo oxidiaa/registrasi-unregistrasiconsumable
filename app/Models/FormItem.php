@@ -10,6 +10,9 @@ class FormItem extends Model
     use SoftDeletes;
     protected $fillable = [
         'form_number',
+        'user_id',
+        'created_by_name',
+        'created_by_dept',
         'kode_barang',
         'nama_barang',
         'harga',
@@ -23,6 +26,11 @@ class FormItem extends Model
         'is_b3',
         'is_non_b3',
     ];
+
+    public function user()
+    {
+        return $this->belongsTo(User::class);
+    }
 
     protected $casts = [
         'is_b3'    => 'boolean',

@@ -132,7 +132,7 @@ class ItemController extends Controller
     }
 
     /**
-     * Re-sequence form numbers so that only forms with items are kept and strictly numbered (01, 02, 03...).
+     * Re-sequence form numbers so that only forms with items are kept and strictly numbered per department (01, 02, 03...).
      * Empty forms (0 items) are eliminated from sequence.
      */
     private function resequenceFormNumbers()
@@ -153,7 +153,7 @@ class ItemController extends Controller
         }
 
         $map = [];
-        $seq = 1;
+        $deptSeqs = [];
         $userDeptTag = strtoupper(auth()->user()->department ?? auth()->user()->name ?? 'PRODUCTION');
         $monthYear = date('m-Y');
 
@@ -164,10 +164,17 @@ class ItemController extends Controller
 
             // Extract department tag and month-year if present
             $parts = explode('/', $oldFormNo);
-            $dept = (count($parts) >= 2 && !empty($parts[1])) ? $parts[1] : $userDeptTag;
-            $my = (count($parts) >= 3 && !empty($parts[2])) ? $parts[2] : $monthYear;
+            $dept = (count($parts) >= 2 && !empty($parts[1])) ? strtoupper(trim($parts[1])) : $userDeptTag;
+            $my = (count($parts) >= 3 && !empty($parts[2])) ? trim($parts[2]) : $monthYear;
 
-            $newSeqStr = str_pad($seq, 2, '0', STR_PAD_LEFT);
+            $key = $dept . '_' . $my;
+            if (!isset($deptSeqs[$key])) {
+                $deptSeqs[$key] = 1;
+            } else {
+                $deptSeqs[$key]++;
+            }
+
+            $newSeqStr = str_pad($deptSeqs[$key], 2, '0', STR_PAD_LEFT);
             $newFormNo = "{$newSeqStr}/{$dept}/{$my}";
 
             $map[$oldFormNo] = $newFormNo;
@@ -177,8 +184,6 @@ class ItemController extends Controller
                     $item->update(['form_number' => $newFormNo]);
                 }
             }
-
-            $seq++;
         }
 
         return $map;
@@ -190,7 +195,7 @@ class ItemController extends Controller
     public function formRegistrasi(Request $request)
     {
         $resequenceMap = $this->resequenceFormNumbers();
-        $formItems = FormItem::orderBy('created_at', 'asc')->orderBy('id', 'asc')->get();
+        $formItems = FormItem::with('user')->orderBy('created_at', 'asc')->orderBy('id', 'asc')->get();
         $users = User::orderBy('id', 'asc')->get();
 
         $activeFormNoParam = $request->query('form');
@@ -237,8 +242,11 @@ class ItemController extends Controller
             'lead_time.required'           => 'Lead time wajib diisi.',
         ]);
 
-        $validated['is_b3']     = $request->has('is_b3');
-        $validated['is_non_b3']  = $request->has('is_non_b3');
+        $validated['is_b3']           = $request->has('is_b3');
+        $validated['is_non_b3']        = $request->has('is_non_b3');
+        $validated['user_id']         = auth()->id();
+        $validated['created_by_name'] = auth()->user()->name ?? 'User';
+        $validated['created_by_dept'] = auth()->user()->department ?? 'Production';
 
         $targetForm = $request->input('form_number');
         FormItem::create($validated);

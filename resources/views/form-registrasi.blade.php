@@ -9,8 +9,15 @@
 
     $existingFormNumbers = $formItems->pluck('form_number')->filter()->unique()->values();
 
+    $userForms = $existingFormNumbers->filter(function($fNo) use ($userDeptTag) {
+        $parts = explode('/', $fNo);
+        return (count($parts) >= 2 && strtoupper(trim($parts[1])) === $userDeptTag);
+    });
+
     if ($activeFormNoParam && $existingFormNumbers->contains($activeFormNoParam)) {
         $currentFormNo = $activeFormNoParam;
+    } else if ($userForms->isNotEmpty()) {
+        $currentFormNo = $userForms->first();
     } else if ($existingFormNumbers->isNotEmpty()) {
         $currentFormNo = $existingFormNumbers->first();
     } else {
@@ -1094,15 +1101,25 @@
         serverFormItems.forEach(item => {
             const fNo = item.form_number || defaultFormNo;
             if (!checksheets[fNo]) {
+                const parts = fNo.split('/');
+                const csDept = parts.length >= 2 ? parts[1] : userTag;
+
+                const reqName = item.created_by_name || (item.user ? item.user.name : null) || '{{ Auth::user()->name ?? "User" }}';
+                const reqDept = item.created_by_dept || (item.user ? item.user.department : null) || csDept;
+                const requestorStr = `${reqName} / ${reqDept}`;
+                const createdDateStr = '{{ date("d-m-Y") }}';
+
                 checksheets[fNo] = {
                     docNo: 'No Doc : W1-CDS-PP-20/F1 Rev 2 &nbsp;|&nbsp; No. Form: <span style="font-weight:700; color:var(--color-primary);">' + fNo + '</span>',
                     formNo: fNo,
-                    date: '{{ date("d-m-Y") }}',
-                    requestor: '{{ Auth::user()->name ?? "Production User" }} / {{ Auth::user()->department ?? "Production" }}',
+                    date: createdDateStr,
+                    requestor: requestorStr,
+                    requestorName: reqName,
+                    requestorDept: reqDept,
                     status: 'Draft',
                     items: [],
                     signatures: {
-                        dibuat: '{{ Auth::user()->name ?? "Production User" }} (Tgl: {{ date("d-m-Y") }})',
+                        dibuat: `${reqName} (Tgl: ${createdDateStr})`,
                         diperiksa: '...................',
                         disetujui: '...................'
                     },
@@ -1113,7 +1130,7 @@
                     statusText: 'DRAFT',
                     statusClass: 'badge-warning',
                     steps: [
-                        { completed: true, active: false, details: '{{ Auth::user()->name ?? "Production User" }} - Production (Tanggal: {{ date("d-m-Y") }})', status: 'Selesai dibuat.', color: 'var(--color-success)' },
+                        { completed: true, active: false, details: `${reqName} - ${reqDept} (Tanggal: ${createdDateStr})`, status: 'Selesai dibuat.', color: 'var(--color-success)' },
                         { completed: false, active: true, details: 'Menunggu pemeriksaan Pemeriksa...', status: 'Pemeriksaan kelayakan.', color: 'var(--color-primary)' },
                         { completed: false, active: false, details: 'Belum diisi.', status: 'Registrasi Warehouse.', color: 'var(--text-muted)' }
                     ]
@@ -1138,20 +1155,24 @@
             });
         });
     } else {
+        const curName = '{{ Auth::user()->name ?? "User" }}';
+        const curDept = '{{ Auth::user()->department ?? "Production" }}';
         checksheets[defaultFormNo] = {
             docNo: 'No Doc : W1-CDS-PP-20/F1 Rev 2 &nbsp;|&nbsp; No. Form: <span style="font-weight:700; color:var(--color-primary);">' + defaultFormNo + '</span>',
             formNo: defaultFormNo,
             date: '{{ date("d-m-Y") }}',
-            requestor: '{{ Auth::user()->name ?? "Production User" }} / {{ Auth::user()->department ?? "Production" }}',
+            requestor: `${curName} / ${curDept}`,
+            requestorName: curName,
+            requestorDept: curDept,
             status: 'Draft',
             items: [],
             signatures: {
-                dibuat: '{{ Auth::user()->name ?? "Production User" }} ({{ date("d-m-Y") }})',
+                dibuat: `${curName} ({{ date("d-m-Y") }})`,
                 diperiksa: '...................',
                 disetujui: '...................'
             },
             comments: {
-                user: 'Formulir pendaftaran barang consumable departemen Production.',
+                user: `Formulir pendaftaran barang consumable departemen ${curDept}.`,
                 pemeriksa: '',
                 warehouse: ''
             }
@@ -1161,7 +1182,7 @@
             statusText: 'DRAFT',
             statusClass: 'badge-warning',
             steps: [
-                { completed: true, active: false, details: '{{ Auth::user()->name ?? "Production User" }} - Production (Tanggal: {{ date("d-m-Y") }})', status: 'Selesai dibuat dan ditandatangani.', color: 'var(--color-success)' },
+                { completed: true, active: false, details: `${curName} - ${curDept} (Tanggal: {{ date("d-m-Y") }})`, status: 'Selesai dibuat dan ditandatangani.', color: 'var(--color-success)' },
                 { completed: false, active: true, details: 'Menunggu kelayakan disetujui Pemeriksa...', status: 'Pemeriksaan kelayakan.', color: 'var(--color-primary)' },
                 { completed: false, active: false, details: 'Belum diisi.', status: 'Registrasi oleh Warehouse.', color: 'var(--text-muted)' }
             ]
@@ -1226,7 +1247,9 @@
                 const opt = document.createElement('option');
                 opt.value = formNo;
                 const itemLabel = (cs.items && cs.items.length > 0) ? `${cs.items.length} Item` : 'Draft Baru';
-                opt.innerText = `${formNo} (${userTag} - ${itemLabel})`;
+                const parts = formNo.split('/');
+                const csDept = parts.length >= 2 ? parts[1] : userTag;
+                opt.innerText = `${formNo} (${csDept} - ${itemLabel})`;
                 if (formNo === selectedChecksheetId) {
                     opt.selected = true;
                 }
@@ -1436,8 +1459,18 @@
             }
         }
 
-        const totalFormsCount = Object.keys(checksheets).length;
-        const nextSeq = String(totalFormsCount + 1).padStart(2, '0');
+        // Count existing forms specifically for the current user's department and current month-year
+        let deptFormsCount = 0;
+        for (const fNo in checksheets) {
+            const parts = fNo.split('/');
+            const fDept = parts.length >= 2 ? parts[1].trim().toUpperCase() : '';
+            const fMY = parts.length >= 3 ? parts[2].trim() : '';
+            if (fDept === userTag.toUpperCase() && fMY === monthYearStr) {
+                deptFormsCount++;
+            }
+        }
+
+        const nextSeq = String(deptFormsCount + 1).padStart(2, '0');
         const todayStr = '{{ date("d-m-Y") }}';
         const nextFormNo = `${nextSeq}/${userTag}/${monthYearStr}`;
         
@@ -1445,11 +1478,11 @@
             docNo: 'No Doc : W1-CDS-PP-20/F1 Rev 2 &nbsp;|&nbsp; No. Form: <span style="font-weight:700; color:var(--color-primary);">' + nextFormNo + '</span>',
             formNo: nextFormNo,
             date: todayStr,
-            requestor: '{{ Auth::user()->name ?? "Production User" }} / {{ Auth::user()->department ?? "Production" }}',
+            requestor: '{{ Auth::user()->name ?? "User" }} / {{ Auth::user()->department ?? "Production" }}',
             status: 'Draft',
             items: [],
             signatures: {
-                dibuat: '{{ Auth::user()->name ?? "Production User" }} (Tgl: ' + todayStr + ')',
+                dibuat: '{{ Auth::user()->name ?? "User" }} (Tgl: ' + todayStr + ')',
                 diperiksa: '...................',
                 disetujui: '...................'
             },
@@ -1464,7 +1497,7 @@
             statusText: 'DRAFT',
             statusClass: 'badge-warning',
             steps: [
-                { completed: true, active: false, details: '{{ Auth::user()->name ?? "Production User" }} - Production (Tanggal: ' + todayStr + ')', status: 'Selesai dibuat.', color: 'var(--color-success)' },
+                { completed: true, active: false, details: '{{ Auth::user()->name ?? "User" }} - ' + userTag + ' (Tanggal: ' + todayStr + ')', status: 'Selesai dibuat.', color: 'var(--color-success)' },
                 { completed: false, active: true, details: 'Menunggu pemeriksaan Pemeriksa...', status: 'Pemeriksaan kelayakan.', color: 'var(--color-primary)' },
                 { completed: false, active: false, details: 'Belum diisi.', status: 'Registrasi Warehouse.', color: 'var(--text-muted)' }
             ]

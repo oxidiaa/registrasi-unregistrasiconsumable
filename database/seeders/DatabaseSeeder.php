@@ -16,9 +16,8 @@ class DatabaseSeeder extends Seeder
     public function run(): void
     {
         // 1. Admin Master
-        User::create([
+        User::firstOrCreate(['email' => 'admin'], [
             'name'       => 'Admin Master MAI',
-            'email'      => 'admin',
             'department' => 'Management / Executive',
             'role'       => 'MASTER',
             'status'     => 'Aktif',
@@ -26,9 +25,8 @@ class DatabaseSeeder extends Seeder
         ]);
 
         // 2. Budi User (Production)
-        User::create([
+        User::firstOrCreate(['email' => 'budi_user'], [
             'name'       => 'Budi Santoso',
-            'email'      => 'budi_user',
             'department' => 'Production',
             'role'       => 'USER',
             'status'     => 'Aktif',
@@ -36,9 +34,8 @@ class DatabaseSeeder extends Seeder
         ]);
 
         // 3. Suherman (Pemeriksa)
-        User::create([
+        User::firstOrCreate(['email' => 'suherman'], [
             'name'       => 'Suherman',
-            'email'      => 'suherman',
             'department' => 'Quality Assurance',
             'role'       => 'PEMERIKSA',
             'status'     => 'Aktif',
@@ -46,9 +43,8 @@ class DatabaseSeeder extends Seeder
         ]);
 
         // 4. Joko Widodo (Warehouse)
-        User::create([
+        User::firstOrCreate(['email' => 'joko_wh'], [
             'name'       => 'Joko Widodo',
-            'email'      => 'joko_wh',
             'department' => 'Warehouse Logistik',
             'role'       => 'WAREHOUSE',
             'status'     => 'Aktif',
@@ -56,13 +52,24 @@ class DatabaseSeeder extends Seeder
         ]);
 
         // 5. Admin Consumable (Default login)
-        User::create([
+        User::firstOrCreate(['email' => 'admin_consumable'], [
             'name'       => 'Admin Consumable',
-            'email'      => 'admin',
             'department' => 'Production',
             'role'       => 'MASTER',
             'status'     => 'Aktif',
             'password'   => bcrypt('admin'),
         ]);
+
+        // Populate creator information for any existing FormItems
+        foreach (\App\Models\FormItem::whereNull('created_by_name')->get() as $item) {
+            $parts = explode('/', $item->form_number);
+            $deptTag = count($parts) >= 2 ? $parts[1] : 'PRODUCTION';
+            $user = User::where('department', 'like', '%' . $deptTag . '%')->first() ?? User::first();
+            $item->update([
+                'user_id'         => $user?->id,
+                'created_by_name' => $user?->name ?? 'User',
+                'created_by_dept' => $user?->department ?? $deptTag,
+            ]);
+        }
     }
 }
