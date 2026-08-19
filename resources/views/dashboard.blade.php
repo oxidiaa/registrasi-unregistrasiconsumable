@@ -93,30 +93,6 @@
         </div>
     </div>
 
-    <!-- Central Floating MAI Holographic Telemetry Badge -->
-    <div class="saturn-floating-hud">
-        <div class="saturn-hud-brand">
-            <img 
-                src="{{ asset('assets/images/MAI TERANG.png') }}?v={{ file_exists(public_path('assets/images/MAI TERANG.png')) ? filemtime(public_path('assets/images/MAI TERANG.png')) : time() }}" 
-                alt="MAI Logo" 
-                class="saturn-hud-logo"
-            >
-            <div class="saturn-hud-meta">
-                <span class="saturn-hud-title">Kawasan Industri KIIC, Jl. Harapan III No.Lot JJ-2A, <br>Sirnabaya, Telukjambe Timur, Karawang, Jawa Barat 41361</span>
-            </div>
-        </div>
-    </div>
-
-    <!-- Bottom Meta Information -->
-    <div class="orbit-hud-meta bottom-left">
-        <span class="hud-mono"><span class="pulse-beacon-inline green"></span> INTERACTION: DRAG TO ROTATE 3D SATURN · SCROLL TO ZOOM</span>
-        <span class="hud-mono">PHYSICAL DATA: DIAMETER 116,460 KM · 1.43 BILLION KM FROM SUN</span>
-    </div>
-    <div class="orbit-hud-meta bottom-right">
-        <span class="hud-mono">RING SYSTEM: CASSINI DIVISION · A, B, C, F RINGS</span>
-        <span class="hud-mono">MOON FLEET: TITAN · ENCELADUS · RHEA · DIONE · TETHYS · MIMAS</span>
-    </div>
-
     <!-- Moon Telemetry Info Drawer (Opens on Moon Click) -->
     <div class="orbit-inspector-box" id="orbitInspectorBox">
         <div class="inspector-header">
