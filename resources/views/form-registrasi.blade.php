@@ -45,12 +45,160 @@
         box-shadow: 0 2px 8px rgba(26, 63, 168, 0.3);
     }
     
-    /* Print optimizations for sheets tabs */
+    /* Print optimizations for sheets tabs & A4 Landscape */
     @media print {
+        @page {
+            size: A4 landscape;
+            margin: 5mm 7mm 5mm 7mm;
+        }
+        .sidebar,
+        .header,
         .sheet-tabs-container,
+        .sheet-doc-toolbar,
+        .toast-container,
+        .no-print,
+        .tab-pane:not(#print-preview-pane),
         #btn-tambah-data,
-        #btn-form-baru {
+        #btn-form-baru,
+        .floating-sidebar-toggle,
+        .app-bg-grid,
+        .app-bg-glow-1,
+        .app-bg-glow-2,
+        .app-bg-glow-3,
+        .empty-state-row,
+        .modal {
             display: none !important;
+        }
+        .main-content {
+            margin: 0 !important;
+            padding: 0 !important;
+            width: 100% !important;
+            max-width: 100% !important;
+            background: transparent !important;
+        }
+        #print-preview-pane {
+            display: block !important;
+            width: 100% !important;
+            margin: 0 !important;
+            padding: 0 !important;
+        }
+        .form-reg-card {
+            border: 1.5px solid #000000 !important;
+            border-radius: 0 !important;
+            box-shadow: none !important;
+            background: #ffffff !important;
+            margin: 0 auto !important;
+            padding: 0 !important;
+            width: 100% !important;
+            page-break-inside: avoid !important;
+            break-inside: avoid !important;
+        }
+        .form-reg-header {
+            padding: 4px 10px !important;
+            border-bottom: 1.5px solid #000000 !important;
+        }
+        .form-reg-logo img {
+            height: 28px !important;
+        }
+        .form-reg-company {
+            font-size: 6.5pt !important;
+            line-height: 1.15 !important;
+        }
+        .form-reg-company strong {
+            font-size: 7.5pt !important;
+        }
+        .form-reg-title {
+            font-size: 10.5pt !important;
+            margin: 0 0 2px 0 !important;
+        }
+        .form-reg-nodoc {
+            font-size: 6.8pt !important;
+        }
+        .form-reg-meta {
+            padding: 3px 10px !important;
+            border-bottom: 1.5px solid #000000 !important;
+            background: #f8fafc !important;
+        }
+        .form-reg-meta-label, .form-reg-meta-line {
+            font-size: 7pt !important;
+        }
+        .form-reg-table {
+            width: 100% !important;
+            min-width: 100% !important;
+            border-collapse: collapse !important;
+            border: 1px solid #000000 !important;
+            table-layout: fixed !important;
+            font-size: 7pt !important;
+            page-break-inside: avoid !important;
+            break-inside: avoid !important;
+        }
+        .form-reg-table thead th {
+            background: #e2e8f0 !important;
+            color: #000000 !important;
+            border: 1px solid #000000 !important;
+            padding: 3px 2px !important;
+            font-size: 6.5pt !important;
+            line-height: 1.1 !important;
+        }
+        .form-reg-table tbody tr {
+            page-break-inside: avoid !important;
+            break-inside: avoid !important;
+        }
+        .form-reg-table tbody td {
+            border: 1px solid #000000 !important;
+            color: #000000 !important;
+            background: #ffffff !important;
+            padding: 1.5px 3px !important;
+            height: 19px !important;
+            font-size: 6.8pt !important;
+            line-height: 1.1 !important;
+        }
+        .form-reg-table tbody tr.tr-even td {
+            background-color: #fbfbfb !important;
+        }
+        .form-reg-table tbody td * {
+            color: #000000 !important;
+        }
+        .item-code-badge, .item-price-tag, .badge-stock-min, .badge-stock-titik, .badge-stock-max, .badge-asset-yes, .badge-asset-no {
+            background: transparent !important;
+            border: none !important;
+            padding: 0 !important;
+            font-size: 6.8pt !important;
+            color: #000000 !important;
+            box-shadow: none !important;
+            border-radius: 0 !important;
+        }
+        .badge-asset-yes svg {
+            display: none !important;
+        }
+        .check-icon-b3 svg {
+            stroke: #000000 !important;
+            width: 10px !important;
+            height: 10px !important;
+        }
+        .print-only-row {
+            display: table-row !important;
+        }
+        .form-reg-signature {
+            border-top: 1.5px solid #000000 !important;
+            page-break-inside: avoid !important;
+            break-inside: avoid !important;
+        }
+        .sig-box {
+            padding: 3px 6px !important;
+            border-right: 1px solid #000000 !important;
+        }
+        .sig-label {
+            font-size: 6.5pt !important;
+            margin-bottom: 2px !important;
+        }
+        .sig-space {
+            height: 32px !important;
+            font-size: 6.8pt !important;
+        }
+        .sig-line {
+            border-bottom: 1px dashed #000000 !important;
+            margin: 2px 10px 0 !important;
         }
     }
 </style>
@@ -195,23 +343,23 @@
             <table class="form-reg-table">
                 <thead>
                     <tr>
-                        <th rowspan="2" class="th-center" style="width:40px;">NO.</th>
-                        <th rowspan="2" class="th-center" style="width:200px;">KODE BARANG</th>
-                        <th rowspan="2" class="th-center" style="width:300px;">NAMA BARANG</th>
-                        <th rowspan="2" class="th-center" style="width:90px;">HARGA</th>
-                        <th rowspan="2" class="th-center" style="width:80px;">ESTIMASI USIA PAKAI</th>
-                        <th rowspan="2" class="th-center" style="width:90px;">KATEGORI PENGGUNAAN</th>
-                        <th rowspan="2" class="th-center" style="width:90px;">KATEGORI UKURAN</th>
-                        <th rowspan="2" class="th-center" style="width:50px;">MIN</th>
-                        <th rowspan="2" class="th-center" style="width:65px;">TITIK ORDER</th>
-                        <th rowspan="2" class="th-center" style="width:50px;">MAX</th>
-                        <th rowspan="2" class="th-center" style="width:75px;">LEAD TIME</th>
-                        <th rowspan="2" class="th-center" style="width:95px;">ASET / NO ASET</th>
-                        <th colspan="2" class="th-center">KATEGORI</th>
+                        <th rowspan="2" class="th-center" style="width:3.5%;">NO.</th>
+                        <th rowspan="2" class="th-center" style="width:13%;">KODE BARANG</th>
+                        <th rowspan="2" class="th-center" style="width:19%;">NAMA BARANG</th>
+                        <th rowspan="2" class="th-center" style="width:9%;">HARGA</th>
+                        <th rowspan="2" class="th-center" style="width:8%;">ESTIMASI USIA PAKAI</th>
+                        <th rowspan="2" class="th-center" style="width:8.5%;">KATEGORI PENGGUNAAN</th>
+                        <th rowspan="2" class="th-center" style="width:8%;">KATEGORI UKURAN</th>
+                        <th rowspan="2" class="th-center" style="width:4.5%;">MIN</th>
+                        <th rowspan="2" class="th-center" style="width:5.5%;">TITIK ORDER</th>
+                        <th rowspan="2" class="th-center" style="width:4.5%;">MAX</th>
+                        <th rowspan="2" class="th-center" style="width:6%;">LEAD TIME</th>
+                        <th rowspan="2" class="th-center" style="width:8%;">ASET / NO ASET</th>
+                        <th colspan="2" class="th-center" style="width:10%;">KATEGORI</th>
                     </tr>
                     <tr>
-                        <th class="th-center" style="width:45px;">B3</th>
-                        <th class="th-center" style="width:55px;">NON B3</th>
+                        <th class="th-center" style="width:4.5%;">B3</th>
+                        <th class="th-center" style="width:5.5%;">NON B3</th>
                     </tr>
                 </thead>
                 <tbody id="preview-table-body">
