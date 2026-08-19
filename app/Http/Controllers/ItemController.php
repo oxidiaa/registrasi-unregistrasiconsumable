@@ -212,7 +212,11 @@ class ItemController extends Controller
     public function storeFormItem(Request $request)
     {
         if (!$request->has('is_b3') && !$request->has('is_non_b3')) {
-            return back()->withErrors(['kategori' => 'Pilih setidaknya satu kategori (B3 atau NON B3).'])->withInput();
+            return back()->withErrors(['kategori' => 'Pilih salah satu kategori (B3 atau NON B3).'])->withInput();
+        }
+
+        if ($request->has('is_b3') && $request->has('is_non_b3')) {
+            return back()->withErrors(['kategori' => 'Hanya boleh memilih salah satu kategori (B3 atau NON B3).'])->withInput();
         }
 
         $validated = $request->validate([

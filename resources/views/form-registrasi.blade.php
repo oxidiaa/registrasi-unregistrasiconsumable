@@ -950,12 +950,12 @@
                 <label style="display:block; font-size:0.875rem; font-weight:600; margin-bottom:0.75rem;">Kategori <span style="color:var(--color-danger);">*</span></label>
                 <div style="display:flex; gap:2rem;">
                     <label class="fi-checkbox-label">
-                        <input type="checkbox" name="is_b3" value="1" class="fi-checkbox" {{ old('is_b3') ? 'checked' : '' }}>
+                        <input type="checkbox" name="is_b3" id="modal_is_b3" value="1" class="fi-checkbox" {{ old('is_b3') ? 'checked' : '' }} onchange="handleB3CategorySelect('b3')">
                         <span class="fi-checkbox-custom"></span>
                         <span>B3 (Bahan Berbahaya Beracun)</span>
                     </label>
                     <label class="fi-checkbox-label">
-                        <input type="checkbox" name="is_non_b3" value="1" class="fi-checkbox" {{ old('is_non_b3') ? 'checked' : '' }}>
+                        <input type="checkbox" name="is_non_b3" id="modal_is_non_b3" value="1" class="fi-checkbox" {{ old('is_non_b3') ? 'checked' : '' }} onchange="handleB3CategorySelect('non_b3')">
                         <span class="fi-checkbox-custom"></span>
                         <span>NON B3</span>
                     </label>
@@ -1010,6 +1010,18 @@
 
 @section('scripts')
 <script>
+    function handleB3CategorySelect(selected) {
+        const b3Cb = document.getElementById('modal_is_b3');
+        const nonB3Cb = document.getElementById('modal_is_non_b3');
+        if (!b3Cb || !nonB3Cb) return;
+
+        if (selected === 'b3' && b3Cb.checked) {
+            nonB3Cb.checked = false;
+        } else if (selected === 'non_b3' && nonB3Cb.checked) {
+            b3Cb.checked = false;
+        }
+    }
+
     function openModal(id) {
         if (id === 'addItemModal') {
             const hiddenFormNo = document.getElementById('modal_form_number');
