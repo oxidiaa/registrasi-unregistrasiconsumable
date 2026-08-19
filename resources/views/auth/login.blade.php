@@ -167,7 +167,8 @@
             flex-direction: column;
             justify-content: flex-start;
             align-self: flex-start;
-            padding-top: 1rem;
+            padding-top: 0;
+            margin-top: -3.5rem;
             padding-right: 1.5rem;
             animation: fadeInSlideLeft 0.8s ease-out;
         }
@@ -175,7 +176,7 @@
         .welcome-title-wrapper {
             position: relative;
             padding-left: 1.25rem;
-            margin-bottom: 1.5rem;
+            margin-bottom: 0.75rem;
         }
 
         .welcome-accent-bar {
@@ -195,15 +196,29 @@
             line-height: 1.08;
             letter-spacing: -0.03em;
             color: var(--text-dark);
+            margin: 0;
+        }
+
+        .welcome-saturnus {
+            font-family: var(--font-head);
+            font-size: 2.25rem;
+            font-weight: 800;
+            letter-spacing: -0.02em;
+            color: #000000;
+            padding-left: 1.25rem;
+            margin-top: 0.25rem;
+            margin-bottom: 0.75rem;
+            line-height: 1.1;
         }
 
         .welcome-desc {
-            font-size: 0.975rem;
-            line-height: 1.6;
+            font-size: 1rem;
+            line-height: 1.55;
             color: var(--text-body);
-            max-width: 330px;
+            max-width: 4000px;
             padding-left: 1.25rem;
             font-weight: 450;
+            margin: 0;
         }
 
         /* ============================================================
@@ -723,6 +738,7 @@
                 align-items: center;
                 align-self: auto;
                 padding-top: 0;
+                margin-top: 0;
                 text-align: center;
                 padding-right: 0;
             }
@@ -733,6 +749,10 @@
 
             .welcome-accent-bar {
                 display: none;
+            }
+
+            .welcome-saturnus {
+                padding-left: 0;
             }
 
             .welcome-desc {
@@ -811,8 +831,11 @@
                         Welcome<br>Back
                     </h1>
                 </div>
+                <h2 class="welcome-saturnus" style="color: black;">
+                    SATURNUS
+                </h2>
                 <p class="welcome-desc" style="color: black;">
-                    Silakan masuk untuk melanjutkan ke sistem dan kelola permintaan material dengan lebih efektif.
+                    Smart Asset Tracking, Registration & Unregistration Network Utility System
                 </p>
             </div>
 
