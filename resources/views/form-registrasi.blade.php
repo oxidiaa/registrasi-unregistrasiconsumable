@@ -30,221 +30,85 @@
     });
 @endphp
 <style>
-    /* Sheet Tabs Styling */
-    .sheet-tabs-container {
-        display: flex;
-        gap: 0.5rem;
-        margin-bottom: 1.5rem;
-        border-bottom: 2px solid rgba(0, 0, 0, 0.07);
-        padding-bottom: 1px;
-    }
-
-    .sheet-tab {
-        padding: 0.75rem 1.5rem;
-        font-family: var(--font-heading);
-        font-weight: 600;
-        font-size: 0.95rem;
-        color: var(--text-muted);
-        background: transparent;
-        border: none;
-        cursor: pointer;
-        border-radius: var(--radius-sm) var(--radius-sm) 0 0;
-        transition: var(--transition-smooth);
-        position: relative;
-        display: inline-flex;
-        align-items: center;
-        gap: 0.5rem;
-    }
-
-    .sheet-tab:hover {
-        color: var(--color-primary);
-        background: rgba(79, 70, 229, 0.04);
-    }
-
-    .sheet-tab.active {
-        color: var(--color-primary);
-        background: #fff;
-        box-shadow: 0 -4px 10px -4px rgba(0,0,0,0.05);
-    }
-
-    .sheet-tab.active::after {
-        content: '';
-        position: absolute;
-        bottom: -3px;
-        left: 0;
-        width: 100%;
-        height: 3px;
-        background-color: var(--color-primary);
-        border-radius: 2px;
-    }
-
-    /* Tab panes */
-    .tab-pane {
-        display: none;
-    }
-
-    .tab-pane.active {
-        display: block;
-    }
-
-    /* Data View Table & Stats */
-    .dataview-stats {
-        display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-        gap: 1.25rem;
-        margin-bottom: 1.75rem;
-    }
-
-    .dataview-stat-card {
-        background: var(--bg-glass);
-        backdrop-filter: blur(12px);
-        border: 1px solid var(--border-glass);
-        padding: 1.25rem;
-        border-radius: var(--radius-md);
-        display: flex;
-        align-items: center;
-        gap: 1rem;
-        box-shadow: var(--shadow-sm);
+    /* Sheet Tabs & Stepper Enhancements for Form Registrasi */
+    .filter-pill-btn {
+        border-radius: 20px !important;
+        font-size: 0.78rem !important;
+        font-weight: 700 !important;
+        padding: 0.4rem 0.95rem !important;
         transition: var(--transition-smooth);
     }
-    
-    .dataview-stat-card:hover {
-        transform: translateY(-2px);
-        box-shadow: var(--shadow-md);
-    }
 
-    /* Timeline/Stepper styles */
-    .stepper-container {
-        display: flex;
-        flex-direction: column;
-        gap: 1.5rem;
-        position: relative;
-        padding-left: 2rem;
-        margin-top: 1.5rem;
-        margin-bottom: 1.5rem;
-    }
-
-    .stepper-container::before {
-        content: '';
-        position: absolute;
-        left: 11px;
-        top: 12px;
-        bottom: 12px;
-        width: 2px;
-        background: #e2e8f0;
-        z-index: 1;
-    }
-
-    .step-item {
-        position: relative;
-        display: flex;
-        flex-direction: column;
-        gap: 0.25rem;
-        padding-bottom: 1.5rem;
-    }
-    
-    .step-item:last-child {
-        padding-bottom: 0;
-    }
-
-    .step-indicator {
-        position: absolute;
-        left: -32px;
-        top: 0;
-        width: 24px;
-        height: 24px;
-        border-radius: 50%;
-        background: #fff;
-        border: 2px solid #cbd5e1;
-        z-index: 2;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        transition: var(--transition-smooth);
-        color: #94a3b8;
-        font-size: 0.75rem;
-        font-weight: 700;
-    }
-
-    .step-item.completed .step-indicator {
-        border-color: var(--color-success);
-        background: var(--color-success);
-        color: #fff;
-    }
-
-    .step-item.active .step-indicator {
-        border-color: var(--color-primary);
-        background: #fff;
-        color: var(--color-primary);
-        box-shadow: 0 0 0 4px var(--color-primary-light);
-    }
-
-    .step-item.pending .step-indicator {
-        border-color: #cbd5e1;
-        background: #f1f5f9;
-        color: #94a3b8;
+    .filter-pill-btn.active {
+        background: var(--mai-blue) !important;
+        color: #ffffff !important;
+        box-shadow: 0 2px 8px rgba(26, 63, 168, 0.3);
     }
     
     /* Print optimizations for sheets tabs */
     @media print {
-        .sheet-tabs-container {
-            display: none !important;
-        }
-        #btn-tambah-data {
+        .sheet-tabs-container,
+        #btn-tambah-data,
+        #btn-form-baru {
             display: none !important;
         }
     }
 </style>
 
+<div class="workspace-light-theme">
+
 <div class="header no-print">
     <div class="header-title">
-        <h1>Form Pendaftaran Barang</h1>
-        <p>Form pendaftaran barang consumable PT. Metalart Astra Indonesia.</p>
+        <div class="galactic-badge" style="margin-bottom: 0.4rem;">
+            <span class="pulse-beacon"></span>
+            <span>MAI CONSUMABLE REGISTRY & WORKSPACE</span>
+        </div>
+        <h1 class="galactic-title" style="font-size: 1.6rem; margin-bottom: 0.2rem;">Form Pendaftaran Barang Consumable</h1>
+        <p class="galactic-subtitle">Lembar kerja pendaftaran, monitoring approval 4-tahap, data explorer, dan account master.</p>
     </div>
-    <div style="display: flex; gap: 0.75rem; align-items: center;">
-        <button class="btn btn-primary" id="btn-form-baru" onclick="createNewForm()" style="font-weight: 600; font-family: var(--font-body); display: inline-flex; align-items: center; gap: 0.4rem; padding: 0.6rem 1.1rem; border-radius: var(--radius-md); cursor: pointer;">
+    <div style="display: flex; gap: 0.65rem; align-items: center; flex-wrap: wrap;">
+
+        <button class="btn btn-secondary" id="btn-form-baru" onclick="createNewForm()" style="font-weight: 700; display: inline-flex; align-items: center; gap: 0.4rem; padding: 0.65rem 1.25rem; border-radius: var(--radius-md); cursor: pointer;">
             <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2.5" fill="none" stroke-linecap="round" stroke-linejoin="round">
                 <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
                 <polyline points="14 2 14 8 20 8"></polyline>
-                <line x1="12" y1="18" x2="12" y2="12"></line>
-                <line x1="9" y1="15" x2="15" y2="15"></line>
             </svg>
-            + Form Baru
+            <span>+ Form Baru</span>
         </button>
-        <button class="btn btn-secondary" onclick="printCurrentSheet()">
+        <button class="btn btn-secondary" onclick="printCurrentSheet()" style="font-weight: 700; display: inline-flex; align-items: center; gap: 0.4rem; padding: 0.65rem 1.25rem; border-radius: var(--radius-md);">
             <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round">
                 <polyline points="6 9 6 2 18 2 18 9"></polyline>
                 <path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"></path>
                 <rect x="6" y="14" width="12" height="8"></rect>
             </svg>
-            Cetak / Print
+            <span>Cetak / Print</span>
         </button>
     </div>
 </div>
 
-{{-- ===== SHEET TABS SELECTOR ===== --}}
+{{-- ===== SHEET TABS SELECTOR (SEGMENTED CONTROL) ===== --}}
 <div class="sheet-tabs-container no-print">
-    <button class="sheet-tab active" onclick="switchSheet('print-preview')">
-        <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round">
+    <button type="button" class="sheet-tab active" onclick="switchSheet('print-preview')">
+        <svg viewBox="0 0 24 24" width="17" height="17" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round">
             <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
             <polyline points="14 2 14 8 20 8"></polyline>
             <line x1="16" y1="13" x2="8" y2="13"></line>
             <line x1="16" y1="17" x2="8" y2="17"></line>
             <polyline points="10 9 9 9 8 9"></polyline>
         </svg>
-        Print Preview
+        <span>Print Preview (Lembar Cetak)</span>
     </button>
 
-    <button class="sheet-tab" onclick="switchSheet('proses-approval')">
-        <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round">
+    <button type="button" class="sheet-tab" onclick="switchSheet('proses-approval')">
+        <svg viewBox="0 0 24 24" width="17" height="17" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round">
             <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
             <polyline points="22 4 12 14.01 9 11.01"></polyline>
         </svg>
-        Proses Approval
+        <span>Proses Approval</span>
     </button>
 
-    <button class="sheet-tab" onclick="switchSheet('data-view')">
-        <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round">
+    <button type="button" class="sheet-tab" onclick="switchSheet('data-view')">
+        <svg viewBox="0 0 24 24" width="17" height="17" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round">
             <line x1="8" y1="6" x2="21" y2="6"></line>
             <line x1="8" y1="12" x2="21" y2="12"></line>
             <line x1="8" y1="18" x2="21" y2="18"></line>
@@ -252,32 +116,53 @@
             <line x1="3" y1="12" x2="3.01" y2="12"></line>
             <line x1="3" y1="18" x2="3.01" y2="18"></line>
         </svg>
-        Data View
+        <span>Data View Explorer</span>
     </button>
 
-    <button class="sheet-tab" onclick="switchSheet('account-master')">
-        <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round">
+    <button type="button" class="sheet-tab" onclick="switchSheet('account-master')">
+        <svg viewBox="0 0 24 24" width="17" height="17" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round">
             <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
             <circle cx="9" cy="7" r="4"></circle>
             <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
             <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
         </svg>
-        Account Master
+        <span>Account Master</span>
     </button>
 </div>
 
 {{-- ===== TAB PANE: PRINT PREVIEW ===== --}}
 <div id="print-preview-pane" class="tab-pane active">
+    
+    <!-- Quick Document Status Bar (No Print) -->
+    <div class="sheet-doc-toolbar no-print">
+        <div class="doc-toolbar-left">
+            <div class="doc-badge-pill">
+                <span class="pulse-beacon-inline green"></span>
+                <span>STATUS LEMBAR: <strong>AKTIF / SIAP CETAK</strong></span>
+            </div>
+            <div class="doc-badge-pill secondary">
+                <span>NO FORM: <strong id="toolbar-form-no">{{ $currentFormNo }}</strong></span>
+            </div>
+        </div>
+        <div class="doc-toolbar-right">
+            <button type="button" class="btn btn-secondary btn-sm" onclick="printCurrentSheet()">
+                <svg viewBox="0 0 24 24" width="14" height="14" stroke="currentColor" stroke-width="2" fill="none">
+                    <polyline points="6 9 6 2 18 2 18 9"></polyline>
+                    <path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"></path>
+                    <rect x="6" y="14" width="12" height="8"></rect>
+                </svg>
+                <span>Cetak A4</span>
+            </button>
+        </div>
+    </div>
+
     <div class="glass-card form-reg-card">
 
         {{-- ===== FORM HEADER ===== --}}
         <div class="form-reg-header">
             <div class="form-reg-header-left">
                 <div class="form-reg-logo">
-                    <svg viewBox="0 0 60 40" width="60" height="40">
-                        <rect width="60" height="40" rx="4" fill="#e11d48"/>
-                        <text x="30" y="26" text-anchor="middle" fill="white" font-weight="bold" font-size="14" font-family="Arial">MAI</text>
-                    </svg>
+                    <img src="{{ asset('assets/images/MAI GELAP.png') }}?v={{ file_exists(public_path('assets/images/MAI GELAP.png')) ? filemtime(public_path('assets/images/MAI GELAP.png')) : time() }}" alt="MAI Logo" style="height: 38px; width: auto; object-fit: contain;">
                     <div class="form-reg-company">
                         <strong>PT. METALART ASTRA INDONESIA</strong>
                         <span>Kawasan Industri KIIC, JL. Harapan III Lot- JJ 2A, Desa Sirnabaya, Kecamatan
@@ -300,7 +185,7 @@
                 <span class="form-reg-meta-line" id="preview-date">{{ date('d-m-Y') }}</span>
             </div>
             <div class="form-reg-meta-item">
-                <span class="form-reg-meta-label">User Dept / Requestor :</span>
+                <span class="form-reg-meta-label">Requestor / User Dept :</span>
                 <span class="form-reg-meta-line" id="preview-requestor">{{ Auth::user()->name ?? 'Production User' }} / {{ Auth::user()->department ?? 'Production' }}</span>
             </div>
         </div>
@@ -311,8 +196,8 @@
                 <thead>
                     <tr>
                         <th rowspan="2" class="th-center" style="width:40px;">NO.</th>
-                        <th rowspan="2" class="th-center" style="width:110px;">KODE BARANG</th>
-                        <th rowspan="2" class="th-center">NAMA BARANG</th>
+                        <th rowspan="2" class="th-center" style="width:200px;">KODE BARANG</th>
+                        <th rowspan="2" class="th-center" style="width:300px;">NAMA BARANG</th>
                         <th rowspan="2" class="th-center" style="width:90px;">HARGA</th>
                         <th rowspan="2" class="th-center" style="width:80px;">ESTIMASI USIA PAKAI</th>
                         <th rowspan="2" class="th-center" style="width:90px;">KATEGORI PENGGUNAAN</th>
@@ -340,21 +225,21 @@
                                 <span style="color:var(--text-muted); font-size:0.75rem;">-</span>
                             @endif
                         </td>
-                        <td style="padding:0 0.6rem; font-weight:700; font-size:0.82rem; color:var(--text-primary);">
+                        <td style="padding:0 0.6rem; font-weight:700; font-size:0.82rem; color:#0f172a;">
                             {{ $item->nama_barang }}
                         </td>
                         <td class="td-center">
                             @if($item->harga)
                                 <span class="item-price-tag">Rp {{ number_format($item->harga, 0, ',', '.') }}</span>
                             @else
-                                <span style="color:var(--text-muted); font-size:0.75rem;">-</span>
+                                <span style="color:#94a3b8; font-size:0.75rem;">-</span>
                             @endif
                         </td>
-                        <td class="td-center" style="font-size:0.75rem; font-weight:600; color:var(--text-muted);">
+                        <td class="td-center" style="font-size:0.75rem; font-weight:600; color:#334155;">
                             {{ $item->estimasi_usia_pakai ? (is_numeric(trim($item->estimasi_usia_pakai)) ? $item->estimasi_usia_pakai . ' Hari' : $item->estimasi_usia_pakai) : '-' }}
                         </td>
-                        <td class="td-center" style="font-size:0.75rem; font-weight:600;">{{ $item->kategori_penggunaan ?? '-' }}</td>
-                        <td class="td-center" style="font-size:0.75rem; font-weight:600;">{{ $item->kategori_ukuran ?? '-' }}</td>
+                        <td class="td-center" style="font-size:0.75rem; font-weight:600; color:#0f172a;">{{ $item->kategori_penggunaan ?? '-' }}</td>
+                        <td class="td-center" style="font-size:0.75rem; font-weight:600; color:#0f172a;">{{ $item->kategori_ukuran ?? '-' }}</td>
                         <td class="td-center">
                             @if($item->min !== null && $item->min !== '')
                                 <span class="badge-stock-min">{{ $item->min }}</span>
@@ -1119,6 +1004,8 @@
     </div>
 </div>
 
+</div> {{-- End .workspace-light-theme --}}
+
 @endsection
 
 @section('scripts')
@@ -1753,17 +1640,17 @@
                         <td class="td-center" style="padding:0 0.4rem;">
                             ${item.kode ? `<span class="item-code-badge">${item.kode}</span>` : '<span style="color:var(--text-muted); font-size:0.75rem;">-</span>'}
                         </td>
-                        <td style="padding:0 0.6rem; font-weight:700; font-size:0.82rem; color:var(--text-primary);">${item.nama}</td>
+                        <td style="padding:0 0.6rem; font-weight:700; font-size:0.82rem; color:#0f172a;">${item.nama}</td>
                         <td class="td-center">
-                            ${item.harga ? `<span class="item-price-tag">${item.harga}</span>` : '<span style="color:var(--text-muted); font-size:0.75rem;">-</span>'}
+                            ${item.harga ? `<span class="item-price-tag">${item.harga}</span>` : '<span style="color:#94a3b8; font-size:0.75rem;">-</span>'}
                         </td>
-                        <td class="td-center" style="font-size:0.75rem; font-weight:600; color:var(--text-muted);">${item.usia || '-'}</td>
-                        <td class="td-center" style="font-size:0.75rem; font-weight:600;">${item.katPeng || '-'}</td>
-                        <td class="td-center" style="font-size:0.75rem; font-weight:600;">${item.katUk || '-'}</td>
+                        <td class="td-center" style="font-size:0.75rem; font-weight:600; color:#334155;">${item.usia || '-'}</td>
+                        <td class="td-center" style="font-size:0.75rem; font-weight:600; color:#0f172a;">${item.katPeng || '-'}</td>
+                        <td class="td-center" style="font-size:0.75rem; font-weight:600; color:#0f172a;">${item.katUk || '-'}</td>
                         <td class="td-center">${item.min ? `<span class="badge-stock-min">${item.min}</span>` : '-'}</td>
                         <td class="td-center">${item.titik ? `<span class="badge-stock-titik">${item.titik}</span>` : '-'}</td>
                         <td class="td-center">${item.max ? `<span class="badge-stock-max">${item.max}</span>` : '-'}</td>
-                        <td class="td-center" style="font-size:0.75rem; font-weight:600;">${item.lead || '-'}</td>
+                        <td class="td-center" style="font-size:0.75rem; font-weight:600; color:#0f172a;">${item.lead || '-'}</td>
                         <td class="td-center" style="vertical-align: middle;">
                             ${item.aset === 'ASET' ? '<span class="badge-asset-yes"><svg viewBox="0 0 24 24" width="11" height="11" stroke="currentColor" stroke-width="3" fill="none"><polyline points="20 6 9 17 4 12"></polyline></svg> ASET</span>' : '<span class="badge-asset-no">NO ASET</span>'}
                         </td>

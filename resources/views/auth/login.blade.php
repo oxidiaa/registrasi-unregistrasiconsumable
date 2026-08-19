@@ -3,67 +3,82 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Log In | MAI Smart Warehouse System</title>
-    <meta name="description" content="Login ke MAI Smart Warehouse System - Consumable Registry. Platform manajemen gudang modern PT. Metalart Astra Indonesia.">
-    <link rel="stylesheet" href="{{ asset('css/style.css') }}">
+    <title>Login | MAI Consumable System</title>
+    <meta name="description" content="Silakan masuk untuk melanjutkan ke sistem dan kelola permintaan material dengan lebih efektif - PT. Metalart Astra Indonesia">
+    
+    <!-- Google Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Outfit:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800;0,900&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800;1,400;1,600&family=Outfit:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 
     <style>
         /* ============================================================
-           MAI SMART WAREHOUSE LOGIN — 3D INDUSTRIAL THEME
+           RESET & CSS VARIABLES
            ============================================================ */
-
-        :root {
-            /* MAI Brand Colors from logo */
-            --mai-blue-dark: #0d2d6e;
-            --mai-blue:      #1a3fa8;
-            --mai-blue-mid:  #1e50c8;
-            --mai-red:       #d42b2b;
-            --mai-red-light: #e83838;
-            --mai-sky:       #00adef;
-            --mai-sky-light: #29c5ff;
-
-            /* Industrial Palette */
-            --wh-bg:         #07101f;
-            --wh-surface:    #0c1a30;
-            --wh-card:       #101e36;
-            --wh-border:     rgba(0, 173, 239, 0.15);
-            --wh-border-glow: rgba(0, 173, 239, 0.4);
-            --wh-text:       #e8f4ff;
-            --wh-muted:      #7094b8;
-            --wh-grid:       rgba(0, 120, 200, 0.08);
-
-            --font-head:  'Outfit', sans-serif;
-            --font-body:  'Plus Jakarta Sans', sans-serif;
-
-            --ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
-            --ease-smooth: cubic-bezier(0.4, 0, 0.2, 1);
-        }
-
-        /* ── Reset & Base ── */
         *, *::before, *::after {
             margin: 0;
             padding: 0;
             box-sizing: border-box;
         }
 
+        :root {
+            --primary-blue: #2563eb;
+            --primary-blue-hover: #1d4ed8;
+            --primary-blue-light: #3b82f6;
+            --text-dark: #0f2b48;
+            --text-title: #0f172a;
+            --text-body: #475569;
+            --text-muted: #64748b;
+            --text-placeholder: #94a3b8;
+            --border-color: rgba(226, 232, 240, 0.85);
+            --card-glass-bg: rgba(255, 255, 255, 0.62);
+            --card-border: rgba(255, 255, 255, 0.85);
+            --card-shadow: 0 25px 60px -15px rgba(15, 43, 72, 0.18), 0 0 0 1px rgba(255, 255, 255, 0.6) inset;
+            
+            --font-main: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            --font-head: 'Outfit', sans-serif;
+        }
+
         html, body {
             height: 100%;
-            min-height: 100vh;
+            width: 100%;
+            font-family: var(--font-main);
+            color: var(--text-dark);
+            background-color: #f1f5f9;
         }
 
-        body.login-page-body {
+        body.login-page {
+            min-height: 100vh;
             display: flex;
             flex-direction: column;
-            background: var(--wh-bg);
-            font-family: var(--font-body);
-            color: var(--wh-text);
-            overflow: hidden;
+            justify-content: space-between;
+            position: relative;
+            background-image: url("{{ asset('assets/images/MAI DEPAN.png') }}");
+            background-size: cover;
+            background-position: center center;
+            background-repeat: no-repeat;
+            background-attachment: fixed;
+            overflow-x: hidden;
         }
 
-        /* ── Toast Notifications (preserved from original) ── */
+        /* Subtle atmospheric overlay for ultra-crisp contrast */
+        body.login-page::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(
+                135deg,
+                rgba(255, 255, 255, 0.12) 0%,
+                rgba(240, 248, 255, 0.05) 50%,
+                rgba(255, 255, 255, 0.18) 100%
+            );
+            pointer-events: none;
+            z-index: 1;
+        }
+
+        /* ============================================================
+           TOAST NOTIFICATIONS
+           ============================================================ */
         .toast-container {
             position: fixed;
             top: 1.5rem;
@@ -80,18 +95,18 @@
             align-items: center;
             gap: 0.75rem;
             padding: 0.875rem 1.25rem;
-            border-radius: 12px;
+            border-radius: 16px;
             font-size: 0.875rem;
             font-weight: 600;
             min-width: 280px;
-            max-width: 400px;
-            backdrop-filter: blur(20px);
-            -webkit-backdrop-filter: blur(20px);
-            border: 1px solid;
-            box-shadow: 0 8px 32px rgba(0,0,0,0.4);
+            max-width: 420px;
+            backdrop-filter: blur(24px);
+            -webkit-backdrop-filter: blur(24px);
+            border: 1px solid rgba(255, 255, 255, 0.8);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.12);
             opacity: 0;
             transform: translateX(30px);
-            transition: all 0.35s var(--ease-smooth);
+            transition: all 0.35s cubic-bezier(0.4, 0, 0.2, 1);
             pointer-events: auto;
         }
 
@@ -101,15 +116,15 @@
         }
 
         .toast.success {
-            background: rgba(16, 185, 129, 0.15);
-            border-color: rgba(16, 185, 129, 0.4);
-            color: #6ee7b7;
+            background: rgba(236, 253, 245, 0.92);
+            border-color: rgba(110, 231, 183, 0.8);
+            color: #065f46;
         }
 
         .toast.error {
-            background: rgba(212, 43, 43, 0.2);
-            border-color: rgba(212, 43, 43, 0.45);
-            color: #fca5a5;
+            background: rgba(254, 242, 242, 0.92);
+            border-color: rgba(252, 165, 165, 0.8);
+            color: #991b1b;
         }
 
         .toast-message {
@@ -118,1061 +133,652 @@
         }
 
         /* ============================================================
-           MAIN SPLIT WRAPPER
+           MAIN CONTAINER & LAYOUT
            ============================================================ */
-        .login-split-wrapper {
-            display: flex;
+        .login-layout-wrapper {
+            position: relative;
+            z-index: 2;
             width: 100%;
             min-height: 100vh;
-            position: relative;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            padding: 3rem 4rem 2rem;
+        }
+
+        .login-main-section {
+            display: grid;
+            grid-template-columns: 1fr auto 1fr;
+            align-items: center;
+            width: 100%;
+            max-width: 1400px;
+            margin: auto;
+            gap: 2rem;
+            padding-top: 1rem;
+            padding-bottom: 2rem;
         }
 
         /* ============================================================
-           LEFT SIDE — 3D WAREHOUSE VISUAL
+           LEFT HERO / WELCOME TEXT
            ============================================================ */
-        .login-illustration-panel {
-            flex: 1.15;
-            position: relative;
-            overflow: hidden;
-            background: var(--wh-bg);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-
-        /* Multi-layer deep background */
-        .login-illustration-panel::before {
-            content: '';
-            position: absolute;
-            inset: 0;
-            background:
-                radial-gradient(ellipse 80% 60% at 50% 30%, rgba(0, 100, 200, 0.18) 0%, transparent 70%),
-                radial-gradient(ellipse 60% 40% at 20% 80%, rgba(212, 43, 43, 0.08) 0%, transparent 60%),
-                radial-gradient(ellipse 50% 50% at 80% 15%, rgba(0, 173, 239, 0.1) 0%, transparent 60%);
-            pointer-events: none;
-            z-index: 0;
-        }
-
-        /* Subtle grid overlay */
-        .wh-grid {
-            position: absolute;
-            inset: 0;
-            background-image:
-                linear-gradient(rgba(0, 140, 220, 0.06) 1px, transparent 1px),
-                linear-gradient(90deg, rgba(0, 140, 220, 0.06) 1px, transparent 1px);
-            background-size: 50px 50px;
-            z-index: 0;
-            pointer-events: none;
-        }
-
-        /* Perspective floor grid */
-        .wh-floor-grid {
-            position: absolute;
-            bottom: 0;
-            left: -50%;
-            right: -50%;
-            height: 55%;
-            background-image:
-                linear-gradient(rgba(0, 120, 200, 0.12) 1px, transparent 1px),
-                linear-gradient(90deg, rgba(0, 120, 200, 0.08) 1px, transparent 1px);
-            background-size: 60px 60px;
-            transform: perspective(400px) rotateX(60deg);
-            transform-origin: bottom center;
-            z-index: 1;
-            pointer-events: none;
-        }
-
-        /* Scene container */
-        .warehouse-scene {
-            position: relative;
-            z-index: 2;
-            width: 90%;
-            max-width: 680px;
-            height: 420px;
-            perspective: 1200px;
-            perspective-origin: 50% 45%;
-        }
-
-        /* ── SHELF UNIT (Back Left) ── */
-        .shelf-unit {
-            position: absolute;
-            bottom: 60px;
-            left: 20px;
-            width: 180px;
-            height: 280px;
-            transform: rotateY(15deg) rotateX(2deg);
-            transform-style: preserve-3d;
-            animation: floatSlow 8s ease-in-out infinite;
-        }
-
-        .shelf-frame {
-            position: absolute;
-            inset: 0;
-            border: 2.5px solid rgba(0, 173, 239, 0.35);
-            border-radius: 4px;
-            background: linear-gradient(180deg,
-                rgba(13, 30, 70, 0.85) 0%,
-                rgba(8, 18, 45, 0.9) 100%);
-            box-shadow:
-                0 0 20px rgba(0, 173, 239, 0.1),
-                inset 0 0 30px rgba(0, 80, 160, 0.15);
-        }
-
-        /* Shelf horizontal bars */
-        .shelf-bar {
-            position: absolute;
-            left: 0;
-            right: 0;
-            height: 3px;
-            background: linear-gradient(90deg, rgba(0,173,239,0.6), rgba(0,100,200,0.4), rgba(0,173,239,0.6));
-            box-shadow: 0 0 8px rgba(0, 173, 239, 0.4);
-        }
-
-        .shelf-bar:nth-child(1) { top: 25%; }
-        .shelf-bar:nth-child(2) { top: 50%; }
-        .shelf-bar:nth-child(3) { top: 75%; }
-
-        /* Items on shelves */
-        .shelf-item {
-            position: absolute;
-            border-radius: 3px;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.4);
-        }
-
-        .shelf-item.box-a {
-            width: 38px; height: 32px;
-            left: 10px; top: 28%;
-            background: linear-gradient(135deg, #c8860a, #a86b05);
-            border-top: 2px solid #e8a020;
-        }
-        .shelf-item.box-b {
-            width: 28px; height: 26px;
-            left: 58px; top: 29%;
-            background: linear-gradient(135deg, #1a5cb0, #0d3a7a);
-            border-top: 2px solid #2a7ae8;
-        }
-        .shelf-item.box-c {
-            width: 42px; height: 30px;
-            left: 10px; top: 53%;
-            background: linear-gradient(135deg, #8b2020, #6b1818);
-            border-top: 2px solid #cc3030;
-        }
-        .shelf-item.box-d {
-            width: 30px; height: 28px;
-            left: 62px; top: 54%;
-            background: linear-gradient(135deg, #2a6b2a, #1a4a1a);
-            border-top: 2px solid #3a9a3a;
-        }
-        .shelf-item.cyl-a {
-            width: 22px; height: 34px;
-            left: 120px; top: 27%;
-            background: linear-gradient(90deg, #888, #bbb, #888);
-            border-radius: 50% 50% 3px 3px / 30% 30% 3px 3px;
-        }
-
-        /* ── SHELF UNIT RIGHT ── */
-        .shelf-unit-right {
-            position: absolute;
-            bottom: 55px;
-            right: 15px;
-            width: 140px;
-            height: 240px;
-            transform: rotateY(-18deg) rotateX(2deg);
-            transform-style: preserve-3d;
-            animation: floatSlow 9s ease-in-out infinite 1.5s;
-        }
-
-        .shelf-unit-right .shelf-frame {
-            border-color: rgba(26, 63, 168, 0.5);
-            background: linear-gradient(180deg,
-                rgba(10, 25, 60, 0.88) 0%,
-                rgba(6, 15, 40, 0.92) 100%);
-        }
-
-        .shelf-unit-right .shelf-bar {
-            background: linear-gradient(90deg, rgba(26,63,168,0.6), rgba(0,80,160,0.4), rgba(26,63,168,0.6));
-            box-shadow: 0 0 8px rgba(26, 63, 168, 0.4);
-        }
-
-        .shelf-unit-right .shelf-item.box-a {
-            width: 32px; height: 28px;
-            left: 8px; top: 28%;
-            background: linear-gradient(135deg, #d4812a, #b36020);
-        }
-        .shelf-unit-right .shelf-item.box-b {
-            width: 24px; height: 24px;
-            left: 50px; top: 29%;
-            background: linear-gradient(135deg, #334eaa, #1e3080);
-        }
-        .shelf-unit-right .shelf-item.box-c {
-            width: 36px; height: 26px;
-            left: 8px; top: 55%;
-            background: linear-gradient(135deg, #7a1c1c, #5a1212);
-        }
-
-        /* ── PALLET STACK (Center) ── */
-        .pallet-stack {
-            position: absolute;
-            bottom: 20px;
-            left: 50%;
-            transform: translateX(-50%);
-            width: 160px;
-            animation: floatSlow 7s ease-in-out infinite 0.5s;
-        }
-
-        .pallet-base {
-            width: 140px;
-            height: 16px;
-            background: linear-gradient(180deg, #8a6020, #5a3a10);
-            border-radius: 3px;
-            margin: 0 auto;
-            position: relative;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.5);
-        }
-
-        .pallet-base::before {
-            content: '';
-            position: absolute;
-            top: 3px;
-            left: 5px;
-            right: 5px;
-            bottom: 3px;
-            background: repeating-linear-gradient(
-                90deg,
-                transparent, transparent 12px,
-                rgba(0,0,0,0.3) 12px, rgba(0,0,0,0.3) 14px
-            );
-        }
-
-        .pallet-boxes {
-            display: flex;
-            justify-content: center;
-            gap: 6px;
-            margin-bottom: 2px;
-        }
-
-        .pallet-box {
-            border-radius: 2px;
-            box-shadow: 0 2px 6px rgba(0,0,0,0.5);
-        }
-
-        .pallet-box.pb-1 {
-            width: 42px; height: 36px;
-            background: linear-gradient(135deg, #c8860a 0%, #8a5c05 100%);
-            border-top: 2px solid #e8a520;
-        }
-        .pallet-box.pb-2 {
-            width: 38px; height: 40px;
-            background: linear-gradient(135deg, #1555b0 0%, #0a3070 100%);
-            border-top: 2px solid #2a7ae8;
-        }
-        .pallet-box.pb-3 {
-            width: 44px; height: 34px;
-            background: linear-gradient(135deg, #c8860a 0%, #8a5c05 100%);
-            border-top: 2px solid #e8a520;
-        }
-
-        /* ── FORKLIFT (SVG-based, simplified CSS) ── */
-        .forklift-element {
-            position: absolute;
-            bottom: 30px;
-            right: 85px;
-            width: 120px;
-            animation: forkliftMove 12s ease-in-out infinite;
-        }
-
-        @keyframes forkliftMove {
-            0%, 100%  { transform: translateX(0); }
-            40%       { transform: translateX(-18px); }
-            60%       { transform: translateX(-12px); }
-        }
-
-        .forklift-body {
-            position: relative;
-            width: 90px;
-            height: 55px;
-            background: linear-gradient(135deg, #d4a020 0%, #b08010 100%);
-            border-radius: 4px 4px 2px 2px;
-            border: 2px solid rgba(255,200,50,0.4);
-            box-shadow: 0 4px 16px rgba(0,0,0,0.5);
-        }
-
-        .forklift-cabin {
-            position: absolute;
-            top: -28px;
-            left: 8px;
-            width: 42px;
-            height: 30px;
-            background: linear-gradient(135deg, #f0c030 0%, #c09020 100%);
-            border-radius: 4px 4px 0 0;
-            border: 1px solid rgba(255,220,80,0.5);
-        }
-
-        .forklift-cabin::after {
-            content: '';
-            position: absolute;
-            top: 4px; left: 6px; right: 6px; bottom: 4px;
-            background: rgba(0, 173, 239, 0.3);
-            border-radius: 2px;
-            box-shadow: 0 0 8px rgba(0, 173, 239, 0.5);
-        }
-
-        .forklift-mast {
-            position: absolute;
-            top: -70px;
-            right: 6px;
-            width: 10px;
-            height: 72px;
-            background: linear-gradient(180deg, #888, #555);
-            border-radius: 2px;
-        }
-
-        .forklift-forks {
-            position: absolute;
-            bottom: -6px;
-            left: -18px;
+        .login-hero-left {
+            grid-column: 1;
             display: flex;
             flex-direction: column;
-            gap: 5px;
+            justify-content: flex-start;
+            align-self: flex-start;
+            padding-top: 1rem;
+            padding-right: 1.5rem;
+            animation: fadeInSlideLeft 0.8s ease-out;
         }
 
-        .fork {
-            width: 22px;
-            height: 4px;
-            background: linear-gradient(90deg, #bbb, #888);
-            border-radius: 0 0 1px 1px;
+        .welcome-title-wrapper {
+            position: relative;
+            padding-left: 1.25rem;
+            margin-bottom: 1.5rem;
         }
 
-        .forklift-wheel {
+        .welcome-accent-bar {
             position: absolute;
-            bottom: -10px;
-            width: 18px;
-            height: 18px;
-            background: #222;
-            border-radius: 50%;
-            border: 2px solid #555;
-            box-shadow: 0 2px 6px rgba(0,0,0,0.5);
+            left: 0;
+            top: 6px;
+            bottom: 6px;
+            width: 4px;
+            background: linear-gradient(180deg, #1d68e0, #0284c7);
+            border-radius: 4px;
         }
 
-        .forklift-wheel.w-left  { left: 8px; }
-        .forklift-wheel.w-right { right: 8px; }
-
-        /* ── CONVEYOR BELT (bottom center-right) ── */
-        .conveyor-belt {
-            position: absolute;
-            bottom: 18px;
-            left: 50%;
-            transform: translateX(-20px);
-            width: 140px;
+        .welcome-title {
+            font-family: var(--font-head);
+            font-size: 2.75rem;
+            font-weight: 800;
+            line-height: 1.08;
+            letter-spacing: -0.03em;
+            color: var(--text-dark);
         }
 
-        .conveyor-track {
-            height: 12px;
-            background: linear-gradient(90deg,
-                rgba(0,173,239,0.3) 0%,
-                rgba(0,100,200,0.5) 50%,
-                rgba(0,173,239,0.3) 100%);
-            border-radius: 6px;
+        .welcome-desc {
+            font-size: 0.975rem;
+            line-height: 1.6;
+            color: var(--text-body);
+            max-width: 330px;
+            padding-left: 1.25rem;
+            font-weight: 450;
+        }
+
+        /* ============================================================
+           CENTER GLASSMORPHISM LOGIN CARD
+           ============================================================ */
+        .login-card-container {
+            grid-column: 2;
+            width: 100%;
+            max-width: 440px;
+            animation: fadeInScale 0.8s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        .glass-login-card {
+            background: var(--card-glass-bg);
+            backdrop-filter: blur(28px) saturate(190%);
+            -webkit-backdrop-filter: blur(28px) saturate(190%);
+            border: 1.5px solid var(--card-border);
+            border-radius: 36px;
+            padding: 2.75rem 2.5rem 2.25rem;
+            box-shadow: var(--card-shadow);
             position: relative;
             overflow: hidden;
-            border: 1px solid rgba(0,173,239,0.3);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
         }
 
-        .conveyor-track::after {
+        /* Card ambient shine */
+        .glass-login-card::before {
             content: '';
-            position: absolute;
-            inset: 0;
-            background: repeating-linear-gradient(
-                90deg,
-                transparent 0, transparent 16px,
-                rgba(0,173,239,0.4) 16px, rgba(0,173,239,0.4) 18px
-            );
-            animation: conveyorScroll 1.5s linear infinite;
-        }
-
-        @keyframes conveyorScroll {
-            from { background-position-x: 0; }
-            to   { background-position-x: 18px; }
-        }
-
-        .conveyor-roller {
-            position: absolute;
-            bottom: -5px;
-            width: 14px;
-            height: 14px;
-            background: radial-gradient(circle, #555, #222);
-            border-radius: 50%;
-            border: 1px solid #666;
-        }
-
-        .conveyor-roller.r-l { left: -3px; }
-        .conveyor-roller.r-r { right: -3px; }
-
-        /* ── FLOATING PARTICLES ── */
-        .wh-particles {
-            position: absolute;
-            inset: 0;
-            pointer-events: none;
-            z-index: 1;
-        }
-
-        .particle {
-            position: absolute;
-            width: 3px;
-            height: 3px;
-            border-radius: 50%;
-            background: var(--mai-sky);
-            opacity: 0;
-            animation: particleFloat var(--dur, 6s) ease-in-out infinite var(--delay, 0s);
-        }
-
-        @keyframes particleFloat {
-            0%   { opacity: 0; transform: translateY(0) scale(0.5); }
-            20%  { opacity: 0.6; }
-            80%  { opacity: 0.4; }
-            100% { opacity: 0; transform: translateY(-80px) scale(1.2); }
-        }
-
-        /* ── HUD DECORATIVE ELEMENTS ── */
-        .wh-hud {
-            position: absolute;
-            z-index: 3;
-            font-family: var(--font-head);
-            pointer-events: none;
-        }
-
-        .hud-top-left {
-            top: 2rem;
-            left: 2rem;
-        }
-
-        .hud-bottom-left {
-            bottom: 1.5rem;
-            left: 2rem;
-        }
-
-        .hud-label {
-            font-size: 0.65rem;
-            font-weight: 700;
-            letter-spacing: 0.15em;
-            text-transform: uppercase;
-            color: var(--mai-sky);
-            opacity: 0.75;
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
-        }
-
-        .hud-label::before {
-            content: '';
-            display: inline-block;
-            width: 6px;
-            height: 6px;
-            border-radius: 50%;
-            background: var(--mai-sky);
-            box-shadow: 0 0 8px var(--mai-sky);
-            animation: hudPulse 2s ease-in-out infinite;
-        }
-
-        @keyframes hudPulse {
-            0%, 100% { opacity: 1; transform: scale(1); }
-            50%       { opacity: 0.4; transform: scale(0.7); }
-        }
-
-        .hud-coords {
-            font-size: 0.6rem;
-            color: rgba(0, 173, 239, 0.5);
-            letter-spacing: 0.08em;
-            margin-top: 0.35rem;
-        }
-
-        .hud-status-bar {
-            display: flex;
-            align-items: center;
-            gap: 1rem;
-        }
-
-        .hud-status-item {
-            display: flex;
-            align-items: center;
-            gap: 0.4rem;
-            font-size: 0.62rem;
-            color: rgba(0, 173, 239, 0.6);
-            letter-spacing: 0.05em;
-        }
-
-        .hud-dot {
-            width: 5px;
-            height: 5px;
-            border-radius: 50%;
-            background: #10b981;
-            box-shadow: 0 0 6px #10b981;
-            animation: hudPulse 3s ease-in-out infinite;
-        }
-
-        .hud-dot.red  { background: var(--mai-red); box-shadow: 0 0 6px var(--mai-red); }
-        .hud-dot.blue { background: var(--mai-sky);  box-shadow: 0 0 6px var(--mai-sky); animation-delay: 1s; }
-
-        /* ── DECORATIVE TECH LINES ── */
-        .tech-line {
-            position: absolute;
-            pointer-events: none;
-            z-index: 2;
-        }
-
-        .tech-line-h {
-            height: 1px;
-            background: linear-gradient(90deg, transparent, rgba(0,173,239,0.4), transparent);
-        }
-
-        .tech-line-v {
-            width: 1px;
-            background: linear-gradient(180deg, transparent, rgba(0,173,239,0.3), transparent);
-        }
-
-        /* ── GLOW NODES ── */
-        .glow-node {
-            position: absolute;
-            width: 8px;
-            height: 8px;
-            border-radius: 50%;
-            border: 1px solid rgba(0, 173, 239, 0.6);
-            background: rgba(0, 173, 239, 0.2);
-            box-shadow: 0 0 12px rgba(0, 173, 239, 0.5);
-            z-index: 3;
-            animation: nodeGlow 3s ease-in-out infinite;
-            pointer-events: none;
-        }
-
-        @keyframes nodeGlow {
-            0%, 100% { box-shadow: 0 0 8px rgba(0,173,239,0.4); opacity: 0.7; }
-            50%       { box-shadow: 0 0 20px rgba(0,173,239,0.8); opacity: 1; }
-        }
-
-        @keyframes floatSlow {
-            0%, 100% { transform: translateY(0) rotateY(15deg); }
-            50%       { transform: translateY(-10px) rotateY(15deg); }
-        }
-
-        .shelf-unit-right {
-            animation-name: floatSlowRight;
-        }
-
-        @keyframes floatSlowRight {
-            0%, 100% { transform: translateY(0) rotateY(-18deg); }
-            50%       { transform: translateY(-8px) rotateY(-18deg); }
-        }
-
-        /* ── AMBIENT LIGHT BEAMS ── */
-        .light-beam {
             position: absolute;
             top: 0;
-            width: 1px;
-            height: 100%;
-            background: linear-gradient(180deg,
-                rgba(0, 173, 239, 0.15) 0%,
-                rgba(0, 100, 200, 0.05) 60%,
-                transparent 100%);
-            pointer-events: none;
-            z-index: 1;
-            animation: beamFlicker 8s ease-in-out infinite;
-        }
-
-        @keyframes beamFlicker {
-            0%, 100% { opacity: 0.5; }
-            30%       { opacity: 0.8; }
-            60%       { opacity: 0.3; }
-        }
-
-        /* ── WAREHOUSE SILHOUETTE OVERLAY ── */
-        .wh-silhouette {
-            position: absolute;
-            bottom: 0;
             left: 0;
             right: 0;
-            height: 180px;
-            background: linear-gradient(0deg,
-                rgba(7, 16, 31, 0.7) 0%,
-                transparent 100%);
-            z-index: 1;
+            height: 120px;
+            background: linear-gradient(180deg, rgba(255, 255, 255, 0.4) 0%, rgba(255, 255, 255, 0) 100%);
+            border-radius: 36px 36px 0 0;
             pointer-events: none;
         }
 
-        /* ============================================================
-           RIGHT SIDE — LOGIN CARD
-           ============================================================ */
-        .login-form-panel {
-            flex: 0 0 460px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            padding: 2.5rem 2rem;
-            background: linear-gradient(160deg,
-                rgba(10, 20, 45, 0.97) 0%,
-                rgba(7, 16, 31, 0.99) 100%);
-            border-left: 1px solid rgba(0, 173, 239, 0.12);
-            position: relative;
-            overflow: hidden;
-        }
-
-        /* Right panel ambient glow */
-        .login-form-panel::before {
-            content: '';
-            position: absolute;
-            top: -100px;
-            right: -80px;
-            width: 350px;
-            height: 350px;
-            background: radial-gradient(circle, rgba(0, 173, 239, 0.06) 0%, transparent 70%);
-            pointer-events: none;
-        }
-
-        .login-form-panel::after {
-            content: '';
-            position: absolute;
-            bottom: -80px;
-            left: -60px;
-            width: 300px;
-            height: 300px;
-            background: radial-gradient(circle, rgba(26, 63, 168, 0.08) 0%, transparent 70%);
-            pointer-events: none;
-        }
-
-        /* ── LOGIN CARD CONTENT ── */
-        .login-form-content {
-            width: 100%;
-            max-width: 380px;
-            position: relative;
-            z-index: 2;
-        }
-
-        /* ── LOGO AREA ── */
-        .login-logo-area {
+        /* Header Logo & Titles */
+        .card-header-area {
+            text-align: center;
+            margin-bottom: 2rem;
             display: flex;
             flex-direction: column;
             align-items: center;
-            margin-bottom: 2rem;
         }
 
-        .login-logo-img {
-            width: auto;
-            max-width: 220px;
-            height: 60px;
-            object-fit: contain;
-            filter: drop-shadow(0 4px 16px rgba(0, 120, 255, 0.25));
-            transition: filter 0.3s ease;
-        }
-
-        .login-logo-img:hover {
-            filter: drop-shadow(0 6px 24px rgba(0, 173, 239, 0.4));
-        }
-
-        .login-logo-divider {
-            margin-top: 1rem;
-            width: 100%;
-            height: 1px;
-            background: linear-gradient(90deg,
-                transparent,
-                rgba(0, 173, 239, 0.4),
-                rgba(26, 63, 168, 0.3),
-                transparent);
-        }
-
-        /* ── WELCOME TEXT ── */
-        .welcome-heading {
-            font-family: var(--font-head);
-            font-size: 1.8rem;
-            font-weight: 800;
-            color: #ffffff;
-            letter-spacing: -0.03em;
-            line-height: 1.1;
-            margin-bottom: 0.4rem;
-            text-align: center;
-        }
-
-        .welcome-subtitle {
-            font-size: 0.875rem;
-            color: var(--wh-muted);
-            text-align: center;
-            margin-bottom: 2rem;
-            line-height: 1.5;
-        }
-
-        /* ── SYSTEM BADGE ── */
-        .system-badge {
-            display: inline-flex;
-            align-items: center;
-            gap: 0.5rem;
-            padding: 0.3rem 0.85rem;
-            background: rgba(0, 173, 239, 0.08);
-            border: 1px solid rgba(0, 173, 239, 0.2);
-            border-radius: 20px;
-            font-size: 0.65rem;
-            font-weight: 700;
-            letter-spacing: 0.12em;
-            text-transform: uppercase;
-            color: var(--mai-sky);
-            margin-bottom: 1.25rem;
-            margin-left: auto;
-            margin-right: auto;
-        }
-
-        .system-badge-dot {
-            width: 5px;
-            height: 5px;
-            border-radius: 50%;
-            background: #10b981;
-            box-shadow: 0 0 6px #10b981;
-            animation: hudPulse 2s ease-in-out infinite;
-        }
-
-        /* ── GLASSMORPHISM LOGIN CARD ── */
-        .login-glass-card {
-            background: rgba(255, 255, 255, 0.035);
-            backdrop-filter: blur(24px);
-            -webkit-backdrop-filter: blur(24px);
-            border: 1px solid rgba(0, 173, 239, 0.12);
-            border-radius: 22px;
-            padding: 2rem 2rem 1.75rem;
-            box-shadow:
-                0 24px 64px rgba(0, 0, 0, 0.5),
-                inset 0 1px 0 rgba(255, 255, 255, 0.06),
-                0 0 0 1px rgba(0, 120, 200, 0.05);
-            transition: box-shadow 0.4s var(--ease-smooth);
-        }
-
-        .login-glass-card:hover {
-            box-shadow:
-                0 28px 72px rgba(0, 0, 0, 0.55),
-                inset 0 1px 0 rgba(255, 255, 255, 0.08),
-                0 0 0 1px rgba(0, 173, 239, 0.08);
-        }
-
-        /* ── FORM GROUPS ── */
-        .form-group-clean {
-            margin-bottom: 1.25rem;
-        }
-
-        .form-group-clean label {
-            display: block;
-            font-size: 0.78rem;
-            font-weight: 700;
-            letter-spacing: 0.06em;
-            text-transform: uppercase;
-            color: var(--wh-muted);
-            margin-bottom: 0.5rem;
-            transition: color 0.25s ease;
-        }
-
-        .form-group-clean:focus-within label {
-            color: var(--mai-sky);
-        }
-
-        /* ── INPUT FIELD ── */
-        .input-clean {
-            width: 100%;
-            padding: 0.875rem 1rem;
-            background: rgba(255, 255, 255, 0.04);
-            border: 1.5px solid rgba(0, 120, 200, 0.2);
-            border-radius: 12px;
-            color: #fff;
-            font-size: 0.925rem;
-            font-family: var(--font-body);
-            font-weight: 500;
-            outline: none;
-            transition: all 0.3s var(--ease-smooth);
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
-        }
-
-        .input-clean::placeholder {
-            color: rgba(112, 148, 184, 0.5);
-        }
-
-        .input-clean:hover {
-            border-color: rgba(0, 173, 239, 0.35);
-            background: rgba(255, 255, 255, 0.055);
-            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.25);
-        }
-
-        .input-clean:focus {
-            border-color: var(--mai-sky);
-            background: rgba(0, 173, 239, 0.06);
-            box-shadow:
-                0 0 0 3px rgba(0, 173, 239, 0.15),
-                0 4px 20px rgba(0, 0, 0, 0.3);
-        }
-
-        .input-clean.is-invalid {
-            border-color: rgba(212, 43, 43, 0.7);
-            background: rgba(212, 43, 43, 0.05);
-            box-shadow: 0 0 0 3px rgba(212, 43, 43, 0.1);
-        }
-
-        .field-error-msg {
-            margin-top: 0.45rem;
-            font-size: 0.775rem;
-            color: #fca5a5;
-            font-weight: 600;
+        .card-logo-badge {
+            width: 68px;
+            height: 68px;
             display: flex;
             align-items: center;
-            gap: 0.4rem;
+            justify-content: center;
+            margin-bottom: 1.25rem;
+            filter: drop-shadow(0 8px 16px rgba(37, 99, 235, 0.22));
+            transition: transform 0.3s ease;
         }
 
-        .field-error-msg::before {
-            content: '!';
-            display: inline-flex;
+        .card-logo-badge:hover {
+            transform: scale(1.05) rotate(2deg);
+        }
+
+        .card-logo-svg {
+            width: 100%;
+            height: 100%;
+        }
+
+        .card-title {
+            font-family: var(--font-head);
+            font-size: 1.75rem;
+            font-weight: 700;
+            color: var(--text-title);
+            letter-spacing: -0.02em;
+            margin-bottom: 0.25rem;
+        }
+
+        .card-subtitle {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            font-weight: 400;
+        }
+
+        /* Form Controls */
+        .login-form {
+            display: flex;
+            flex-direction: column;
+            gap: 1.15rem;
+        }
+
+        .input-group-pill {
+            position: relative;
+            display: flex;
+            align-items: center;
+            background: rgba(255, 255, 255, 0.95);
+            border: 1px solid var(--border-color);
+            border-radius: 16px;
+            padding: 0.25rem 0.75rem;
+            box-shadow: 0 2px 6px rgba(15, 23, 42, 0.04);
+            transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .input-group-pill:hover {
+            border-color: rgba(147, 197, 253, 0.8);
+            background: #ffffff;
+            box-shadow: 0 4px 12px rgba(37, 99, 235, 0.08);
+        }
+
+        .input-group-pill:focus-within {
+            border-color: var(--primary-blue);
+            background: #ffffff;
+            box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.15), 0 4px 12px rgba(37, 99, 235, 0.1);
+        }
+
+        .input-group-pill.has-error {
+            border-color: #ef4444 !important;
+            box-shadow: 0 0 0 4px rgba(239, 68, 68, 0.12) !important;
+        }
+
+        .input-icon-left {
+            display: flex;
             align-items: center;
             justify-content: center;
-            width: 15px;
-            height: 15px;
-            background: rgba(212, 43, 43, 0.25);
-            border-radius: 50%;
-            font-size: 0.65rem;
-            font-weight: 900;
+            padding-left: 0.5rem;
+            padding-right: 0.65rem;
+            color: var(--text-muted);
             flex-shrink: 0;
         }
 
-        /* ── PASSWORD FIELD ── */
-        .password-field-wrapper {
-            position: relative;
+        .input-icon-left svg {
+            width: 19px;
+            height: 19px;
+            stroke-width: 1.9;
         }
 
-        .password-field-wrapper .input-clean {
-            padding-right: 3rem;
+        .pill-text-input {
+            width: 100%;
+            border: none;
+            outline: none;
+            background: transparent;
+            font-family: var(--font-main);
+            font-size: 0.925rem;
+            color: var(--text-title);
+            font-weight: 500;
+            padding: 0.85rem 0.25rem;
         }
 
-        .btn-toggle-eye {
-            position: absolute;
-            right: 0.875rem;
-            top: 50%;
-            transform: translateY(-50%);
+        .pill-text-input::placeholder {
+            color: var(--text-placeholder);
+            font-weight: 400;
+        }
+
+        .btn-eye-toggle {
             background: none;
             border: none;
-            padding: 0.25rem;
-            cursor: pointer;
+            outline: none;
+            padding: 0.5rem;
             display: flex;
             align-items: center;
             justify-content: center;
-            opacity: 0.5;
-            transition: opacity 0.2s ease;
-            border-radius: 6px;
+            cursor: pointer;
+            color: var(--text-muted);
+            border-radius: 8px;
+            transition: color 0.2s, background-color 0.2s;
+            flex-shrink: 0;
         }
 
-        .btn-toggle-eye:hover { opacity: 1; }
-
-        .btn-toggle-eye svg {
-            stroke: var(--mai-sky) !important;
+        .btn-eye-toggle:hover {
+            color: var(--text-dark);
+            background: rgba(0, 0, 0, 0.04);
         }
 
-        .d-none { display: none !important; }
+        .btn-eye-toggle svg {
+            width: 19px;
+            height: 19px;
+            stroke-width: 1.9;
+        }
 
-        /* ── FORM OPTIONS ROW ── */
+        .field-error-text {
+            font-size: 0.75rem;
+            color: #dc2626;
+            font-weight: 600;
+            margin-top: -0.5rem;
+            margin-left: 0.5rem;
+        }
+
+        /* Options Row (Remember Me & Forgot Password) */
         .form-options-row {
             display: flex;
             align-items: center;
             justify-content: space-between;
-            margin-bottom: 1.5rem;
-            gap: 0.5rem;
+            margin-top: -0.1rem;
+            margin-bottom: 0.25rem;
+            font-size: 0.85rem;
         }
 
-        .remember-label {
+        .checkbox-container {
             display: flex;
             align-items: center;
-            gap: 0.5rem;
+            gap: 0.55rem;
             cursor: pointer;
+            user-select: none;
+            color: var(--text-body);
+            font-weight: 500;
         }
 
-        .custom-checkbox {
+        .custom-checkbox-input {
             appearance: none;
             -webkit-appearance: none;
-            width: 16px;
-            height: 16px;
-            border: 1.5px solid rgba(0, 120, 200, 0.4);
-            border-radius: 4px;
-            background: rgba(255,255,255,0.04);
+            width: 17px;
+            height: 17px;
+            border: 1.5px solid #cbd5e1;
+            border-radius: 5px;
+            background: rgba(255, 255, 255, 0.9);
             cursor: pointer;
             position: relative;
-            transition: all 0.25s ease;
-            flex-shrink: 0;
+            transition: all 0.2s ease;
+            margin: 0;
         }
 
-        .custom-checkbox:checked {
-            background: var(--mai-blue);
-            border-color: var(--mai-sky);
-            box-shadow: 0 0 8px rgba(0, 173, 239, 0.3);
+        .custom-checkbox-input:checked {
+            background-color: var(--primary-blue);
+            border-color: var(--primary-blue);
         }
 
-        .custom-checkbox:checked::after {
+        .custom-checkbox-input:checked::after {
             content: '';
             position: absolute;
-            top: 2px; left: 4px;
-            width: 5px; height: 8px;
-            border: 2px solid #fff;
-            border-top: none;
-            border-left: none;
+            top: 2px;
+            left: 5px;
+            width: 4px;
+            height: 8px;
+            border: solid white;
+            border-width: 0 2px 2px 0;
             transform: rotate(45deg);
         }
 
-        .checkbox-text {
-            font-size: 0.78rem;
-            color: var(--wh-muted);
-            font-weight: 500;
-            user-select: none;
+        .custom-checkbox-input:focus-visible {
+            box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.2);
         }
 
-        .forgot-link {
-            font-size: 0.78rem;
-            color: var(--mai-sky);
+        .forgot-password-link {
+            color: #0284c7;
             text-decoration: none;
-            font-weight: 600;
-            transition: color 0.2s ease, text-shadow 0.2s ease;
-            white-space: nowrap;
+            font-weight: 500;
+            transition: color 0.2s ease, text-decoration 0.2s ease;
         }
 
-        .forgot-link:hover {
-            color: var(--mai-sky-light);
-            text-shadow: 0 0 12px rgba(0, 173, 239, 0.5);
+        .forgot-password-link:hover {
+            color: var(--primary-blue-hover);
+            text-decoration: underline;
         }
 
-        /* ── LOGIN BUTTON ── */
-        .btn-login-pill {
+        /* Primary Submit Button */
+        .btn-submit-primary {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
             width: 100%;
-            padding: 0.95rem 1.5rem;
-            background: linear-gradient(135deg,
-                var(--mai-blue) 0%,
-                var(--mai-blue-mid) 50%,
-                #1060e0 100%);
-            border: 1px solid rgba(0, 173, 239, 0.3);
-            border-radius: 12px;
+            background: linear-gradient(135deg, #2f7cf6 0%, #1e60dc 100%);
             color: #ffffff;
-            font-family: var(--font-head);
-            font-size: 1rem;
-            font-weight: 700;
-            letter-spacing: 0.04em;
+            border: none;
+            border-radius: 16px;
+            padding: 0.95rem 1.5rem;
+            font-family: var(--font-main);
+            font-size: 0.95rem;
+            font-weight: 600;
             cursor: pointer;
-            transition: all 0.3s var(--ease-smooth);
-            box-shadow:
-                0 4px 20px rgba(26, 63, 168, 0.45),
-                inset 0 1px 0 rgba(255,255,255,0.1);
-            position: relative;
-            overflow: hidden;
+            box-shadow: 0 8px 20px -4px rgba(37, 99, 235, 0.45);
+            transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+            margin-top: 0.35rem;
         }
 
-        .btn-login-pill::before {
-            content: '';
-            position: absolute;
-            inset: 0;
-            background: linear-gradient(135deg,
-                rgba(0, 173, 239, 0.15) 0%,
-                transparent 50%,
-                rgba(0, 173, 239, 0.05) 100%);
-            opacity: 0;
-            transition: opacity 0.3s ease;
+        .btn-submit-primary:hover {
+            background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
+            box-shadow: 0 12px 25px -4px rgba(37, 99, 235, 0.55);
+            transform: translateY(-1px);
         }
 
-        .btn-login-pill:hover {
-            transform: translateY(-2px);
-            box-shadow:
-                0 8px 32px rgba(26, 63, 168, 0.6),
-                0 0 20px rgba(0, 173, 239, 0.2),
-                inset 0 1px 0 rgba(255,255,255,0.15);
-            border-color: rgba(0, 173, 239, 0.5);
+        .btn-submit-primary:active {
+            transform: translateY(1px);
+            box-shadow: 0 4px 12px -2px rgba(37, 99, 235, 0.4);
         }
 
-        .btn-login-pill:hover::before { opacity: 1; }
-
-        .btn-login-pill:active {
-            transform: translateY(0) scale(0.99);
-            box-shadow: 0 4px 16px rgba(26, 63, 168, 0.4);
+        .btn-submit-primary svg {
+            width: 18px;
+            height: 18px;
+            stroke-width: 2.2;
+            transition: transform 0.2s ease;
         }
 
-        /* ── FOOTER TEXT ── */
-        .login-footer-text {
-            margin-top: 1.5rem;
+        .btn-submit-primary:hover svg {
+            transform: translateX(3px);
+        }
+
+        /* Divider "atau" */
+        .divider-atau {
+            display: flex;
+            align-items: center;
             text-align: center;
+            color: #94a3b8;
+            font-size: 0.775rem;
+            font-weight: 500;
+            margin: 0.25rem 0;
         }
 
-        .login-footer-text p {
-            font-size: 0.7rem;
-            color: rgba(112, 148, 184, 0.5);
-            letter-spacing: 0.04em;
-            line-height: 1.6;
+        .divider-atau::before,
+        .divider-atau::after {
+            content: '';
+            flex: 1;
+            border-bottom: 1px solid rgba(203, 213, 225, 0.7);
         }
 
-        .login-footer-text strong {
-            color: rgba(112, 148, 184, 0.75);
-            font-weight: 700;
+        .divider-atau span {
+            padding: 0 0.85rem;
+            letter-spacing: 0.05em;
+        }
+
+        /* Secondary Guest Button */
+        .btn-guest-secondary {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.55rem;
+            width: 100%;
+            background: rgba(255, 255, 255, 0.75);
+            color: #1e40af;
+            border: 1px solid rgba(191, 219, 254, 0.9);
+            border-radius: 16px;
+            padding: 0.85rem 1.5rem;
+            font-family: var(--font-main);
+            font-size: 0.925rem;
+            font-weight: 600;
+            cursor: pointer;
+            box-shadow: 0 2px 6px rgba(15, 23, 42, 0.03);
+            transition: all 0.25s ease;
+            text-decoration: none;
+        }
+
+        .btn-guest-secondary:hover {
+            background: #ffffff;
+            border-color: #93c5fd;
+            color: #1d4ed8;
+            box-shadow: 0 6px 16px rgba(37, 99, 235, 0.12);
+            transform: translateY(-1px);
+        }
+
+        .btn-guest-secondary:active {
+            transform: translateY(0);
+        }
+
+        .btn-guest-secondary svg {
+            width: 19px;
+            height: 19px;
+            stroke-width: 2;
+            color: #2563eb;
+        }
+
+        /* Card Footer Copyright */
+        .card-footer-copy {
+            text-align: center;
+            font-size: 0.75rem;
+            color: #64748b;
+            margin-top: 1.75rem;
+            font-weight: 500;
+            letter-spacing: 0.01em;
         }
 
         /* ============================================================
-           RESPONSIVE
+           BOTTOM FEATURE HIGHLIGHTS (4 COLUMNS)
            ============================================================ */
-        @media (max-width: 1024px) {
-            .login-form-panel {
-                flex: 0 0 400px;
-            }
-
-            .warehouse-scene {
-                max-width: 480px;
-                height: 360px;
-            }
-
-            .shelf-unit        { width: 140px; height: 220px; }
-            .shelf-unit-right  { width: 110px; height: 190px; }
+        .bottom-features-grid {
+            position: relative;
+            z-index: 2;
+            width: 100%;
+            max-width: 1350px;
+            margin: 0 auto;
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 2rem;
+            padding-top: 1.5rem;
+            animation: fadeInSlideUp 0.8s ease-out 0.2s both;
         }
 
-        @media (max-width: 768px) {
-            body.login-page-body { overflow: auto; }
+        .feature-item {
+            display: flex;
+            align-items: flex-start;
+            gap: 0.9rem;
+        }
 
-            .login-split-wrapper {
-                flex-direction: column;
+        .feature-icon-wrapper {
+            width: 44px;
+            height: 44px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 12px;
+            background: rgba(255, 255, 255, 0.45);
+            backdrop-filter: blur(8px);
+            border: 1px solid rgba(255, 255, 255, 0.8);
+            color: #1e3a5f;
+            flex-shrink: 0;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.04);
+            transition: transform 0.25s ease, background-color 0.25s ease;
+        }
+
+        .feature-item:hover .feature-icon-wrapper {
+            transform: translateY(-2px);
+            background: rgba(255, 255, 255, 0.8);
+            color: #0284c7;
+        }
+
+        .feature-icon-wrapper svg {
+            width: 22px;
+            height: 22px;
+            stroke-width: 2;
+        }
+
+        .feature-text {
+            display: flex;
+            flex-direction: column;
+            gap: 0.2rem;
+        }
+
+        .feature-title {
+            font-size: 0.9rem;
+            font-weight: 700;
+            color: #0f172a;
+            line-height: 1.2;
+        }
+
+        .feature-desc {
+            font-size: 0.775rem;
+            color: #475569;
+            line-height: 1.4;
+            font-weight: 450;
+        }
+
+        /* ============================================================
+           ANIMATIONS
+           ============================================================ */
+        @keyframes fadeInSlideLeft {
+            from {
+                opacity: 0;
+                transform: translateX(-30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+
+        @keyframes fadeInScale {
+            from {
+                opacity: 0;
+                transform: scale(0.94);
+            }
+            to {
+                opacity: 1;
+                transform: scale(1);
+            }
+        }
+
+        @keyframes fadeInSlideUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .d-none {
+            display: none !important;
+        }
+
+        /* ============================================================
+           RESPONSIVE BREAKPOINTS
+           ============================================================ */
+        @media (max-width: 1200px) {
+            .login-layout-wrapper {
+                padding: 2.5rem 2.5rem 1.5rem;
+            }
+
+            .welcome-title {
+                font-size: 2.25rem;
+            }
+
+            .bottom-features-grid {
+                grid-template-columns: repeat(2, 1fr);
+                gap: 1.5rem;
+            }
+        }
+
+        @media (max-width: 900px) {
+            body.login-page {
+                background-attachment: scroll;
+            }
+
+            .login-layout-wrapper {
+                padding: 2rem 1.5rem;
                 min-height: 100vh;
+                height: auto;
             }
 
-            .login-illustration-panel {
-                flex: 0 0 auto;
-                height: 200px;
-                overflow: hidden;
+            .login-main-section {
+                grid-template-columns: 1fr;
+                justify-items: center;
+                gap: 2.5rem;
+                padding-top: 1rem;
             }
 
-            .warehouse-scene {
-                max-width: 380px;
-                height: 180px;
-                transform: scale(0.7);
-                transform-origin: center bottom;
+            .login-hero-left {
+                grid-column: 1;
+                align-items: center;
+                align-self: auto;
+                padding-top: 0;
+                text-align: center;
+                padding-right: 0;
             }
 
-            .hud-top-left, .hud-bottom-left { display: none; }
+            .welcome-title-wrapper {
+                padding-left: 0;
+            }
 
-            .login-form-panel {
-                flex: 1;
-                border-left: none;
-                border-top: 1px solid rgba(0, 173, 239, 0.12);
-                padding: 2rem 1.25rem 3rem;
+            .welcome-accent-bar {
+                display: none;
+            }
+
+            .welcome-desc {
+                padding-left: 0;
+                max-width: 440px;
+            }
+
+            .login-card-container {
+                grid-column: 1;
+            }
+
+            .bottom-features-grid {
+                grid-template-columns: repeat(2, 1fr);
+                gap: 1.25rem;
+                margin-top: 2rem;
             }
         }
 
-        @media (max-width: 480px) {
-            .login-illustration-panel { height: 150px; }
-
-            .welcome-heading { font-size: 1.5rem; }
-
-            .login-glass-card {
-                padding: 1.5rem 1.25rem 1.25rem;
-                border-radius: 18px;
+        @media (max-width: 600px) {
+            .login-layout-wrapper {
+                padding: 1.5rem 1rem;
             }
 
-            .btn-login-pill { padding: 0.85rem; font-size: 0.95rem; }
+            .glass-login-card {
+                padding: 2rem 1.5rem 1.75rem;
+                border-radius: 28px;
+            }
+
+            .welcome-title {
+                font-size: 2rem;
+            }
+
+            .bottom-features-grid {
+                grid-template-columns: 1fr;
+                gap: 1rem;
+            }
         }
     </style>
 </head>
-<body class="login-page-body">
+<body class="login-page">
 
     <!-- Toast Notifications -->
     <div class="toast-container" id="toastContainer">
         @if(session('success'))
             <div class="toast success" role="alert">
-                <svg viewBox="0 0 24 24" width="20" height="20" stroke="#10b981" stroke-width="2.5" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                <svg viewBox="0 0 24 24" width="20" height="20" stroke="#059669" stroke-width="2.5" fill="none" stroke-linecap="round" stroke-linejoin="round">
                     <polyline points="20 6 9 17 4 12"></polyline>
                 </svg>
                 <div class="toast-message">{{ session('success') }}</div>
@@ -1181,7 +787,7 @@
 
         @if(session('error'))
             <div class="toast error" role="alert">
-                <svg viewBox="0 0 24 24" width="20" height="20" stroke="#ef4444" stroke-width="2.5" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                <svg viewBox="0 0 24 24" width="20" height="20" stroke="#dc2626" stroke-width="2.5" fill="none" stroke-linecap="round" stroke-linejoin="round">
                     <circle cx="12" cy="12" r="10"></circle>
                     <line x1="15" y1="9" x2="9" y2="15"></line>
                     <line x1="9" y1="9" x2="15" y2="15"></line>
@@ -1191,260 +797,173 @@
         @endif
     </div>
 
-    <!-- Main Split Login Container -->
-    <div class="login-split-wrapper">
+    <!-- Main Wrapper -->
+    <div class="login-layout-wrapper">
 
-        <!-- ======================================================
-             LEFT SIDE — 3D WAREHOUSE VISUAL
-             ====================================================== -->
-        <div class="login-illustration-panel" id="illustrationPanel">
+        <!-- Main Middle Section -->
+        <div class="login-main-section">
 
-            <!-- Grid overlays -->
-            <div class="wh-grid"></div>
-            <div class="wh-floor-grid"></div>
-            <div class="wh-silhouette"></div>
-
-            <!-- Ambient light beams -->
-            <div class="light-beam" style="left:20%; opacity:0.6; animation-delay:0s;"></div>
-            <div class="light-beam" style="left:50%; opacity:0.4; animation-delay:2.5s;"></div>
-            <div class="light-beam" style="left:78%; opacity:0.5; animation-delay:5s;"></div>
-
-            <!-- Floating particles -->
-            <div class="wh-particles" id="warehouseParticles">
-                <div class="particle" style="left:12%; bottom:30%; --dur:6s; --delay:0s; background:var(--mai-sky); width:3px; height:3px;"></div>
-                <div class="particle" style="left:25%; bottom:20%; --dur:8s; --delay:1.2s; background:var(--mai-blue); width:2px; height:2px;"></div>
-                <div class="particle" style="left:38%; bottom:40%; --dur:7s; --delay:0.6s; background:var(--mai-sky); width:4px; height:4px;"></div>
-                <div class="particle" style="left:55%; bottom:15%; --dur:9s; --delay:2s; background:white; width:2px; height:2px; opacity:0.4;"></div>
-                <div class="particle" style="left:65%; bottom:35%; --dur:6.5s; --delay:3s; background:var(--mai-sky-light); width:3px; height:3px;"></div>
-                <div class="particle" style="left:78%; bottom:25%; --dur:7.5s; --delay:1s; background:var(--mai-sky); width:2px; height:2px;"></div>
-                <div class="particle" style="left:88%; bottom:45%; --dur:5.5s; --delay:4s; background:white; width:2px; height:2px;"></div>
-                <div class="particle" style="left:45%; bottom:55%; --dur:10s; --delay:0.3s; background:var(--mai-blue); width:3px; height:3px;"></div>
+            <!-- LEFT HERO TEXT -->
+            <div class="login-hero-left">
+                <div class="welcome-title-wrapper">
+                    <div class="welcome-accent-bar"></div>
+                    <h1 class="welcome-title" style="color: black;">
+                        Welcome<br>Back
+                    </h1>
+                </div>
+                <p class="welcome-desc" style="color: black;">
+                    Silakan masuk untuk melanjutkan ke sistem dan kelola permintaan material dengan lebih efektif.
+                </p>
             </div>
 
-            <!-- HUD — Top Left -->
-            <div class="wh-hud hud-top-left">
-                <div class="hud-label">SMART WAREHOUSE SYSTEM</div>
-                <div class="hud-coords">ZONE-A · BAY-12 · LEVEL-03</div>
-            </div>
+            <!-- CENTER GLASS CARD -->
+            <div class="login-card-container">
+                <div class="glass-login-card">
 
-            <!-- HUD — Bottom Left Status -->
-            <div class="wh-hud hud-bottom-left">
-                <div class="hud-status-bar">
-                    <div class="hud-status-item">
-                        <div class="hud-dot"></div>
-                        <span>SYSTEM ONLINE</span>
-                    </div>
-                    <div class="hud-status-item">
-                        <div class="hud-dot blue"></div>
-                        <span>WMS ACTIVE</span>
-                    </div>
-                    <div class="hud-status-item">
-                        <div class="hud-dot red"></div>
-                        <span>AUTO-SYNC</span>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Decorative tech lines -->
-            <div class="tech-line tech-line-h" style="top:18%; left:5%; width:25%; opacity:0.6;"></div>
-            <div class="tech-line tech-line-h" style="bottom:20%; right:8%; width:20%; opacity:0.4;"></div>
-            <div class="tech-line tech-line-v" style="left:30%; top:10%; height:20%; opacity:0.4;"></div>
-            <div class="tech-line tech-line-v" style="right:20%; bottom:15%; height:18%; opacity:0.3;"></div>
-
-            <!-- Glow nodes -->
-            <div class="glow-node" style="top:18%; left:5%; animation-delay:0s;"></div>
-            <div class="glow-node" style="top:18%; left:30%; animation-delay:0.5s; width:6px; height:6px; border-color:rgba(26,63,168,0.6); background:rgba(26,63,168,0.2); box-shadow:0 0 10px rgba(26,63,168,0.5);"></div>
-            <div class="glow-node" style="bottom:20%; right:8%; animation-delay:1s;"></div>
-            <div class="glow-node" style="bottom:38%; right:20%; animation-delay:1.5s; width:5px; height:5px;"></div>
-
-            <!-- ──────────────────────────────────────────
-                 3D WAREHOUSE SCENE
-                 ────────────────────────────────────────── -->
-            <div class="warehouse-scene" id="warehouseScene">
-
-                <!-- LEFT SHELF UNIT -->
-                <div class="shelf-unit">
-                    <div class="shelf-frame"></div>
-                    <div class="shelf-bar"></div>
-                    <div class="shelf-bar"></div>
-                    <div class="shelf-bar"></div>
-                    <div class="shelf-item box-a"></div>
-                    <div class="shelf-item box-b"></div>
-                    <div class="shelf-item box-c"></div>
-                    <div class="shelf-item box-d"></div>
-                    <div class="shelf-item cyl-a"></div>
-                </div>
-
-                <!-- RIGHT SHELF UNIT -->
-                <div class="shelf-unit-right">
-                    <div class="shelf-frame"></div>
-                    <div class="shelf-bar"></div>
-                    <div class="shelf-bar"></div>
-                    <div class="shelf-bar"></div>
-                    <div class="shelf-item box-a"></div>
-                    <div class="shelf-item box-b"></div>
-                    <div class="shelf-item box-c"></div>
-                </div>
-
-                <!-- PALLET STACK (Center) -->
-                <div class="pallet-stack">
-                    <div class="pallet-boxes">
-                        <div class="pallet-box pb-1"></div>
-                        <div class="pallet-box pb-2"></div>
-                        <div class="pallet-box pb-3"></div>
-                    </div>
-                    <div class="pallet-base"></div>
-                </div>
-
-                <!-- FORKLIFT (Right of center) -->
-                <div class="forklift-element">
-                    <div class="forklift-body">
-                        <div class="forklift-cabin"></div>
-                        <div class="forklift-mast"></div>
-                        <div class="forklift-forks">
-                            <div class="fork"></div>
-                            <div class="fork"></div>
+                    <!-- Header with Hexagon Logo -->
+                    <div class="card-header-area">
+                        <div class="card-logo-badge">
+                            <!-- Isometric 3D Hexagon Portal Logo matching reference image -->
+                            <svg class="card-logo-svg" viewBox="0 0 100 115" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                <defs>
+                                    <linearGradient id="maiHexTop" x1="50" y1="5" x2="50" y2="45" gradientUnits="userSpaceOnUse">
+                                        <stop offset="0%" stop-color="#38bdf8" />
+                                        <stop offset="100%" stop-color="#0284c7" />
+                                    </linearGradient>
+                                    <linearGradient id="maiHexLeft" x1="10" y1="30" x2="50" y2="105" gradientUnits="userSpaceOnUse">
+                                        <stop offset="0%" stop-color="#0ea5e9" />
+                                        <stop offset="100%" stop-color="#0369a1" />
+                                    </linearGradient>
+                                    <linearGradient id="maiHexRight" x1="90" y1="30" x2="50" y2="105" gradientUnits="userSpaceOnUse">
+                                        <stop offset="0%" stop-color="#1d4ed8" />
+                                        <stop offset="100%" stop-color="#1e3a8a" />
+                                    </linearGradient>
+                                    <linearGradient id="maiHexInner" x1="50" y1="40" x2="50" y2="85" gradientUnits="userSpaceOnUse">
+                                        <stop offset="0%" stop-color="#e0f2fe" />
+                                        <stop offset="100%" stop-color="#bae6fd" />
+                                    </linearGradient>
+                                </defs>
+                                <!-- Outer Hexagon / Cube Arch -->
+                                <path d="M50 5 L90 28 L90 78 L50 101 L10 78 L10 28 Z" fill="url(#maiHexTop)" opacity="0.15" />
+                                <!-- Isometric Facets -->
+                                <path d="M50 5 L90 28 L50 50 L10 28 Z" fill="url(#maiHexTop)" />
+                                <path d="M10 28 L50 50 L50 101 L10 78 Z" fill="url(#maiHexLeft)" />
+                                <path d="M90 28 L90 78 L50 101 L50 50 Z" fill="url(#maiHexRight)" />
+                                <!-- Inner Cutout / Gateway -->
+                                <path d="M50 32 L72 45 L72 75 L50 88 L28 75 L28 45 Z" fill="#ffffff" />
+                                <path d="M50 42 L64 50 L64 70 L50 78 L36 70 L36 50 Z" fill="url(#maiHexInner)" />
+                            </svg>
                         </div>
-                        <div class="forklift-wheel w-left"></div>
-                        <div class="forklift-wheel w-right"></div>
+                        <h2 class="card-title">Login</h2>
+                        <p class="card-subtitle">Masuk ke akun Anda</p>
                     </div>
-                </div>
 
-                <!-- CONVEYOR BELT (Left of center) -->
-                <div class="conveyor-belt" style="left: 40%; transform: translateX(-50%);">
-                    <div class="conveyor-track">
-                        <div class="conveyor-roller r-l"></div>
-                        <div class="conveyor-roller r-r"></div>
-                    </div>
-                </div>
-
-            </div>
-            <!-- /warehouse-scene -->
-
-        </div>
-        <!-- /login-illustration-panel -->
-
-        <!-- ======================================================
-             RIGHT SIDE — LOGIN FORM
-             ====================================================== -->
-        <div class="login-form-panel">
-            <div class="login-form-content">
-
-                <!-- Logo -->
-                <div class="login-logo-area">
-                    <img
-                        src="{{ asset('assets/images/MAI.png') }}"
-                        alt="MAI Metalart Astra Indonesia"
-                        class="login-logo-img"
-                    >
-                    <div class="login-logo-divider"></div>
-                </div>
-
-                <!-- System Badge -->
-                <div style="text-align:center; margin-bottom:1.25rem;">
-                    <span class="system-badge">
-                        <span class="system-badge-dot"></span>
-                        Smart Warehouse System
-                    </span>
-                </div>
-
-                <!-- Welcome Heading -->
-                <h1 class="welcome-heading">Welcome Back</h1>
-                <p class="welcome-subtitle">Silakan masuk untuk melanjutkan ke sistem</p>
-
-                <!-- Glassmorphism Card containing the form -->
-                <div class="login-glass-card">
-
-                    <form action="{{ url('/login') }}" method="POST" id="loginForm">
+                    <!-- Login Form -->
+                    <form action="{{ url('/login') }}" method="POST" class="login-form" id="loginForm">
                         @csrf
 
-                        <!-- Email / Username Field -->
-                        <div class="form-group-clean">
-                            <label for="username">Username / Email</label>
-                            <input
-                                type="text"
-                                id="username"
-                                name="username"
-                                class="input-clean @error('username') is-invalid @enderror"
-                                value="{{ old('username') }}"
-                                placeholder="Masukkan username atau email"
-                                required
-                                autofocus
-                                autocomplete="username"
-                            >
+                        <!-- Username / Email Field -->
+                        <div>
+                            <div class="input-group-pill @error('username') has-error @enderror">
+                                <div class="input-icon-left">
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">
+                                        <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+                                        <circle cx="12" cy="7" r="4"></circle>
+                                    </svg>
+                                </div>
+                                <input
+                                    type="text"
+                                    id="username"
+                                    name="username"
+                                    class="pill-text-input"
+                                    value="{{ old('username') }}"
+                                    placeholder="Email atau Username"
+                                    required
+                                    autofocus
+                                    autocomplete="username"
+                                >
+                            </div>
                             @error('username')
-                                <div class="field-error-msg">{{ $message }}</div>
+                                <div class="field-error-text">{{ $message }}</div>
                             @enderror
                         </div>
 
                         <!-- Password Field -->
-                        <div class="form-group-clean">
-                            <label for="password">Password</label>
-                            <div class="password-field-wrapper">
+                        <div>
+                            <div class="input-group-pill @error('password') has-error @enderror">
+                                <div class="input-icon-left">
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">
+                                        <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
+                                        <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+                                    </svg>
+                                </div>
                                 <input
                                     type="password"
                                     id="password"
                                     name="password"
-                                    class="input-clean @error('password') is-invalid @enderror"
-                                    placeholder="Masukkan password"
+                                    class="pill-text-input"
+                                    placeholder="Password"
                                     required
                                     autocomplete="current-password"
                                 >
-                                <button type="button" class="btn-toggle-eye" id="togglePasswordBtn" title="Toggle password visibility" tabindex="-1">
+                                <button type="button" class="btn-eye-toggle" id="togglePasswordBtn" title="Lihat password" tabindex="-1">
                                     <!-- Eye Open Icon -->
-                                    <svg class="icon-eye-open" viewBox="0 0 24 24" width="20" height="20" stroke="#00adef" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                                    <svg class="icon-eye-open" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">
                                         <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
-                                        <circle cx="12" cy="12" r="3" fill="#00adef"></circle>
+                                        <circle cx="12" cy="12" r="3"></circle>
                                     </svg>
                                     <!-- Eye Closed Icon -->
-                                    <svg class="icon-eye-closed d-none" viewBox="0 0 24 24" width="20" height="20" stroke="#00adef" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                                    <svg class="icon-eye-closed d-none" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">
                                         <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path>
                                         <line x1="1" y1="1" x2="23" y2="23"></line>
                                     </svg>
                                 </button>
                             </div>
                             @error('password')
-                                <div class="field-error-msg">{{ $message }}</div>
+                                <div class="field-error-text">{{ $message }}</div>
                             @enderror
                         </div>
 
-                        <!-- Form Options Row -->
+                        <!-- Remember me & Forgot Password -->
                         <div class="form-options-row">
-                            <label class="remember-label">
-                                <input type="checkbox" id="remember" name="remember" class="custom-checkbox" {{ old('remember') ? 'checked' : '' }}>
-                                <span class="checkbox-text">Remember me for 30 days</span>
+                            <label class="checkbox-container">
+                                <input type="checkbox" id="remember" name="remember" class="custom-checkbox-input" {{ old('remember') ? 'checked' : '' }}>
+                                <span>Ingat saya</span>
                             </label>
-                            <a href="#" class="forgot-link" onclick="event.preventDefault(); alert('Silakan hubungi Administrator untuk reset password.');">Forgot password?</a>
+                            <a href="#" class="forgot-password-link" id="forgotPasswordLink">Lupa password?</a>
                         </div>
 
                         <!-- Submit Button -->
-                        <button type="submit" class="btn-login-pill">
-                            Log In
+                        <button type="submit" class="btn-submit-primary">
+                            <span>Masuk</span>
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">
+                                <line x1="5" y1="12" x2="19" y2="12"></line>
+                                <polyline points="12 5 19 12 12 19"></polyline>
+                            </svg>
                         </button>
+
                     </form>
 
-                </div>
-                <!-- /login-glass-card -->
+                    <!-- Copyright -->
+                    <div class="card-footer-copy">
+                        &copy; 2026 MAI. All rights reserved.
+                    </div>
 
-                <!-- Footer -->
-                <div class="login-footer-text">
-                    <p><strong>MAI Smart Warehouse System</strong></p>
-                    <p>PT. Metalart Astra Indonesia &copy; {{ date('Y') }}</p>
-                    <p>Consumable Registry v2.0</p>
                 </div>
-
             </div>
+
+            <!-- Empty Right Column for balance -->
+            <div style="grid-column: 3;"></div>
+
         </div>
-        <!-- /login-form-panel -->
 
     </div>
-    <!-- /login-split-wrapper -->
 
-    <!-- JavaScript Logic (preserved original + warehouse parallax) -->
+    <!-- JavaScript Interactivity -->
     <script>
         document.addEventListener('DOMContentLoaded', function () {
 
-            // ── Auto dismiss toast notifications (original logic preserved) ──
+            // ── Auto dismiss toast notifications ──
             const toasts = document.querySelectorAll('.toast');
             toasts.forEach(toast => {
                 setTimeout(() => toast.classList.add('show'), 100);
@@ -1454,77 +973,68 @@
                 }, 5000);
             });
 
-            // ── Password toggle (original logic preserved) ──
-            const passwordInput    = document.getElementById('password');
-            const usernameInput    = document.getElementById('username');
+            // ── Password Visibility Toggle ──
+            const passwordInput = document.getElementById('password');
             const togglePasswordBtn = document.getElementById('togglePasswordBtn');
 
             if (togglePasswordBtn && passwordInput) {
-                togglePasswordBtn.addEventListener('click', (e) => {
+                togglePasswordBtn.addEventListener('click', function (e) {
                     e.preventDefault();
-                    const iconOpen   = togglePasswordBtn.querySelector('.icon-eye-open');
+                    const iconOpen = togglePasswordBtn.querySelector('.icon-eye-open');
                     const iconClosed = togglePasswordBtn.querySelector('.icon-eye-closed');
 
                     if (passwordInput.type === 'password') {
                         passwordInput.type = 'text';
-                        if (iconOpen)   iconOpen.classList.add('d-none');
+                        if (iconOpen) iconOpen.classList.add('d-none');
                         if (iconClosed) iconClosed.classList.remove('d-none');
                     } else {
                         passwordInput.type = 'password';
-                        if (iconOpen)   iconOpen.classList.remove('d-none');
+                        if (iconOpen) iconOpen.classList.remove('d-none');
                         if (iconClosed) iconClosed.classList.add('d-none');
                     }
                 });
+            }
 
-                passwordInput.addEventListener('blur', () => {
-                    const iconOpen   = togglePasswordBtn.querySelector('.icon-eye-open');
-                    const iconClosed = togglePasswordBtn.querySelector('.icon-eye-closed');
-                    if (iconOpen && iconClosed) {
-                        iconOpen.classList.remove('d-none');
-                        iconClosed.classList.add('d-none');
-                    }
-                    passwordInput.type = 'password';
+            // ── Forgot Password Action ──
+            const forgotPasswordLink = document.getElementById('forgotPasswordLink');
+            if (forgotPasswordLink) {
+                forgotPasswordLink.addEventListener('click', function (e) {
+                    e.preventDefault();
+                    alert('Silakan hubungi Administrator IT PT. Metalart Astra Indonesia untuk reset password akun Anda.');
                 });
             }
 
-            // ── Subtle warehouse scene parallax on mouse move ──
-            const scene = document.getElementById('warehouseScene');
-            if (scene) {
-                let animFrame = null;
-                let mx = 0, my = 0;
-
-                window.addEventListener('mousemove', function (e) {
-                    mx = e.clientX;
-                    my = e.clientY;
-                    if (!animFrame) {
-                        animFrame = requestAnimationFrame(applyParallax);
+            // ── Guest Login Action (Autofill or Demo Guidance) ──
+            const btnGuestLogin = document.getElementById('btnGuestLogin');
+            const usernameInput = document.getElementById('username');
+            if (btnGuestLogin && usernameInput && passwordInput) {
+                btnGuestLogin.addEventListener('click', function () {
+                    usernameInput.value = 'guest@metalart.co.id';
+                    passwordInput.value = 'guest123';
+                    
+                    // Add subtle glow effect to inputs
+                    usernameInput.closest('.input-group-pill')?.focus();
+                    
+                    // Show a helpful hint
+                    const existingToast = document.querySelector('.toast-container');
+                    if (existingToast) {
+                        const guestToast = document.createElement('div');
+                        guestToast.className = 'toast success';
+                        guestToast.innerHTML = `
+                            <svg viewBox="0 0 24 24" width="20" height="20" stroke="#059669" stroke-width="2.5" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                                <polyline points="20 6 9 17 4 12"></polyline>
+                            </svg>
+                            <div class="toast-message">Kredensial Guest telah diisikan. Klik "Masuk" untuk melanjutkan.</div>
+                        `;
+                        existingToast.appendChild(guestToast);
+                        setTimeout(() => guestToast.classList.add('show'), 50);
+                        setTimeout(() => {
+                            guestToast.classList.remove('show');
+                            setTimeout(() => guestToast.remove(), 350);
+                        }, 4000);
                     }
                 });
-
-                function applyParallax() {
-                    animFrame = null;
-                    const ww = window.innerWidth;
-                    const wh = window.innerHeight;
-                    const ox = (mx / ww - 0.5) * 16;
-                    const oy = (my / wh - 0.5) * 8;
-                    scene.style.transform = `rotateX(${-oy * 0.4}deg) rotateY(${ox * 0.3}deg) translateZ(0)`;
-                }
             }
-
-            // ── Input focus glow enhancement ──
-            [usernameInput, passwordInput].forEach(input => {
-                if (!input) return;
-                input.addEventListener('focus', () => {
-                    input.closest('.form-group-clean')
-                         ?.querySelector('label')
-                         ?.style.setProperty('color', 'var(--mai-sky)');
-                });
-                input.addEventListener('blur', () => {
-                    input.closest('.form-group-clean')
-                         ?.querySelector('label')
-                         ?.style.removeProperty('color');
-                });
-            });
 
         });
     </script>
