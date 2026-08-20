@@ -622,6 +622,45 @@
         </div>
     </div>
 
+    @php
+        $curRole = strtolower(Auth::user()->role ?? 'user');
+        $roleName = Auth::user()->role ?? 'User';
+        $roleDesc = '';
+        $roleColor = '#2563eb';
+        if (in_array($curRole, ['master', 'admin'])) {
+            $roleDesc = 'Anda login sebagai <strong>Administrator / Master</strong> (Wewenang penuh untuk verifikasi semua tahap).';
+            $roleColor = '#0f172a';
+        } elseif (str_contains($curRole, 'staff')) {
+            $roleDesc = 'Anda login sebagai <strong>Staff Approver (Tahap 1)</strong>. Bertugas menyetujui form yang baru dibuat & diajukan oleh User.';
+            $roleColor = '#2563eb';
+        } elseif (str_contains($curRole, 'accounting') || str_contains($curRole, 'acc')) {
+            $roleDesc = 'Anda login sebagai <strong>Accounting Approver (Tahap 2)</strong>. Hanya dapat menyetujui formulir setelah disetujui oleh Staff.';
+            $roleColor = '#4f46e5';
+        } elseif (str_contains($curRole, 'warehouse')) {
+            $roleDesc = 'Anda login sebagai <strong>Warehouse Consumable (Tahap 3)</strong>. Hanya dapat meregistrasi barang setelah formulir disetujui oleh Accounting.';
+            $roleColor = '#059669';
+        } else {
+            $roleDesc = 'Anda login sebagai <strong>User (Pembuat Form)</strong>. Bertugas membuat FORM Baru & mengajukannya ke Staff. <em>(Akun User tidak memiliki wewenang approval)</em>.';
+            $roleColor = '#d97706';
+        }
+    @endphp
+
+    {{-- User Role Access Information Banner --}}
+    <div style="background: #ffffff; border-left: 4px solid {{ $roleColor }}; border-radius: var(--radius-md); padding: 0.85rem 1.25rem; margin-top: 1rem; box-shadow: var(--shadow-sm); display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 0.75rem;">
+        <div style="display: flex; align-items: center; gap: 0.75rem;">
+            <div style="width: 36px; height: 36px; border-radius: 50%; background: {{ $roleColor }}18; color: {{ $roleColor }}; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 0.85rem; flex-shrink: 0;">
+                <svg viewBox="0 0 24 24" width="18" height="18" stroke="currentColor" stroke-width="2.5" fill="none">
+                    <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+                    <circle cx="12" cy="7" r="4"></circle>
+                </svg>
+            </div>
+            <div>
+                <div style="font-size: 0.72rem; color: var(--text-muted); font-weight: 700; text-transform: uppercase; letter-spacing: 0.04em;">Hak Akses Login: <span style="color: {{ $roleColor }}; font-weight: 800;">{{ $roleName }}</span></div>
+                <div style="font-size: 0.84rem; color: var(--text-dark); margin-top: 0.1rem;">{!! $roleDesc !!}</div>
+            </div>
+        </div>
+    </div>
+
     {{-- Simple & Friendly Approval Container Card --}}
     <div class="glass-card" style="padding: 1.5rem; margin-top: 1.25rem;">
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.25rem; flex-wrap: wrap; gap: 1rem;">
@@ -969,6 +1008,7 @@
                     <option value="Die Shop">Die Shop</option>
                     <option value="Dies Assy">Dies Assy</option>
                     <option value="Maintenance">Maintenance</option>
+                    <option value="Accounting">Accounting</option>
                 </select>
             </div>
 
@@ -1210,6 +1250,23 @@
     const userTag = '{{ strtoupper(Auth::user()->department ?? Auth::user()->name ?? "PRODUCTION") }}';
     const monthYearStr = '{{ date("m-Y") }}';
     const defaultFormNo = `01/${userTag}/${monthYearStr}`;
+
+    // Current Authenticated User & Strict Role Definition
+    const authRoleRaw = '{{ strtolower(trim(Auth::user()->role ?? "User")) }}';
+    const authUserName = '{{ Auth::user()->name ?? "User" }}';
+    const authUserDept = '{{ Auth::user()->department ?? "Production" }}';
+    let userRoleType = 'user';
+    if (authRoleRaw.includes('master') || authRoleRaw.includes('admin')) {
+        userRoleType = 'admin';
+    } else if (authRoleRaw.includes('warehouse')) {
+        userRoleType = 'warehouse';
+    } else if (authRoleRaw.includes('accounting') || authRoleRaw.includes('acc')) {
+        userRoleType = 'accounting';
+    } else if (authRoleRaw.includes('staff')) {
+        userRoleType = 'staff';
+    } else {
+        userRoleType = 'user';
+    }
     
     // Distinct existing form numbers in server items
     const existingForms = [...new Set(serverFormItems.map(i => i.form_number).filter(Boolean))];
@@ -2177,20 +2234,117 @@
             });
             stepsHtml += '</div>';
 
-            // Action button
+            // Role-Based Strict Action Button Generator
             let actionBtnHtml = '';
-            if (stageKey !== 'completed' && cs.status !== 'Selesai') {
-                actionBtnHtml = `
-                    <button class="btn btn-primary btn-sm" onclick="openQuickApprovalModal('${cs.formNo}')" style="padding: 0.35rem 0.75rem; font-size: 0.78rem; font-weight: 700; border-radius: 6px; display: inline-flex; align-items: center; gap: 0.3rem;">
-                        <svg viewBox="0 0 24 24" width="13" height="13" stroke="currentColor" stroke-width="2.5" fill="none"><polyline points="20 6 9 17 4 12"></polyline></svg>
-                        Setujui Form
-                    </button>
-                `;
-            } else {
+            const isCompleted = (stageKey === 'completed' || cs.status === 'Selesai' || data.statusText === 'TELAH DIDAFTARKAN');
+
+            if (isCompleted) {
                 actionBtnHtml = `
                     <button class="btn btn-secondary btn-sm" onclick="viewChecksheet('${cs.formNo}')" style="padding: 0.35rem 0.65rem; font-size: 0.75rem; border-radius: 6px; display: inline-flex; align-items: center; gap: 0.25rem;">
-                        <svg viewBox="0 0 24 24" width="12" height="12" stroke="currentColor" stroke-width="2" fill="none"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>
+                        <svg viewBox="0 0 24 24" width="12" height="12" stroke="currentColor" stroke-width="2.5" fill="none"><polyline points="20 6 9 17 4 12"></polyline></svg>
                         Selesai
+                    </button>
+                `;
+            } else if (userRoleType === 'user') {
+                // Rule: Role User TIDAK BISA APPROVAL (Hanya membuat form)
+                actionBtnHtml = `
+                    <div style="display: inline-flex; flex-direction: column; align-items: center; gap: 2px;">
+                        <button class="btn btn-secondary btn-sm" onclick="viewChecksheet('${cs.formNo}')" style="padding: 0.3rem 0.65rem; font-size: 0.75rem; border-radius: 6px; display: inline-flex; align-items: center; gap: 0.25rem;">
+                            <svg viewBox="0 0 24 24" width="12" height="12" stroke="currentColor" stroke-width="2" fill="none"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>
+                            Lihat Form
+                        </button>
+                        <span style="font-size: 0.68rem; color: var(--text-muted); font-weight: 500;">(Hanya Pembuat)</span>
+                    </div>
+                `;
+            } else if (userRoleType === 'staff') {
+                // Rule: Role Staff HANYA BISA APPROVAL ketika User telah membuat form (Tahap 1 -> Staff)
+                if (stageKey === 'staff') {
+                    actionBtnHtml = `
+                        <button class="btn btn-primary btn-sm" onclick="openQuickApprovalModal('${cs.formNo}')" style="padding: 0.35rem 0.75rem; font-size: 0.78rem; font-weight: 700; border-radius: 6px; display: inline-flex; align-items: center; gap: 0.3rem; background: linear-gradient(135deg, #2563eb, #1d4ed8);">
+                            <svg viewBox="0 0 24 24" width="13" height="13" stroke="currentColor" stroke-width="2.5" fill="none"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                            Setujui (Staff)
+                        </button>
+                    `;
+                } else if (stageKey === 'accounting') {
+                    actionBtnHtml = `
+                        <div style="display: inline-flex; flex-direction: column; align-items: center; gap: 2px;">
+                            <button class="btn btn-secondary btn-sm" onclick="viewChecksheet('${cs.formNo}')" style="padding: 0.25rem 0.55rem; font-size: 0.72rem; border-radius: 6px;">Lihat Form</button>
+                            <span style="font-size: 0.68rem; color: #4f46e5; font-weight: 600;">Menunggu Acc</span>
+                        </div>
+                    `;
+                } else {
+                    actionBtnHtml = `
+                        <div style="display: inline-flex; flex-direction: column; align-items: center; gap: 2px;">
+                            <button class="btn btn-secondary btn-sm" onclick="viewChecksheet('${cs.formNo}')" style="padding: 0.25rem 0.55rem; font-size: 0.72rem; border-radius: 6px;">Lihat Form</button>
+                            <span style="font-size: 0.68rem; color: #0284c7; font-weight: 600;">Menunggu WH</span>
+                        </div>
+                    `;
+                }
+            } else if (userRoleType === 'accounting') {
+                // Rule: Role Accounting HANYA DAPAT APPROVAL setelah Role Staff approval
+                if (stageKey === 'staff') {
+                    actionBtnHtml = `
+                        <div style="display: inline-flex; flex-direction: column; align-items: center; gap: 2px;">
+                            <button class="btn btn-secondary btn-sm" onclick="viewChecksheet('${cs.formNo}')" style="padding: 0.25rem 0.55rem; font-size: 0.72rem; border-radius: 6px;">Lihat Form</button>
+                            <span style="font-size: 0.68rem; color: #d97706; font-weight: 600;">Menunggu Staff</span>
+                        </div>
+                    `;
+                } else if (stageKey === 'accounting') {
+                    actionBtnHtml = `
+                        <button class="btn btn-primary btn-sm" onclick="openQuickApprovalModal('${cs.formNo}')" style="padding: 0.35rem 0.75rem; font-size: 0.78rem; font-weight: 700; border-radius: 6px; display: inline-flex; align-items: center; gap: 0.3rem; background: linear-gradient(135deg, #4f46e5, #4338ca);">
+                            <svg viewBox="0 0 24 24" width="13" height="13" stroke="currentColor" stroke-width="2.5" fill="none"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                            Setujui (Accounting)
+                        </button>
+                    `;
+                } else {
+                    actionBtnHtml = `
+                        <div style="display: inline-flex; flex-direction: column; align-items: center; gap: 2px;">
+                            <button class="btn btn-secondary btn-sm" onclick="viewChecksheet('${cs.formNo}')" style="padding: 0.25rem 0.55rem; font-size: 0.72rem; border-radius: 6px;">Lihat Form</button>
+                            <span style="font-size: 0.68rem; color: #0284c7; font-weight: 600;">Menunggu WH</span>
+                        </div>
+                    `;
+                }
+            } else if (userRoleType === 'warehouse') {
+                // Rule: Role Warehouse Consumable HANYA BISA REGIST / APPROVAL setelah Role Accounting sudah approval
+                if (stageKey === 'staff') {
+                    actionBtnHtml = `
+                        <div style="display: inline-flex; flex-direction: column; align-items: center; gap: 2px;">
+                            <button class="btn btn-secondary btn-sm" onclick="viewChecksheet('${cs.formNo}')" style="padding: 0.25rem 0.55rem; font-size: 0.72rem; border-radius: 6px;">Lihat Form</button>
+                            <span style="font-size: 0.68rem; color: #d97706; font-weight: 600;">Menunggu Staff</span>
+                        </div>
+                    `;
+                } else if (stageKey === 'accounting') {
+                    actionBtnHtml = `
+                        <div style="display: inline-flex; flex-direction: column; align-items: center; gap: 2px;">
+                            <button class="btn btn-secondary btn-sm" onclick="viewChecksheet('${cs.formNo}')" style="padding: 0.25rem 0.55rem; font-size: 0.72rem; border-radius: 6px;">Lihat Form</button>
+                            <span style="font-size: 0.68rem; color: #4f46e5; font-weight: 600;">Menunggu Acc</span>
+                        </div>
+                    `;
+                } else if (stageKey === 'warehouse') {
+                    actionBtnHtml = `
+                        <button class="btn btn-primary btn-sm" onclick="openQuickApprovalModal('${cs.formNo}')" style="padding: 0.35rem 0.75rem; font-size: 0.78rem; font-weight: 700; border-radius: 6px; display: inline-flex; align-items: center; gap: 0.3rem; background: linear-gradient(135deg, #059669, #047857);">
+                            <svg viewBox="0 0 24 24" width="13" height="13" stroke="currentColor" stroke-width="2.5" fill="none"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>
+                            Registrasi Barang
+                        </button>
+                    `;
+                }
+            } else {
+                // Administrator / Master: can approve whatever stage is currently active
+                let adminBtnLabel = 'Setujui Form';
+                let adminBg = 'linear-gradient(135deg, #2563eb, #1d4ed8)';
+                if (stageKey === 'staff') {
+                    adminBtnLabel = 'Setujui (Staff / Admin)';
+                } else if (stageKey === 'accounting') {
+                    adminBtnLabel = 'Setujui (Acc / Admin)';
+                    adminBg = 'linear-gradient(135deg, #4f46e5, #4338ca)';
+                } else if (stageKey === 'warehouse') {
+                    adminBtnLabel = 'Registrasi (WH / Admin)';
+                    adminBg = 'linear-gradient(135deg, #059669, #047857)';
+                }
+                actionBtnHtml = `
+                    <button class="btn btn-primary btn-sm" onclick="openQuickApprovalModal('${cs.formNo}')" style="padding: 0.35rem 0.75rem; font-size: 0.78rem; font-weight: 700; border-radius: 6px; display: inline-flex; align-items: center; gap: 0.3rem; background: ${adminBg};">
+                        <svg viewBox="0 0 24 24" width="13" height="13" stroke="currentColor" stroke-width="2.5" fill="none"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                        ${adminBtnLabel}
                     </button>
                 `;
             }
@@ -2244,18 +2398,65 @@
         const data = stepperData[csId];
         if (!cs || !data) return;
 
+        // Rule 1: Role User TIDAK BISA APPROVAL
+        if (userRoleType === 'user') {
+            alert('Akses Ditolak: Akun dengan role User hanya bertugas membuat & mengajukan FORM Baru dan tidak memiliki wewenang approval.');
+            return;
+        }
+
         const activeStepIndex = data.steps.findIndex(s => s.active);
+
+        // Strict Role Hierarchy Verification
+        if (userRoleType === 'staff') {
+            // Rule 2: Role Staff HANYA BISA APPROVAL ketika user telah membuat form (Tahap 1 aktif)
+            if (activeStepIndex !== 1) {
+                alert('Akses Ditolak: Role Staff hanya dapat melakukan approval ketika formulir baru diajukan oleh User (Tahap Approval Staff).');
+                return;
+            }
+        } else if (userRoleType === 'accounting') {
+            // Rule 3: Role Accounting HANYA DAPAT APPROVAL setelah role staff approval
+            if (activeStepIndex === 1) {
+                alert('Akses Ditolak: Role Accounting hanya dapat melakukan approval setelah formulir disetujui oleh Staff terlebih dahulu.');
+                return;
+            } else if (activeStepIndex !== 2) {
+                alert('Formulir ini tidak sedang berada dalam tahap Approval Accounting.');
+                return;
+            }
+        } else if (userRoleType === 'warehouse') {
+            // Rule 4: Role Warehouse Consumable HANYA BISA REGIST / APPROVAL setelah role accounting sudah approval
+            if (activeStepIndex === 1) {
+                alert('Akses Ditolak: Warehouse Consumable baru dapat meregistrasi barang setelah formulir disetujui oleh Staff dan Accounting.');
+                return;
+            } else if (activeStepIndex === 2) {
+                alert('Akses Ditolak: Warehouse Consumable baru dapat meregistrasi barang setelah formulir disetujui oleh Accounting.');
+                return;
+            } else if (activeStepIndex !== 3) {
+                alert('Formulir ini tidak sedang berada dalam tahap Registrasi Warehouse.');
+                return;
+            }
+        }
+
         let currentRoleKey = 'staff';
+        let roleBadgeTitle = 'Staff Approver (Approval Tahap 1)';
+        let roleBadgeColor = '#2563eb';
+        let actionBtnText = '✓ Setujui sebagai Staff';
+        let infoHelperText = `Memverifikasi spesifikasi data barang yang diajukan oleh <strong>${cs.requestor}</strong>.`;
 
         if (activeStepIndex === 2) {
             currentRoleKey = 'accounting';
+            roleBadgeTitle = 'Accounting Approver (Approval Tahap 2)';
+            roleBadgeColor = '#4f46e5';
+            actionBtnText = '✓ Setujui sebagai Accounting';
+            infoHelperText = `Menyetujui anggaran & klasifikasi aset setelah persetujuan oleh Staff (<strong>${cs.signatures.staff || 'Staff'}</strong>).`;
         } else if (activeStepIndex === 3) {
             currentRoleKey = 'warehouse';
-        } else if (activeStepIndex === 0) {
-            currentRoleKey = 'user';
+            roleBadgeTitle = 'Warehouse Consumable (Final Registrasi & Input ERP)';
+            roleBadgeColor = '#059669';
+            actionBtnText = '✓ Registrasi Barang ke Sistem (Warehouse)';
+            infoHelperText = `Mendaftarkan barang consumable ke sistem master inventaris setelah persetujuan oleh Accounting (<strong>${cs.signatures.accounting || 'Accounting'}</strong>).`;
         }
 
-        const curUserName = '{{ Auth::user()->name ?? "User" }}';
+        const curUserName = authUserName || '{{ Auth::user()->name ?? "User" }}';
         const modalBody = document.getElementById('quick-approval-modal-body');
 
         if (modalBody) {
@@ -2271,7 +2472,7 @@
                 </div>
 
                 {{-- Horizontal Stepper Visual --}}
-                <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 1.5rem; background: #f8fafc; padding: 0.75rem; border-radius: var(--radius-md);">
+                <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 1.25rem; background: #f8fafc; padding: 0.75rem; border-radius: var(--radius-md);">
                     ${data.steps.map((st, i) => `
                         <div style="display: flex; flex-direction: column; align-items: center; gap: 0.2rem; flex: 1; text-align: center;">
                             <div style="width: 22px; height: 22px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 0.7rem; font-weight: 700; ${st.completed ? 'background: var(--color-success); color: white;' : (st.active ? 'background: var(--color-primary); color: white; box-shadow: 0 0 0 3px var(--color-primary-light);' : 'background: #e2e8f0; color: #64748b;')}">
@@ -2282,14 +2483,19 @@
                     `).join('<div style="width: 15px; height: 2px; background: #e2e8f0; margin-bottom: 1rem;"></div>')}
                 </div>
 
+                <div style="background: #f1f5f9; border-left: 3px solid ${roleBadgeColor}; padding: 0.65rem 0.85rem; border-radius: 6px; margin-bottom: 1.25rem; font-size: 0.8rem; color: #334155;">
+                    ${infoHelperText}
+                </div>
+
                 <form onsubmit="submitQuickApproval(event, '${csId}', '${currentRoleKey}')">
+                    <input type="hidden" id="qa-role" value="${currentRoleKey}">
+
                     <div class="form-group" style="margin-bottom: 1rem;">
-                        <label style="font-weight: 700; font-size: 0.82rem; margin-bottom: 0.3rem; display: block;">Peran Verifikator (Role):</label>
-                        <select id="qa-role" class="form-control" style="height: 38px; font-size: 0.85rem; font-weight: 600;">
-                            <option value="staff" ${currentRoleKey === 'staff' ? 'selected' : ''}>Staff (Approval 1)</option>
-                            <option value="accounting" ${currentRoleKey === 'accounting' ? 'selected' : ''}>Accounting (Approval 2)</option>
-                            <option value="warehouse" ${currentRoleKey === 'warehouse' ? 'selected' : ''}>Warehouse Consumable (Final Registrasi)</option>
-                        </select>
+                        <label style="font-weight: 700; font-size: 0.82rem; margin-bottom: 0.3rem; display: block;">Peran Verifikator (Terkunci Sesuai Hak Akses):</label>
+                        <div style="background: #f8fafc; border: 1px solid #cbd5e1; padding: 0.6rem 0.85rem; border-radius: 6px; font-size: 0.85rem; font-weight: 700; color: ${roleBadgeColor}; display: flex; align-items: center; gap: 0.4rem;">
+                            <span style="width: 8px; height: 8px; border-radius: 50%; background: ${roleBadgeColor}; display: inline-block;"></span>
+                            ${roleBadgeTitle}
+                        </div>
                     </div>
 
                     <div class="form-group" style="margin-bottom: 1rem;">
@@ -2304,9 +2510,9 @@
 
                     <div style="display: flex; gap: 0.75rem; justify-content: flex-end; margin-top: 1.25rem;">
                         <button type="button" class="btn btn-secondary" onclick="closeModal('quickApprovalModal')">Batal</button>
-                        <button type="submit" class="btn btn-primary" style="font-weight: 700; padding: 0.6rem 1.2rem; display: flex; align-items: center; gap: 0.4rem;">
+                        <button type="submit" class="btn btn-primary" style="font-weight: 700; padding: 0.6rem 1.2rem; display: flex; align-items: center; gap: 0.4rem; background: ${roleBadgeColor}; border-color: ${roleBadgeColor};">
                             <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2.5" fill="none"><polyline points="20 6 9 17 4 12"></polyline></svg>
-                            ✓ Setujui Form
+                            ${actionBtnText}
                         </button>
                     </div>
                 </form>
@@ -2332,6 +2538,10 @@
         }
 
         if (role === 'staff') {
+            if (!steps[0].completed) {
+                alert('Akses Gagal: Form harus dibuat dan diajukan oleh User terlebih dahulu!');
+                return;
+            }
             cs.signatures.staff = name + ' (Tgl: ' + cs.date + ')';
             cs.comments.staff = comment;
 
@@ -2351,6 +2561,10 @@
             stepperData[csId].statusClass = 'badge-primary';
         }
         else if (role === 'accounting') {
+            if (!steps[1].completed) {
+                alert('Akses Gagal: Approval Staff harus diselesaikan terlebih dahulu sebelum Accounting!');
+                return;
+            }
             cs.signatures.accounting = name + ' (Tgl: ' + cs.date + ')';
             cs.comments.accounting = comment;
 
@@ -2370,6 +2584,10 @@
             stepperData[csId].statusClass = 'badge-info';
         }
         else if (role === 'warehouse') {
+            if (!steps[2].completed) {
+                alert('Akses Gagal: Approval Accounting harus diselesaikan terlebih dahulu sebelum Registrasi Warehouse!');
+                return;
+            }
             cs.signatures.warehouse = name + ' (Tgl: ' + cs.date + ')';
             cs.comments.warehouse = comment;
 

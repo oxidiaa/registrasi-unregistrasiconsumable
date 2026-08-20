@@ -24,34 +24,43 @@ class DatabaseSeeder extends Seeder
             'password'   => bcrypt('admin'),
         ]);
 
-        // 2. Budi User (Production)
+        // 2. User Pembuat Form (Production)
         User::firstOrCreate(['email' => 'budi_user'], [
-            'name'       => 'Budi Santoso',
+            'name'       => 'Budi Santoso (User)',
             'department' => 'Production',
-            'role'       => 'USER',
+            'role'       => 'User',
             'status'     => 'Aktif',
             'password'   => bcrypt('user'),
         ]);
 
-        // 3. Suherman (Pemeriksa)
-        User::firstOrCreate(['email' => 'suherman'], [
-            'name'       => 'Suherman',
-            'department' => 'Quality Assurance',
-            'role'       => 'PEMERIKSA',
+        // 3. Staff Approver (Approval Tahap 1)
+        User::firstOrCreate(['email' => 'staff'], [
+            'name'       => 'Suherman (Staff Approver)',
+            'department' => 'Production',
+            'role'       => 'Staff',
             'status'     => 'Aktif',
-            'password'   => bcrypt('suherman'),
+            'password'   => bcrypt('staff'),
         ]);
 
-        // 4. Joko Widodo (Warehouse)
-        User::firstOrCreate(['email' => 'joko_wh'], [
-            'name'       => 'Joko Widodo',
-            'department' => 'Warehouse Logistik',
-            'role'       => 'WAREHOUSE',
+        // 4. Accounting Approver (Approval Tahap 2)
+        User::firstOrCreate(['email' => 'accounting'], [
+            'name'       => 'Hendra (Accounting Approver)',
+            'department' => 'Accounting',
+            'role'       => 'Accounting',
+            'status'     => 'Aktif',
+            'password'   => bcrypt('accounting'),
+        ]);
+
+        // 5. Warehouse Consumable (Final Registrasi)
+        User::firstOrCreate(['email' => 'warehouse'], [
+            'name'       => 'Joko Widodo (Warehouse Consumable)',
+            'department' => 'PPIC Warehouse',
+            'role'       => 'Warehouse Consumable',
             'status'     => 'Aktif',
             'password'   => bcrypt('warehouse'),
         ]);
 
-        // 5. Admin Consumable (Default login)
+        // 6. Admin Consumable (Alternative Login)
         User::firstOrCreate(['email' => 'admin_consumable'], [
             'name'       => 'Admin Consumable',
             'department' => 'Production',
