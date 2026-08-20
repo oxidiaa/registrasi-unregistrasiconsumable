@@ -633,7 +633,8 @@
             $roleDesc = 'Anda login sebagai <strong>Administrator / Master</strong> (Wewenang penuh untuk verifikasi semua tahap).';
             $roleColor = '#0f172a';
         } elseif (str_contains($curRole, 'staff')) {
-            $roleDesc = 'Anda login sebagai <strong>Staff Approver (Tahap 1)</strong>. Bertugas menyetujui form yang baru dibuat & diajukan oleh User.';
+            $staffDept = Auth::user()->department ?? 'Production';
+            $roleDesc = 'Anda login sebagai <strong>Staff Approver Departemen ' . e($staffDept) . ' (Tahap 1)</strong>. Hanya berwenang menyetujui formulir yang belum diapprove dari departemen <strong>' . e($staffDept) . '</strong> Anda.';
             $roleColor = '#2563eb';
         } elseif (str_contains($curRole, 'accounting') || str_contains($curRole, 'acc')) {
             $roleDesc = 'Anda login sebagai <strong>Accounting Approver (Tahap 2)</strong>. Hanya dapat menyetujui formulir setelah disetujui oleh Staff.';
@@ -996,7 +997,7 @@
                     <option value="Dies Assy">Dies Assy</option>
                     <option value="Maintenance">Maintenance</option>
                     <option value="Accounting">Accounting</option>
-                    <option value="Management / Executive">Management / Executive</option>
+                    <option value="Warehouse Consumable">Warehouse Consumable</option>
                 </select>
             </div>
 
@@ -1063,7 +1064,7 @@
                     <option value="Dies Assy">Dies Assy</option>
                     <option value="Maintenance">Maintenance</option>
                     <option value="Accounting">Accounting</option>
-                    <option value="Management / Executive">Management / Executive</option>
+                    <option value="Warehouse Consumable">Warehouse Consumable</option>
                 </select>
             </div>
 
@@ -2291,6 +2292,15 @@
         renderApprovalMonitoringTable();
     }
 
+    function getCsDepartment(cs, fNo) {
+        if (cs && cs.requestorDept) return cs.requestorDept.trim().toUpperCase();
+        if (fNo && fNo.includes('/')) {
+            const parts = fNo.split('/');
+            if (parts.length >= 2) return parts[1].trim().toUpperCase();
+        }
+        return '';
+    }
+
     function renderApprovalMonitoringTable() {
         const tbody = document.getElementById('approval-monitoring-tbody');
         if (!tbody) return;
@@ -2303,12 +2313,27 @@
         let statAccounting = 0;
         let statRegistered = 0;
 
+        const staffDept = (authUserDept || '').trim().toUpperCase();
+
         for (const formNo in checksheets) {
             const cs = checksheets[formNo];
             if (!cs.items || cs.items.length === 0) continue;
 
             const data = stepperData[formNo];
             if (!data) continue;
+
+            const formDept = getCsDepartment(cs, formNo);
+            const staffDone = data.steps && data.steps[1] ? data.steps[1].completed : false;
+
+            // RULE: Role Staff HANYA menampilkan no form yang BELUM approval di departmentnya sendiri
+            if (userRoleType === 'staff') {
+                if (staffDept && formDept && formDept !== staffDept) {
+                    continue; // Skip form dari department lain
+                }
+                if (staffDone) {
+                    continue; // Skip form yang sudah diapprove oleh Staff
+                }
+            }
 
             statTotal++;
 
@@ -2390,14 +2415,14 @@
                 actionBtnHtml = `
                     <div style="display: inline-flex; flex-direction: column; align-items: center; gap: 2px;">
                         <button class="btn btn-secondary btn-sm" onclick="viewChecksheet('${cs.formNo}')" style="padding: 0.3rem 0.65rem; font-size: 0.75rem; border-radius: 6px; display: inline-flex; align-items: center; gap: 0.25rem;">
-                            <svg viewBox="0 0 24 24" width="12" height="12" stroke="currentColor" stroke-width="2" fill="none"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>
+                            <svg viewBox="0 0 24 24" width="12" height="12" stroke="currentColor" stroke-width="2.5" fill="none"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>
                             Lihat Form
                         </button>
                         <span style="font-size: 0.68rem; color: var(--text-muted); font-weight: 500;">(Hanya Pembuat)</span>
                     </div>
                 `;
             } else if (userRoleType === 'staff') {
-                // Rule: Role Staff HANYA BISA APPROVAL ketika User telah membuat form (Tahap 1 -> Staff)
+                // Rule: Role Staff HANYA BISA APPROVAL ketika User telah membuat form (Tahap 1 -> Staff) di departmentnya
                 if (stageKey === 'staff') {
                     actionBtnHtml = `
                         <button class="btn btn-primary btn-sm" onclick="openQuickApprovalModal('${cs.formNo}')" style="padding: 0.35rem 0.75rem; font-size: 0.78rem; font-weight: 700; border-radius: 6px; display: inline-flex; align-items: center; gap: 0.3rem; background: linear-gradient(135deg, #2563eb, #1d4ed8);">
@@ -2508,10 +2533,14 @@
         }
 
         if (html === '') {
+            let emptyMsg = 'Tidak ada formulir yang sesuai dengan filter alur approval.';
+            if (userRoleType === 'staff') {
+                emptyMsg = `Tidak ada formulir yang menunggu persetujuan Staff dari Departemen ${authUserDept || 'Anda'}. Semua formulir telah diproses atau belum ada pengajuan baru.`;
+            }
             html = `
                 <tr>
                     <td colspan="7" style="text-align: center; padding: 2.5rem 1rem; color: var(--text-muted); font-size: 0.9rem;">
-                        Tidak ada formulir yang sesuai dengan filter alur approval.
+                        ${emptyMsg}
                     </td>
                 </tr>
             `;
@@ -2546,9 +2575,17 @@
 
         const activeStepIndex = data.steps.findIndex(s => s.active);
 
-        // Strict Role Hierarchy Verification
+        // Strict Role Hierarchy & Department Verification
         if (userRoleType === 'staff') {
-            // Rule 2: Role Staff HANYA BISA APPROVAL ketika user telah membuat form (Tahap 1 aktif)
+            // Rule 2: Role Staff HANYA BISA APPROVAL sesuai dengan department dari usernya saja
+            const formDept = getCsDepartment(cs, csId);
+            const staffDept = (authUserDept || '').trim().toUpperCase();
+
+            if (formDept && staffDept && formDept !== staffDept) {
+                alert(`Akses Ditolak: Anda login sebagai Staff Departemen ${staffDept}. Anda hanya berwenang menyetujui formulir dari departemen Anda sendiri (Formulir ${csId} berasal dari Departemen ${formDept}).`);
+                return;
+            }
+
             if (activeStepIndex !== 1) {
                 alert('Akses Ditolak: Role Staff hanya dapat melakukan approval ketika formulir baru diajukan oleh User (Tahap Approval Staff).');
                 return;
@@ -2677,8 +2714,14 @@
             return;
         }
 
-        // Sequential validation before sending
-        if (role === 'staff') {
+        // Sequential & Department validation before sending
+        if (role === 'staff' && userRoleType !== 'admin') {
+            const formDept = getCsDepartment(cs, csId);
+            const staffDept = (authUserDept || '').trim().toUpperCase();
+            if (formDept && staffDept && formDept !== staffDept) {
+                alert(`Akses Ditolak: Anda login sebagai Staff Departemen ${staffDept}. Anda hanya berwenang menyetujui formulir dari departemen Anda sendiri.`);
+                return;
+            }
             if (!steps[0].completed) {
                 alert('Akses Gagal: Form harus dibuat dan diajukan oleh User terlebih dahulu!');
                 return;

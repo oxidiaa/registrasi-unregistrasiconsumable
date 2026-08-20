@@ -362,6 +362,25 @@ class ItemController extends Controller
                 return back()->with('error', 'Akses Ditolak: Hanya Role Staff atau Master yang dapat menyetujui tahap ini.');
             }
 
+            // Department authorization for Staff: Staff can only approve forms from their own department
+            if (!$isMaster) {
+                $userDept = strtoupper(trim($currentUser->department ?? ''));
+                $formDept = strtoupper(trim($approval->requestor_dept ?? ''));
+
+                if (!$formDept && str_contains($formNo, '/')) {
+                    $parts = explode('/', $formNo);
+                    $formDept = isset($parts[1]) ? strtoupper(trim($parts[1])) : '';
+                }
+
+                if ($userDept && $formDept && $userDept !== $formDept) {
+                    $errMsg = "Akses Ditolak: Anda login sebagai Staff Departemen {$userDept}. Anda hanya berwenang menyetujui formulir dari departemen Anda sendiri (Form {$formNo} berasal dari Departemen {$formDept}).";
+                    if ($request->wantsJson() || $request->ajax()) {
+                        return response()->json(['success' => false, 'message' => $errMsg], 403);
+                    }
+                    return back()->with('error', $errMsg);
+                }
+            }
+
             $approval->staff_signed_at = now();
             $approval->staff_signer_name = $name;
             $approval->staff_comment = $comment;

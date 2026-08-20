@@ -18,7 +18,7 @@ class DatabaseSeeder extends Seeder
         // 1. Admin Master
         User::firstOrCreate(['email' => 'admin'], [
             'name'       => 'Admin Master MAI',
-            'department' => 'Management / Executive',
+            'department' => 'Warehouse Consumable',
             'role'       => 'MASTER',
             'status'     => 'Aktif',
             'password'   => bcrypt('admin'),
@@ -27,7 +27,7 @@ class DatabaseSeeder extends Seeder
         // 1b. Master User
         User::firstOrCreate(['email' => 'master'], [
             'name'       => 'Master Administrator',
-            'department' => 'Management / Executive',
+            'department' => 'Warehouse Consumable',
             'role'       => 'MASTER',
             'status'     => 'Aktif',
             'password'   => bcrypt('master'),
