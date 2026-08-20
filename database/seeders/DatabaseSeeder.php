@@ -24,6 +24,15 @@ class DatabaseSeeder extends Seeder
             'password'   => bcrypt('admin'),
         ]);
 
+        // 1b. Master User
+        User::firstOrCreate(['email' => 'master'], [
+            'name'       => 'Master Administrator',
+            'department' => 'Management / Executive',
+            'role'       => 'MASTER',
+            'status'     => 'Aktif',
+            'password'   => bcrypt('master'),
+        ]);
+
         // 2. User Pembuat Form (Production)
         User::firstOrCreate(['email' => 'budi_user'], [
             'name'       => 'Budi Santoso (User)',

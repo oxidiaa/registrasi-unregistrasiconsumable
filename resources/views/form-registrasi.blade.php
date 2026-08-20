@@ -267,6 +267,7 @@
         <span>Data View Explorer</span>
     </button>
 
+    @if(in_array(strtoupper(Auth::user()->role ?? ''), ['MASTER', 'ADMIN']))
     <button type="button" class="sheet-tab" onclick="switchSheet('account-master')">
         <svg viewBox="0 0 24 24" width="17" height="17" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round">
             <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
@@ -276,6 +277,7 @@
         </svg>
         <span>Account Master</span>
     </button>
+    @endif
 </div>
 
 {{-- ===== TAB PANE: PRINT PREVIEW ===== --}}
@@ -817,8 +819,7 @@
     </div>
 </div>
 
-
-
+@if(in_array(strtoupper(Auth::user()->role ?? ''), ['MASTER', 'ADMIN']))
 {{-- ===== TAB PANE: ACCOUNT MASTER ===== --}}
 <div id="account-master-pane" class="tab-pane no-print">
     <div style="display: flex; flex-direction: column; gap: 1.5rem; max-width: 1200px; margin: 0 auto;">
@@ -830,7 +831,7 @@
                     <svg viewBox="0 0 24 24" width="22" height="22" stroke="var(--color-primary)" stroke-width="2.5" fill="none"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>
                     Account Master Management
                 </h3>
-                <p style="color: var(--text-muted); font-size: 0.875rem;">Kelola data pengguna, hak akses role (User, Staff, Accounting, Warehouse Consumable), dan department.</p>
+                <p style="color: var(--text-muted); font-size: 0.875rem;">Kelola data pengguna, hak akses role (Master, User, Staff, Accounting, Warehouse Consumable), dan department.</p>
             </div>
             <button class="btn btn-primary" onclick="openModal('addAccountModal')" style="display: inline-flex; align-items: center; gap: 0.5rem; font-weight: 600; padding: 0.65rem 1.25rem; border-radius: var(--radius-md);">
                 <svg viewBox="0 0 24 24" width="18" height="18" stroke="currentColor" stroke-width="2.5" fill="none"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
@@ -856,7 +857,7 @@
                 </div>
                 <div>
                     <span style="font-size: 0.75rem; color: var(--text-muted); font-weight: 600; display: block; text-transform: uppercase;">Akun USER</span>
-                    <span style="font-size: 1.4rem; font-weight: 800; color: rgb(29, 78, 216);" id="stat-user-accounts-count">{{ isset($users) ? $users->where('role', 'User')->count() : 0 }} Akun</span>
+                    <span style="font-size: 1.4rem; font-weight: 800; color: rgb(29, 78, 216);" id="stat-user-accounts-count">{{ isset($users) ? $users->filter(fn($u) => strtolower($u->role) === 'user')->count() : 0 }} Akun</span>
                 </div>
             </div>
             
@@ -866,7 +867,7 @@
                 </div>
                 <div>
                     <span style="font-size: 0.75rem; color: var(--text-muted); font-weight: 600; display: block; text-transform: uppercase;">Akun STAFF</span>
-                    <span style="font-size: 1.4rem; font-weight: 800; color: var(--color-warning);" id="stat-staff-accounts-count">{{ isset($users) ? $users->where('role', 'Staff')->count() : 0 }} Akun</span>
+                    <span style="font-size: 1.4rem; font-weight: 800; color: var(--color-warning);" id="stat-staff-accounts-count">{{ isset($users) ? $users->filter(fn($u) => strtolower($u->role) === 'staff')->count() : 0 }} Akun</span>
                 </div>
             </div>
 
@@ -876,7 +877,7 @@
                 </div>
                 <div>
                     <span style="font-size: 0.75rem; color: var(--text-muted); font-weight: 600; display: block; text-transform: uppercase;">ACCOUNTING & WH</span>
-                    <span style="font-size: 1.4rem; font-weight: 800; color: var(--color-success);" id="stat-acc-wh-accounts-count">{{ isset($users) ? $users->whereIn('role', ['Accounting', 'Warehouse Consumable'])->count() : 0 }} Akun</span>
+                    <span style="font-size: 1.4rem; font-weight: 800; color: var(--color-success);" id="stat-acc-wh-accounts-count">{{ isset($users) ? $users->filter(fn($u) => in_array(strtolower($u->role), ['accounting', 'warehouse consumable', 'warehouse']))->count() : 0 }} Akun</span>
                 </div>
             </div>
         </div>
@@ -900,8 +901,58 @@
                             <th class="th-center" style="width: 140px;">AKSI</th>
                         </tr>
                     </thead>
-                    <tbody id="accounts-tbody">
-                        <!-- Populated dynamically via JS -->
+                    <tbody id="account-table-body">
+                        @forelse($users ?? [] as $index => $u)
+                            @php
+                                $rLower = strtolower(trim($u->role ?? ''));
+                                if (in_array($rLower, ['master', 'admin'])) {
+                                    $roleBadge = '<span style="background-color: rgba(99, 102, 241, 0.15); color: #4f46e5; border: 1px solid rgba(99, 102, 241, 0.3); padding: 0.25rem 0.6rem; border-radius: 4px; font-weight: 700; font-size: 0.75rem;">MASTER</span>';
+                                } elseif ($rLower === 'staff') {
+                                    $roleBadge = '<span style="background-color: var(--color-warning-light); color: var(--color-warning); padding: 0.25rem 0.6rem; border-radius: 4px; font-weight: 700; font-size: 0.75rem;">Staff</span>';
+                                } elseif (str_contains($rLower, 'accounting') || str_contains($rLower, 'acc')) {
+                                    $roleBadge = '<span style="background-color: rgba(168, 85, 247, 0.15); color: #9333ea; padding: 0.25rem 0.6rem; border-radius: 4px; font-weight: 700; font-size: 0.75rem;">Accounting</span>';
+                                } elseif (str_contains($rLower, 'warehouse')) {
+                                    $roleBadge = '<span style="background-color: var(--color-success-light); color: var(--color-success); padding: 0.25rem 0.6rem; border-radius: 4px; font-weight: 700; font-size: 0.75rem;">Warehouse Consumable</span>';
+                                } else {
+                                    $roleBadge = '<span style="background-color: rgba(59, 130, 246, 0.15); color: rgb(29, 78, 216); padding: 0.25rem 0.6rem; border-radius: 4px; font-weight: 700; font-size: 0.75rem;">User</span>';
+                                }
+                                $userAccObj = [
+                                    'id' => $u->id,
+                                    'name' => $u->name,
+                                    'username' => $u->email,
+                                    'dept' => $u->department ?? 'Production',
+                                    'role' => $u->role ?? 'User',
+                                    'status' => $u->status ?? 'Aktif',
+                                    'date' => $u->created_at ? $u->created_at->format('d-m-Y') : date('d-m-Y')
+                                ];
+                                $userAccJson = htmlspecialchars(json_encode($userAccObj), ENT_QUOTES, 'UTF-8');
+                            @endphp
+                            <tr>
+                                <td class="td-center td-no">{{ $index + 1 }}</td>
+                                <td style="font-weight: 700; color: var(--text-primary); padding: 0 0.8rem;">
+                                    {{ $u->name }}
+                                    <div style="font-size:0.75rem; color:var(--text-muted); font-weight:normal;">Username / Login ID: <strong>{{ $u->email }}</strong></div>
+                                </td>
+                                <td style="padding: 0 0.8rem; font-size: 0.85rem; font-weight: 600;">{{ $u->department ?? '-' }}</td>
+                                <td class="td-center">{!! $roleBadge !!}</td>
+                                <td class="td-center"><span style="background-color: var(--color-success-light); color: var(--color-success); padding: 0.2rem 0.5rem; border-radius: 4px; font-weight: 700; font-size: 0.7rem;">{{ $u->status ?? 'Aktif' }}</span></td>
+                                <td class="td-center" style="font-size: 0.85rem;">{{ $u->created_at ? $u->created_at->format('d-m-Y') : '-' }}</td>
+                                <td class="td-center" style="padding: 0 0.5rem;">
+                                    <button class="btn btn-secondary btn-sm" onclick="openEditUserModal({{ $userAccJson }})" style="padding: 0.25rem 0.55rem; font-size: 0.75rem; border-radius: 4px;">Edit</button>
+                                    @if(auth()->id() !== $u->id)
+                                    <form action="{{ route('users.delete', $u->id) }}" method="POST" style="display:inline;" onsubmit="return confirm('Apakah Anda yakin ingin menghapus akun user &quot;{{ $u->name }}&quot;?')">
+                                        @csrf
+                                        @method('DELETE')
+                                        <button type="submit" class="btn btn-danger btn-sm" style="padding: 0.25rem 0.55rem; font-size: 0.75rem; border-radius: 4px; background-color: #ef4444; color: white; border: none; margin-left: 0.2rem;">Hapus</button>
+                                    </form>
+                                    @endif
+                                </td>
+                            </tr>
+                        @empty
+                            <tr>
+                                <td colspan="7" style="text-align: center; padding: 1.5rem; color: var(--text-muted);">Belum ada akun pengguna terdaftar. Klik "+ Buat Akun Baru" untuk menambahkan pengguna.</td>
+                            </tr>
+                        @endforelse
                     </tbody>
                 </table>
             </div>
@@ -918,11 +969,12 @@
             <button class="btn-close" onclick="closeModal('addAccountModal')">&times;</button>
         </div>
 
-        <form action="{{ route('users.store') }}" method="POST">
+        <form id="form-add-account" action="{{ route('users.store') }}" method="POST">
             @csrf
+            
             <div class="form-group" style="margin-bottom: 1rem;">
                 <label for="acc_add_name" style="font-weight: 600; font-size: 0.85rem; margin-bottom: 0.35rem; display: block;">User Name <span style="color: var(--color-danger);">*</span></label>
-                <input type="text" id="acc_add_name" name="name" class="form-control" placeholder="Masukkan nama pengguna..." required style="height: 42px;">
+                <input type="text" id="acc_add_name" name="name" class="form-control" placeholder="Cth: Budi Santoso" required style="height: 42px;">
             </div>
 
             <div class="form-group" style="margin-bottom: 1rem;">
@@ -944,6 +996,7 @@
                     <option value="Dies Assy">Dies Assy</option>
                     <option value="Maintenance">Maintenance</option>
                     <option value="Accounting">Accounting</option>
+                    <option value="Management / Executive">Management / Executive</option>
                 </select>
             </div>
 
@@ -951,6 +1004,7 @@
                 <label for="acc_add_role" style="font-weight: 600; font-size: 0.85rem; margin-bottom: 0.35rem; display: block;">Role Hak Akses <span style="color: var(--color-danger);">*</span></label>
                 <select id="acc_add_role" name="role" class="form-control" style="height: 42px;" required>
                     <option value="" disabled selected>-- Pilih Role --</option>
+                    <option value="MASTER">Master (Akses Penuh & Account Master)</option>
                     <option value="User">User</option>
                     <option value="Staff">Staff</option>
                     <option value="Accounting">Accounting</option>
@@ -1009,12 +1063,14 @@
                     <option value="Dies Assy">Dies Assy</option>
                     <option value="Maintenance">Maintenance</option>
                     <option value="Accounting">Accounting</option>
+                    <option value="Management / Executive">Management / Executive</option>
                 </select>
             </div>
 
             <div class="form-group" style="margin-bottom: 1rem;">
                 <label for="acc_edit_role" style="font-weight: 600; font-size: 0.85rem; margin-bottom: 0.35rem; display: block;">Role Hak Akses <span style="color: var(--color-danger);">*</span></label>
                 <select id="acc_edit_role" name="role" class="form-control" style="height: 42px;" required>
+                    <option value="MASTER">Master (Akses Penuh & Account Master)</option>
                     <option value="User">User</option>
                     <option value="Staff">Staff</option>
                     <option value="Accounting">Accounting</option>
@@ -1037,6 +1093,7 @@
         </form>
     </div>
 </div>
+@endif
 
 {{-- ===== MODAL: QUICK APPROVAL ===== --}}
 <div class="modal" id="quickApprovalModal">
@@ -1702,7 +1759,7 @@
             switchSheet('proses-approval');
         } else if (activeTabParam === 'data-view' || window.location.hash === '#data-view') {
             switchSheet('data-view');
-        } else if (activeTabParam === 'account-master' || window.location.hash === '#account-master') {
+        } else if ((activeTabParam === 'account-master' || window.location.hash === '#account-master') && userRoleType === 'admin') {
             switchSheet('account-master');
         }
     });
@@ -1773,6 +1830,11 @@
     }
 
     function switchSheet(tabId) {
+        if (tabId === 'account-master' && userRoleType !== 'admin') {
+            alert('Akses Ditolak: Hanya Role Master yang memiliki wewenang untuk mengakses fitur Account Master.');
+            return;
+        }
+
         document.querySelectorAll('.tab-pane').forEach(pane => pane.classList.remove('active'));
         document.querySelectorAll('.sheet-tab').forEach(tab => tab.classList.remove('active'));
 
@@ -2637,7 +2699,7 @@
     ];
 
     function renderAccountTable() {
-        const tbody = document.getElementById('accounts-tbody');
+        const tbody = document.getElementById('account-table-body') || document.getElementById('accounts-tbody');
         if (!tbody) return;
 
         let html = '';
@@ -2650,16 +2712,18 @@
             let roleBadge = '';
             const rLower = (acc.role || '').toLowerCase();
 
-            if (rLower === 'user') {
+            if (rLower === 'master' || rLower === 'admin') {
+                roleBadge = `<span style="background-color: rgba(99, 102, 241, 0.15); color: #4f46e5; border: 1px solid rgba(99, 102, 241, 0.3); padding: 0.25rem 0.6rem; border-radius: 4px; font-weight: 700; font-size: 0.75rem;">MASTER</span>`;
+            } else if (rLower === 'user') {
                 userCount++;
                 roleBadge = `<span style="background-color: rgba(59, 130, 246, 0.15); color: rgb(29, 78, 216); padding: 0.25rem 0.6rem; border-radius: 4px; font-weight: 700; font-size: 0.75rem;">User</span>`;
             } else if (rLower === 'staff') {
                 staffCount++;
                 roleBadge = `<span style="background-color: var(--color-warning-light); color: var(--color-warning); padding: 0.25rem 0.6rem; border-radius: 4px; font-weight: 700; font-size: 0.75rem;">Staff</span>`;
-            } else if (rLower === 'accounting') {
+            } else if (rLower === 'accounting' || rLower.includes('acc')) {
                 accCount++;
                 roleBadge = `<span style="background-color: rgba(168, 85, 247, 0.15); color: #9333ea; padding: 0.25rem 0.6rem; border-radius: 4px; font-weight: 700; font-size: 0.75rem;">Accounting</span>`;
-            } else if (rLower === 'warehouse consumable' || rLower === 'warehouse') {
+            } else if (rLower.includes('warehouse')) {
                 whCount++;
                 roleBadge = `<span style="background-color: var(--color-success-light); color: var(--color-success); padding: 0.25rem 0.6rem; border-radius: 4px; font-weight: 700; font-size: 0.75rem;">Warehouse Consumable</span>`;
             } else {
@@ -2667,13 +2731,21 @@
             }
 
             const jsonAcc = JSON.stringify(acc).replace(/'/g, "&apos;").replace(/"/g, "&quot;");
+            const isSelf = ({{ auth()->id() ?? 0 }} === acc.id);
+            const deleteBtnHtml = isSelf ? '' : `
+                <form action="/users/${acc.id}" method="POST" style="display:inline;" onsubmit="return confirm('Apakah Anda yakin ingin menghapus akun user &quot;${acc.name}&quot;?')">
+                    <input type="hidden" name="_token" value="{{ csrf_token() }}">
+                    <input type="hidden" name="_method" value="DELETE">
+                    <button type="submit" class="btn btn-danger btn-sm" style="padding: 0.25rem 0.55rem; font-size: 0.75rem; border-radius: 4px; background-color: #ef4444; color: white; border: none; margin-left: 0.2rem;">Hapus</button>
+                </form>
+            `;
 
             html += `
                 <tr>
                     <td class="td-center td-no">${index + 1}</td>
                     <td style="font-weight: 700; color: var(--text-primary); padding: 0 0.8rem;">
                         ${acc.name}
-                        <div style="font-size:0.75rem; color:var(--text-muted); font-weight:normal;">Username: <strong>${acc.username}</strong></div>
+                        <div style="font-size:0.75rem; color:var(--text-muted); font-weight:normal;">Username / Login ID: <strong>${acc.username}</strong></div>
                     </td>
                     <td style="padding: 0 0.8rem; font-size: 0.85rem; font-weight: 600;">${acc.dept}</td>
                     <td class="td-center">${roleBadge}</td>
@@ -2681,11 +2753,7 @@
                     <td class="td-center" style="font-size: 0.85rem;">${acc.date}</td>
                     <td class="td-center" style="padding: 0 0.5rem;">
                         <button class="btn btn-secondary btn-sm" onclick="openEditUserModal(${jsonAcc})" style="padding: 0.25rem 0.55rem; font-size: 0.75rem; border-radius: 4px;">Edit</button>
-                        <form action="/users/${acc.id}" method="POST" style="display:inline;" onsubmit="return confirm('Apakah Anda yakin ingin menghapus akun user &quot;${acc.name}&quot;?')">
-                            @csrf
-                            @method('DELETE')
-                            <button type="submit" class="btn btn-danger btn-sm" style="padding: 0.25rem 0.55rem; font-size: 0.75rem; border-radius: 4px; background-color: #ef4444; color: white; border: none; margin-left: 0.2rem;">Hapus</button>
-                        </form>
+                        ${deleteBtnHtml}
                     </td>
                 </tr>
             `;

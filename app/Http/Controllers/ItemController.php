@@ -194,6 +194,12 @@ class ItemController extends Controller
      */
     public function formRegistrasi(Request $request)
     {
+        $activeTab = $request->query('tab');
+        $userRole = strtoupper(auth()->user()->role ?? '');
+        if ($activeTab === 'account-master' && !in_array($userRole, ['MASTER', 'ADMIN'])) {
+            return redirect()->route('form-registrasi')->with('error', 'Akses ditolak. Fitur Account Master hanya dapat diakses oleh Role Master.');
+        }
+
         $resequenceMap = $this->resequenceFormNumbers();
         $formItems = FormItem::with('user')->orderBy('created_at', 'asc')->orderBy('id', 'asc')->get();
         $users = User::orderBy('id', 'asc')->get();
@@ -315,6 +321,11 @@ class ItemController extends Controller
      */
     public function storeUser(Request $request)
     {
+        $userRole = strtoupper(auth()->user()->role ?? '');
+        if (!in_array($userRole, ['MASTER', 'ADMIN'])) {
+            return redirect()->route('form-registrasi')->with('error', 'Akses ditolak. Hanya role Master yang dapat membuat akun pengguna.');
+        }
+
         $validated = $request->validate([
             'name'       => 'required|string|max:255',
             'username'   => 'nullable|string|max:100|unique:users,email',
@@ -359,6 +370,11 @@ class ItemController extends Controller
      */
     public function updateUser(Request $request, $id)
     {
+        $currentUserRole = strtoupper(auth()->user()->role ?? '');
+        if (!in_array($currentUserRole, ['MASTER', 'ADMIN'])) {
+            return redirect()->route('form-registrasi')->with('error', 'Akses ditolak. Hanya role Master yang dapat mengubah akun pengguna.');
+        }
+
         $user = User::findOrFail($id);
 
         $validated = $request->validate([
@@ -397,6 +413,11 @@ class ItemController extends Controller
      */
     public function deleteUser($id)
     {
+        $currentUserRole = strtoupper(auth()->user()->role ?? '');
+        if (!in_array($currentUserRole, ['MASTER', 'ADMIN'])) {
+            return redirect()->route('form-registrasi')->with('error', 'Akses ditolak. Hanya role Master yang dapat menghapus akun pengguna.');
+        }
+
         $user = User::findOrFail($id);
 
         if (auth()->id() === $user->id) {

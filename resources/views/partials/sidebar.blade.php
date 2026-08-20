@@ -49,6 +49,7 @@
                 </a>
             </li>
 
+            @if(in_array(strtoupper(Auth::user()->role ?? ''), ['MASTER', 'ADMIN']))
             <li class="menu-item">
                 <a href="{{ route('form-registrasi') }}#account-master" onclick="if(window.switchSheet) switchSheet('account-master');">
                     <div class="menu-icon-box">
@@ -62,6 +63,7 @@
                     <span>Account Master</span>
                 </a>
             </li>
+            @endif
 
             <li class="menu-item menu-item-logout">
                 <a href="#" onclick="event.preventDefault(); document.getElementById('logout-form').submit();">
