@@ -365,12 +365,12 @@
         planetGeo.scale(1, 0.91, 1);
         const planetMat = new THREE.MeshStandardMaterial({
             map: planetTexture,
-            roughness: 0.75,
-            metalness: 0.1
+            roughness: 0.72,
+            metalness: 0.05
         });
         const planetMesh = new THREE.Mesh(planetGeo, planetMat);
         planetMesh.castShadow = true;
-        planetMesh.receiveShadow = true;
+        planetMesh.receiveShadow = false; // Prevents self-shadow acne and polygon clipping artifacts
         saturnSystem.add(planetMesh);
 
         const ringGeo = new THREE.RingGeometry(7.8, 18.2, 128);
@@ -394,7 +394,7 @@
         });
         const ringMesh = new THREE.Mesh(ringGeo, ringMat);
         ringMesh.receiveShadow = true;
-        ringMesh.castShadow = true;
+        ringMesh.castShadow = false; // Ring is transparent micro-dust; disable solid polygon shadow casting to prevent black block artifacts
         saturnSystem.add(ringMesh);
 
         // 4. Moons of Saturn
@@ -468,7 +468,14 @@
         sunLight.castShadow = true;
         sunLight.shadow.mapSize.width = 2048;
         sunLight.shadow.mapSize.height = 2048;
-        sunLight.shadow.bias = -0.0008;
+        sunLight.shadow.camera.near = 0.5;
+        sunLight.shadow.camera.far = 150;
+        sunLight.shadow.camera.left = -35;
+        sunLight.shadow.camera.right = 35;
+        sunLight.shadow.camera.top = 35;
+        sunLight.shadow.camera.bottom = -35;
+        sunLight.shadow.bias = -0.0001;
+        sunLight.shadow.normalBias = 0.02;
         scene.add(sunLight);
 
         const ambientLight = new THREE.AmbientLight(0x0a142c, 0.85);
