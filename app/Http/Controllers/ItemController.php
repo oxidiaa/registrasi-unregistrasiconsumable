@@ -7,6 +7,7 @@ use Illuminate\Http\Request;
 use App\Models\Item;
 use App\Models\FormItem;
 use App\Models\User;
+use App\Models\FormApproval;
 use Illuminate\Support\Facades\DB;
 
 class ItemController extends Controller
@@ -184,6 +185,10 @@ class ItemController extends Controller
                     $item->update(['form_number' => $newFormNo]);
                 }
             }
+
+            if ($oldFormNo !== $newFormNo) {
+                FormApproval::where('form_number', $oldFormNo)->update(['form_number' => $newFormNo]);
+            }
         }
 
         return $map;
@@ -204,12 +209,34 @@ class ItemController extends Controller
         $formItems = FormItem::with('user')->orderBy('created_at', 'asc')->orderBy('id', 'asc')->get();
         $users = User::orderBy('id', 'asc')->get();
 
+        // Auto-create FormApproval record for each unique form_number in form_items if not exists
+        $distinctForms = $formItems->pluck('form_number')->filter()->unique();
+        foreach ($distinctForms as $fNo) {
+            $firstItem = $formItems->firstWhere('form_number', $fNo);
+            $creator = $firstItem?->user;
+            FormApproval::firstOrCreate(
+                ['form_number' => $fNo],
+                [
+                    'user_id'          => $creator?->id ?? auth()->id(),
+                    'requestor_name'   => $firstItem?->created_by_name ?? $creator?->name ?? (auth()->user()->name ?? 'User'),
+                    'requestor_dept'   => $firstItem?->created_by_dept ?? $creator?->department ?? (auth()->user()->department ?? 'Production'),
+                    'form_date'        => $firstItem?->created_at ? $firstItem->created_at->format('d-m-Y') : date('d-m-Y'),
+                    'status'           => 'BUTUH APPROVAL STAFF',
+                    'user_signed_at'   => $firstItem?->created_at ?? now(),
+                    'user_signer_name' => $firstItem?->created_by_name ?? (auth()->user()->name ?? 'User'),
+                    'user_comment'     => 'Formulir pendaftaran diajukan.',
+                ]
+            );
+        }
+
+        $formApprovals = FormApproval::with('user')->get();
+
         $activeFormNoParam = $request->query('form');
         if ($activeFormNoParam && isset($resequenceMap[$activeFormNoParam])) {
             $activeFormNoParam = $resequenceMap[$activeFormNoParam];
         }
 
-        return view('form-registrasi', compact('formItems', 'users', 'activeFormNoParam'));
+        return view('form-registrasi', compact('formItems', 'users', 'formApprovals', 'activeFormNoParam'));
     }
 
     /**
@@ -266,11 +293,138 @@ class ItemController extends Controller
             $targetForm = $map[$targetForm];
         }
 
+        // Ensure FormApproval exists for the targetForm
+        if ($targetForm) {
+            FormApproval::firstOrCreate(
+                ['form_number' => $targetForm],
+                [
+                    'user_id'          => auth()->id(),
+                    'requestor_name'   => auth()->user()->name ?? 'User',
+                    'requestor_dept'   => auth()->user()->department ?? 'Production',
+                    'form_date'        => date('d-m-Y'),
+                    'status'           => 'BUTUH APPROVAL STAFF',
+                    'user_signed_at'   => now(),
+                    'user_signer_name' => auth()->user()->name ?? 'User',
+                    'user_comment'     => 'Formulir pendaftaran diajukan.',
+                ]
+            );
+        }
+
         $redirectParams = $targetForm ? ['form' => $targetForm] : [];
 
         return redirect()->route('form-registrasi', $redirectParams)
             ->with('success', 'Data barang "' . $validated['nama_barang'] . '" berhasil ditambahkan.')
             ->with('show_add_more_prompt', true);
+    }
+
+    /**
+     * Handle approval submission for a form with real database persistence.
+     */
+    public function approveForm(Request $request)
+    {
+        $request->validate([
+            'form_number' => 'required|string',
+            'role'        => 'required|string|in:staff,accounting,warehouse,user',
+            'name'        => 'required|string|max:255',
+            'comment'     => 'nullable|string|max:1000',
+        ]);
+
+        $formNo = $request->input('form_number');
+        $role = strtolower($request->input('role'));
+        $name = trim($request->input('name'));
+        $comment = trim($request->input('comment')) ?: 'Disetujui.';
+
+        $currentUser = auth()->user();
+        $currentUserRole = strtoupper(trim($currentUser->role ?? ''));
+        $isMaster = in_array($currentUserRole, ['MASTER', 'ADMIN']);
+
+        $approval = FormApproval::firstOrCreate(
+            ['form_number' => $formNo],
+            [
+                'user_id'          => $currentUser->id,
+                'requestor_name'   => $currentUser->name,
+                'requestor_dept'   => $currentUser->department ?? 'Production',
+                'form_date'        => date('d-m-Y'),
+                'status'           => 'BUTUH APPROVAL STAFF',
+                'user_signed_at'   => now(),
+                'user_signer_name' => $currentUser->name,
+                'user_comment'     => 'Formulir diajukan.',
+            ]
+        );
+
+        $msg = 'Status persetujuan berhasil diperbarui.';
+
+        if ($role === 'staff') {
+            if (!$isMaster && !str_contains($currentUserRole, 'STAFF')) {
+                if ($request->wantsJson() || $request->ajax()) {
+                    return response()->json(['success' => false, 'message' => 'Akses Ditolak: Hanya Role Staff atau Master yang dapat menyetujui tahap ini.'], 403);
+                }
+                return back()->with('error', 'Akses Ditolak: Hanya Role Staff atau Master yang dapat menyetujui tahap ini.');
+            }
+
+            $approval->staff_signed_at = now();
+            $approval->staff_signer_name = $name;
+            $approval->staff_comment = $comment;
+            $approval->status = 'APPROVAL ACCOUNTING';
+            $approval->save();
+
+            $msg = "Form $formNo berhasil disetujui oleh Staff ($name). Tahap selanjutnya: Approval Accounting.";
+        } elseif ($role === 'accounting') {
+            if (!$isMaster && !str_contains($currentUserRole, 'ACC')) {
+                if ($request->wantsJson() || $request->ajax()) {
+                    return response()->json(['success' => false, 'message' => 'Akses Ditolak: Hanya Role Accounting atau Master yang dapat menyetujui tahap ini.'], 403);
+                }
+                return back()->with('error', 'Akses Ditolak: Hanya Role Accounting atau Master yang dapat menyetujui tahap ini.');
+            }
+
+            if (!$approval->staff_signed_at && !$isMaster) {
+                if ($request->wantsJson() || $request->ajax()) {
+                    return response()->json(['success' => false, 'message' => 'Akses Ditolak: Tahap Staff harus disetujui terlebih dahulu.'], 422);
+                }
+                return back()->with('error', 'Akses Ditolak: Tahap Staff harus disetujui terlebih dahulu.');
+            }
+
+            $approval->accounting_signed_at = now();
+            $approval->accounting_signer_name = $name;
+            $approval->accounting_comment = $comment;
+            $approval->status = 'REGISTRASI WAREHOUSE';
+            $approval->save();
+
+            $msg = "Form $formNo berhasil disetujui oleh Accounting ($name). Tahap selanjutnya: Registrasi Warehouse.";
+        } elseif ($role === 'warehouse') {
+            if (!$isMaster && !str_contains($currentUserRole, 'WAREHOUSE')) {
+                if ($request->wantsJson() || $request->ajax()) {
+                    return response()->json(['success' => false, 'message' => 'Akses Ditolak: Hanya Role Warehouse Consumable atau Master yang dapat menyelesaikan registrasi ini.'], 403);
+                }
+                return back()->with('error', 'Akses Ditolak: Hanya Role Warehouse Consumable atau Master yang dapat menyelesaikan registrasi ini.');
+            }
+
+            if (!$approval->accounting_signed_at && !$isMaster) {
+                if ($request->wantsJson() || $request->ajax()) {
+                    return response()->json(['success' => false, 'message' => 'Akses Ditolak: Tahap Accounting harus disetujui terlebih dahulu.'], 422);
+                }
+                return back()->with('error', 'Akses Ditolak: Tahap Accounting harus disetujui terlebih dahulu.');
+            }
+
+            $approval->warehouse_signed_at = now();
+            $approval->warehouse_signer_name = $name;
+            $approval->warehouse_comment = $comment;
+            $approval->status = 'TELAH DIDAFTARKAN';
+            $approval->save();
+
+            $msg = "Form $formNo telah berhasil diregistrasi oleh Warehouse Consumable ($name). Proses Selesai.";
+        }
+
+        if ($request->wantsJson() || $request->ajax()) {
+            return response()->json([
+                'success'  => true,
+                'message'  => $msg,
+                'approval' => $approval,
+            ]);
+        }
+
+        return redirect()->route('form-registrasi', ['tab' => 'proses-approval', 'form' => $formNo])
+            ->with('success', $msg);
     }
 
     /**
@@ -284,6 +438,7 @@ class ItemController extends Controller
         }
 
         FormItem::where('form_number', $formNo)->forceDelete();
+        FormApproval::where('form_number', $formNo)->delete();
 
         $this->resequenceFormNumbers();
 

@@ -1303,6 +1303,7 @@
 
     // TAB SYSTEM & MULTI-FORM ENGINE
     const serverFormItems = @json($formItems);
+    const serverFormApprovals = @json($formApprovals ?? []);
     const urlFormParam = '{{ $activeFormNoParam ?? "" }}';
     const userTag = '{{ strtoupper(Auth::user()->department ?? Auth::user()->name ?? "PRODUCTION") }}';
     const monthYearStr = '{{ date("m-Y") }}';
@@ -1325,8 +1326,12 @@
         userRoleType = 'user';
     }
     
-    // Distinct existing form numbers in server items
-    const existingForms = [...new Set(serverFormItems.map(i => i.form_number).filter(Boolean))];
+    // Distinct existing form numbers in server items & database approvals
+    const existingForms = [...new Set([
+        ...serverFormItems.map(i => i.form_number).filter(Boolean),
+        ...serverFormApprovals.map(a => a.form_number).filter(Boolean)
+    ])];
+    
     const activeFormNo = (urlFormParam && (existingForms.includes(urlFormParam) || serverFormItems.length === 0))
         ? urlFormParam
         : (existingForms[0] || defaultFormNo);
@@ -1399,52 +1404,161 @@
         `).join('')}
     `;
 
+    function formatApprovalDateStr(val) {
+        if (!val) return '';
+        try {
+            const d = new Date(val);
+            if (isNaN(d.getTime())) return val;
+            const dd = String(d.getDate()).padStart(2, '0');
+            const mm = String(d.getMonth() + 1).padStart(2, '0');
+            const yy = d.getFullYear();
+            return `${dd}-${mm}-${yy}`;
+        } catch (e) {
+            return val;
+        }
+    }
+
     const checksheets = {};
     const stepperData = {};
 
-    // Populate checksheets dynamically from server database items
-    if (serverFormItems.length > 0) {
-        serverFormItems.forEach(item => {
-            const fNo = item.form_number || defaultFormNo;
-            if (!checksheets[fNo]) {
-                const parts = fNo.split('/');
-                const csDept = parts.length >= 2 ? parts[1] : userTag;
+    // Collect all active form numbers
+    const allKnownFormNumbers = [...new Set([
+        ...existingForms,
+        ...(existingForms.length === 0 ? [defaultFormNo] : [])
+    ])];
 
-                const reqName = item.created_by_name || (item.user ? item.user.name : null) || '{{ Auth::user()->name ?? "User" }}';
-                const reqDept = item.created_by_dept || (item.user ? item.user.department : null) || csDept;
-                const requestorStr = `${reqName} / ${reqDept}`;
-                const createdDateStr = '{{ date("d-m-Y") }}';
+    allKnownFormNumbers.forEach(fNo => {
+        const parts = fNo.split('/');
+        const csDept = parts.length >= 2 ? parts[1] : userTag;
+        
+        // Find existing DB approval record
+        const dbAppr = serverFormApprovals.find(a => a.form_number === fNo) || null;
+        
+        // Find first item for creator details
+        const firstItem = serverFormItems.find(i => i.form_number === fNo) || null;
+        
+        const reqName = (dbAppr && dbAppr.requestor_name) 
+            || (firstItem && firstItem.created_by_name) 
+            || (firstItem && firstItem.user ? firstItem.user.name : null) 
+            || '{{ Auth::user()->name ?? "User" }}';
+            
+        const reqDept = (dbAppr && dbAppr.requestor_dept) 
+            || (firstItem && firstItem.created_by_dept) 
+            || (firstItem && firstItem.user ? firstItem.user.department : null) 
+            || csDept;
+            
+        const formDateStr = (dbAppr && dbAppr.form_date) 
+            || (firstItem && firstItem.created_at ? formatApprovalDateStr(firstItem.created_at) : '{{ date("d-m-Y") }}');
 
-                checksheets[fNo] = {
-                    docNo: 'No Doc : W1-CDS-PP-20/F1 Rev 2 &nbsp;|&nbsp; No. Form: <span style="font-weight:700; color:var(--color-primary);">' + fNo + '</span>',
-                    formNo: fNo,
-                    date: createdDateStr,
-                    requestor: requestorStr,
-                    requestorName: reqName,
-                    requestorDept: reqDept,
-                    status: 'Draft',
-                    items: [],
-                    signatures: {
-                        dibuat: `${reqName} (Tgl: ${createdDateStr})`,
-                        staff: '...................',
-                        accounting: '...................',
-                        warehouse: '...................'
-                    },
-                    comments: { user: 'Formulir pendaftaran barang consumable diajukan.', staff: '', accounting: '', warehouse: '' }
-                };
+        const requestorStr = `${reqName} / ${reqDept}`;
 
-                stepperData[fNo] = {
-                    statusText: 'BUTUH APPROVAL STAFF',
-                    statusClass: 'badge-warning',
-                    steps: [
-                        { role: 'user', title: '1. User Membuat Form', completed: true, active: false, details: `${reqName} - ${reqDept} (Tanggal: ${createdDateStr})`, status: 'Selesai dibuat & diajukan.', color: 'var(--color-success)' },
-                        { role: 'staff', title: '2. Approval Staff', completed: false, active: true, details: 'Menunggu persetujuan Staff...', status: 'Butuh Approval Staff.', color: 'var(--color-primary)' },
-                        { role: 'accounting', title: '3. Approval Accounting', completed: false, active: false, details: 'Menunggu persetujuan Accounting...', status: 'Pemeriksaan anggaran.', color: 'var(--text-muted)' },
-                        { role: 'warehouse', title: '4. Didaftarkan Warehouse Consumable', completed: false, active: false, details: 'Menunggu registrasi oleh Warehouse...', status: 'Registrasi database ERP.', color: 'var(--text-muted)' }
-                    ]
-                };
+        // Accurate persistent status determination
+        const staffDone = !!(dbAppr && (dbAppr.staff_signed_at || dbAppr.staff_signer_name));
+        const accDone = !!(dbAppr && (dbAppr.accounting_signed_at || dbAppr.accounting_signer_name));
+        const whDone = !!(dbAppr && (dbAppr.warehouse_signed_at || dbAppr.warehouse_signer_name));
+
+        let overallStatus = 'Draft';
+        let statusText = 'BUTUH APPROVAL STAFF';
+        let statusClass = 'badge-warning';
+
+        if (whDone || (dbAppr && dbAppr.status === 'TELAH DIDAFTARKAN')) {
+            overallStatus = 'Selesai';
+            statusText = 'TELAH DIDAFTARKAN';
+            statusClass = 'badge-success';
+        } else if (accDone || (dbAppr && dbAppr.status === 'REGISTRASI WAREHOUSE')) {
+            overallStatus = 'Pending Warehouse';
+            statusText = 'REGISTRASI WAREHOUSE';
+            statusClass = 'badge-info';
+        } else if (staffDone || (dbAppr && dbAppr.status === 'APPROVAL ACCOUNTING')) {
+            overallStatus = 'Pending Accounting';
+            statusText = 'APPROVAL ACCOUNTING';
+            statusClass = 'badge-primary';
+        } else {
+            overallStatus = 'Draft';
+            statusText = 'BUTUH APPROVAL STAFF';
+            statusClass = 'badge-warning';
+        }
+
+        const userSigDate = (dbAppr && dbAppr.user_signed_at) ? formatApprovalDateStr(dbAppr.user_signed_at) : formDateStr;
+        const staffSigDate = (dbAppr && dbAppr.staff_signed_at) ? formatApprovalDateStr(dbAppr.staff_signed_at) : formDateStr;
+        const accSigDate = (dbAppr && dbAppr.accounting_signed_at) ? formatApprovalDateStr(dbAppr.accounting_signed_at) : formDateStr;
+        const whSigDate = (dbAppr && dbAppr.warehouse_signed_at) ? formatApprovalDateStr(dbAppr.warehouse_signed_at) : formDateStr;
+
+        const staffSigner = (dbAppr && dbAppr.staff_signer_name) ? dbAppr.staff_signer_name : 'Staff Approver';
+        const accSigner = (dbAppr && dbAppr.accounting_signer_name) ? dbAppr.accounting_signer_name : 'Accounting Approver';
+        const whSigner = (dbAppr && dbAppr.warehouse_signer_name) ? dbAppr.warehouse_signer_name : 'Warehouse Consumable';
+
+        checksheets[fNo] = {
+            docNo: 'No Doc : W1-CDS-PP-20/F1 Rev 2 &nbsp;|&nbsp; No. Form: <span style="font-weight:700; color:var(--color-primary);">' + fNo + '</span>',
+            formNo: fNo,
+            date: formDateStr,
+            requestor: requestorStr,
+            requestorName: reqName,
+            requestorDept: reqDept,
+            status: overallStatus,
+            items: [],
+            signatures: {
+                dibuat: `${reqName} (Tgl: ${userSigDate})`,
+                staff: staffDone ? `${staffSigner} (Tgl: ${staffSigDate})` : '...................',
+                accounting: accDone ? `${accSigner} (Tgl: ${accSigDate})` : '...................',
+                warehouse: whDone ? `${whSigner} (Tgl: ${whSigDate})` : '...................'
+            },
+            comments: {
+                user: (dbAppr && dbAppr.user_comment) || 'Formulir pendaftaran barang consumable diajukan.',
+                staff: (dbAppr && dbAppr.staff_comment) || '',
+                accounting: (dbAppr && dbAppr.accounting_comment) || '',
+                warehouse: (dbAppr && dbAppr.warehouse_comment) || ''
             }
+        };
 
+        stepperData[fNo] = {
+            statusText: statusText,
+            statusClass: statusClass,
+            steps: [
+                {
+                    role: 'user',
+                    title: '1. User Membuat Form',
+                    completed: true,
+                    active: false,
+                    details: `${reqName} - ${reqDept} (Tanggal: ${userSigDate})`,
+                    status: 'Selesai dibuat & diajukan.',
+                    color: 'var(--color-success)'
+                },
+                {
+                    role: 'staff',
+                    title: '2. Approval Staff',
+                    completed: staffDone,
+                    active: !staffDone,
+                    details: staffDone ? `${staffSigner} (Staff - Tanggal: ${staffSigDate})` : 'Menunggu persetujuan Staff...',
+                    status: staffDone ? 'Disetujui oleh Staff.' : 'Butuh Approval Staff.',
+                    color: staffDone ? 'var(--color-success)' : (!staffDone ? 'var(--color-primary)' : 'var(--text-muted)')
+                },
+                {
+                    role: 'accounting',
+                    title: '3. Approval Accounting',
+                    completed: accDone,
+                    active: staffDone && !accDone,
+                    details: accDone ? `${accSigner} (Accounting - Tanggal: ${accSigDate})` : (staffDone ? 'Menunggu persetujuan Accounting...' : 'Menunggu persetujuan Staff...'),
+                    status: accDone ? 'Disetujui oleh Accounting.' : 'Pemeriksaan anggaran & persetujuan.',
+                    color: accDone ? 'var(--color-success)' : (staffDone && !accDone ? 'var(--color-primary)' : 'var(--text-muted)')
+                },
+                {
+                    role: 'warehouse',
+                    title: '4. Didaftarkan Warehouse Consumable',
+                    completed: whDone,
+                    active: accDone && !whDone,
+                    details: whDone ? `${whSigner} (Warehouse - Tanggal: ${whSigDate})` : (accDone ? 'Menunggu registrasi oleh Warehouse...' : 'Menunggu persetujuan Accounting...'),
+                    status: whDone ? 'Telah didaftarkan oleh Warehouse Consumable.' : 'Registrasi database ERP.',
+                    color: whDone ? 'var(--color-success)' : (accDone && !whDone ? 'var(--color-primary)' : 'var(--text-muted)')
+                }
+            ]
+        };
+    });
+
+    // Populate database items into checksheets
+    serverFormItems.forEach(item => {
+        const fNo = item.form_number || defaultFormNo;
+        if (checksheets[fNo]) {
             checksheets[fNo].items.push({
                 no: checksheets[fNo].items.length + 1,
                 kode: item.kode_barang || '-',
@@ -1461,44 +1575,8 @@
                 b3: item.is_b3,
                 non_b3: item.is_non_b3
             });
-        });
-    } else {
-        const curName = '{{ Auth::user()->name ?? "User" }}';
-        const curDept = '{{ Auth::user()->department ?? "Production" }}';
-        checksheets[defaultFormNo] = {
-            docNo: 'No Doc : W1-CDS-PP-20/F1 Rev 2 &nbsp;|&nbsp; No. Form: <span style="font-weight:700; color:var(--color-primary);">' + defaultFormNo + '</span>',
-            formNo: defaultFormNo,
-            date: '{{ date("d-m-Y") }}',
-            requestor: `${curName} / ${curDept}`,
-            requestorName: curName,
-            requestorDept: curDept,
-            status: 'Draft',
-            items: [],
-            signatures: {
-                dibuat: `${curName} ({{ date("d-m-Y") }})`,
-                staff: '...................',
-                accounting: '...................',
-                warehouse: '...................'
-            },
-            comments: {
-                user: `Formulir pendaftaran barang consumable departemen ${curDept}.`,
-                staff: '',
-                accounting: '',
-                warehouse: ''
-            }
-        };
-
-        stepperData[defaultFormNo] = {
-            statusText: 'BUTUH APPROVAL STAFF',
-            statusClass: 'badge-warning',
-            steps: [
-                { role: 'user', title: '1. User Membuat Form', completed: true, active: false, details: `${curName} - ${curDept} (Tanggal: {{ date("d-m-Y") }})`, status: 'Selesai dibuat dan diajukan.', color: 'var(--color-success)' },
-                { role: 'staff', title: '2. Approval Staff', completed: false, active: true, details: 'Menunggu persetujuan Staff...', status: 'Butuh Approval Staff.', color: 'var(--color-primary)' },
-                { role: 'accounting', title: '3. Approval Accounting', completed: false, active: false, details: 'Menunggu persetujuan Accounting...', status: 'Pemeriksaan anggaran.', color: 'var(--text-muted)' },
-                { role: 'warehouse', title: '4. Didaftarkan Warehouse Consumable', completed: false, active: false, details: 'Menunggu registrasi oleh Warehouse...', status: 'Registrasi database ERP.', color: 'var(--text-muted)' }
-            ]
-        };
-    }
+        }
+    });
 
     const monthNamesIndo = {
         '01': 'Januari', '02': 'Februari', '03': 'Maret', '04': 'April',
@@ -2584,7 +2662,7 @@
         openModal('quickApprovalModal');
     }
 
-    function submitQuickApproval(event, csId, defaultRoleKey) {
+    async function submitQuickApproval(event, csId, defaultRoleKey) {
         event.preventDefault();
         const cs = checksheets[csId];
         const steps = stepperData[csId] ? stepperData[csId].steps : null;
@@ -2599,78 +2677,130 @@
             return;
         }
 
+        // Sequential validation before sending
         if (role === 'staff') {
             if (!steps[0].completed) {
                 alert('Akses Gagal: Form harus dibuat dan diajukan oleh User terlebih dahulu!');
                 return;
             }
-            cs.signatures.staff = name + ' (Tgl: ' + cs.date + ')';
-            cs.comments.staff = comment;
-
-            steps[1].completed = true;
-            steps[1].active = false;
-            steps[1].details = name + ' (Staff - Tanggal: ' + cs.date + ')';
-            steps[1].status = 'Disetujui oleh Staff.';
-            steps[1].color = 'var(--color-success)';
-
-            steps[2].active = true;
-            steps[2].details = 'Menunggu persetujuan Accounting...';
-            steps[2].status = 'Pemeriksaan & Approval Accounting.';
-            steps[2].color = 'var(--color-primary)';
-
-            cs.status = 'Pending Accounting';
-            stepperData[csId].statusText = 'APPROVAL ACCOUNTING';
-            stepperData[csId].statusClass = 'badge-primary';
-        }
-        else if (role === 'accounting') {
-            if (!steps[1].completed) {
+        } else if (role === 'accounting') {
+            if (!steps[1].completed && userRoleType !== 'admin') {
                 alert('Akses Gagal: Approval Staff harus diselesaikan terlebih dahulu sebelum Accounting!');
                 return;
             }
-            cs.signatures.accounting = name + ' (Tgl: ' + cs.date + ')';
-            cs.comments.accounting = comment;
-
-            steps[2].completed = true;
-            steps[2].active = false;
-            steps[2].details = name + ' (Accounting - Tanggal: ' + cs.date + ')';
-            steps[2].status = 'Disetujui oleh Accounting.';
-            steps[2].color = 'var(--color-success)';
-
-            steps[3].active = true;
-            steps[3].details = 'Menunggu registrasi oleh Warehouse Consumable...';
-            steps[3].status = 'Proses input kode barang oleh Warehouse.';
-            steps[3].color = 'var(--color-primary)';
-
-            cs.status = 'Pending Warehouse';
-            stepperData[csId].statusText = 'REGISTRASI WAREHOUSE';
-            stepperData[csId].statusClass = 'badge-info';
-        }
-        else if (role === 'warehouse') {
-            if (!steps[2].completed) {
+        } else if (role === 'warehouse') {
+            if (!steps[2].completed && userRoleType !== 'admin') {
                 alert('Akses Gagal: Approval Accounting harus diselesaikan terlebih dahulu sebelum Registrasi Warehouse!');
                 return;
             }
-            cs.signatures.warehouse = name + ' (Tgl: ' + cs.date + ')';
-            cs.comments.warehouse = comment;
-
-            steps[3].completed = true;
-            steps[3].active = false;
-            steps[3].details = name + ' (Warehouse Consumable - Tanggal: ' + cs.date + ')';
-            steps[3].status = 'Telah didaftarkan oleh Warehouse Consumable.';
-            steps[3].color = 'var(--color-success)';
-
-            cs.status = 'Selesai';
-            stepperData[csId].statusText = 'TELAH DIDAFTARKAN';
-            stepperData[csId].statusClass = 'badge-success';
         }
 
-        closeModal('quickApprovalModal');
-        renderApprovalMonitoringTable();
-        renderDataViewTable();
-        if (selectedChecksheetId === csId) {
-            viewChecksheet(csId);
+        const submitBtn = event.target.querySelector('button[type="submit"]');
+        const origBtnHtml = submitBtn ? submitBtn.innerHTML : '';
+        if (submitBtn) {
+            submitBtn.disabled = true;
+            submitBtn.innerHTML = '<svg class="spinner" viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none"><circle cx="12" cy="12" r="10"></circle></svg> Menyimpan...';
         }
-        showToast(`Persetujuan Form ${csId} (${role.toUpperCase()}) Berhasil Disimpan!`, 'success');
+
+        try {
+            const response = await fetch('{{ route("form-registrasi.approve") }}', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                    'Accept': 'application/json'
+                },
+                body: JSON.stringify({
+                    form_number: csId,
+                    role: role,
+                    name: name,
+                    comment: comment
+                })
+            });
+
+            const data = await response.json();
+
+            if (!response.ok || !data.success) {
+                alert('Gagal menyimpan approval: ' + (data.message || 'Terjadi kesalahan sistem.'));
+                if (submitBtn) {
+                    submitBtn.disabled = false;
+                    submitBtn.innerHTML = origBtnHtml;
+                }
+                return;
+            }
+
+            const todayStr = '{{ date("d-m-Y") }}';
+
+            if (role === 'staff') {
+                cs.signatures.staff = name + ' (Tgl: ' + todayStr + ')';
+                cs.comments.staff = comment;
+
+                steps[1].completed = true;
+                steps[1].active = false;
+                steps[1].details = name + ' (Staff - Tanggal: ' + todayStr + ')';
+                steps[1].status = 'Disetujui oleh Staff.';
+                steps[1].color = 'var(--color-success)';
+
+                steps[2].active = true;
+                steps[2].details = 'Menunggu persetujuan Accounting...';
+                steps[2].status = 'Pemeriksaan & Approval Accounting.';
+                steps[2].color = 'var(--color-primary)';
+
+                cs.status = 'Pending Accounting';
+                stepperData[csId].statusText = 'APPROVAL ACCOUNTING';
+                stepperData[csId].statusClass = 'badge-primary';
+            }
+            else if (role === 'accounting') {
+                cs.signatures.accounting = name + ' (Tgl: ' + todayStr + ')';
+                cs.comments.accounting = comment;
+
+                steps[2].completed = true;
+                steps[2].active = false;
+                steps[2].details = name + ' (Accounting - Tanggal: ' + todayStr + ')';
+                steps[2].status = 'Disetujui oleh Accounting.';
+                steps[2].color = 'var(--color-success)';
+
+                steps[3].active = true;
+                steps[3].details = 'Menunggu registrasi oleh Warehouse Consumable...';
+                steps[3].status = 'Proses input kode barang oleh Warehouse.';
+                steps[3].color = 'var(--color-primary)';
+
+                cs.status = 'Pending Warehouse';
+                stepperData[csId].statusText = 'REGISTRASI WAREHOUSE';
+                stepperData[csId].statusClass = 'badge-info';
+            }
+            else if (role === 'warehouse') {
+                cs.signatures.warehouse = name + ' (Tgl: ' + todayStr + ')';
+                cs.comments.warehouse = comment;
+
+                steps[3].completed = true;
+                steps[3].active = false;
+                steps[3].details = name + ' (Warehouse Consumable - Tanggal: ' + todayStr + ')';
+                steps[3].status = 'Telah didaftarkan oleh Warehouse Consumable.';
+                steps[3].color = 'var(--color-success)';
+
+                cs.status = 'Selesai';
+                stepperData[csId].statusText = 'TELAH DIDAFTARKAN';
+                stepperData[csId].statusClass = 'badge-success';
+            }
+
+            closeModal('quickApprovalModal');
+            renderApprovalMonitoringTable();
+            renderDataViewTable();
+            if (selectedChecksheetId === csId) {
+                viewChecksheet(csId);
+            }
+            updateApprovalStepper(csId);
+            showToast(data.message || `Approval Form ${csId} (${role.toUpperCase()}) Berhasil Disimpan Permanen!`, 'success');
+
+        } catch (err) {
+            console.error('Approval Error:', err);
+            alert('Terjadi kesalahan koneksi ke server saat menyimpan approval.');
+            if (submitBtn) {
+                submitBtn.disabled = false;
+                submitBtn.innerHTML = origBtnHtml;
+            }
+        }
     }
 
     function selectFormForApproval(csId) {

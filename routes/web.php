@@ -17,6 +17,7 @@ Route::middleware('auth')->group(function () {
     Route::post('/items/{id}/unregister', [ItemController::class, 'unregister'])->name('items.unregister');
     Route::get('/form-registrasi', [ItemController::class, 'formRegistrasi'])->name('form-registrasi');
     Route::post('/form-registrasi', [ItemController::class, 'storeFormItem'])->name('form-registrasi.store');
+    Route::post('/form-registrasi/approve', [ItemController::class, 'approveForm'])->name('form-registrasi.approve');
     Route::delete('/form-registrasi/form/delete', [ItemController::class, 'deleteFormChecksheet'])->name('form-registrasi.delete-checksheet');
     Route::delete('/form-registrasi/{id}', [ItemController::class, 'deleteFormItem'])->name('form-registrasi.delete');
 
