@@ -50,34 +50,6 @@
             </li>
 
             <li class="menu-item">
-                <a href="{{ route('form-registrasi') }}#proses-approval" onclick="if(window.switchSheet) switchSheet('proses-approval');">
-                    <div class="menu-icon-box">
-                        <svg viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                            <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
-                            <polyline points="22 4 12 14.01 9 11.01"></polyline>
-                        </svg>
-                    </div>
-                    <span>Proses Approval</span>
-                </a>
-            </li>
-
-            <li class="menu-item">
-                <a href="{{ route('form-registrasi') }}#data-view" onclick="if(window.switchSheet) switchSheet('data-view');">
-                    <div class="menu-icon-box">
-                        <svg viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                            <line x1="8" y1="6" x2="21" y2="6"></line>
-                            <line x1="8" y1="12" x2="21" y2="12"></line>
-                            <line x1="8" y1="18" x2="21" y2="18"></line>
-                            <line x1="3" y1="6" x2="3.01" y2="6"></line>
-                            <line x1="3" y1="12" x2="3.01" y2="12"></line>
-                            <line x1="3" y1="18" x2="3.01" y2="18"></line>
-                        </svg>
-                    </div>
-                    <span>Data View</span>
-                </a>
-            </li>
-
-            <li class="menu-item">
                 <a href="{{ route('form-registrasi') }}#account-master" onclick="if(window.switchSheet) switchSheet('account-master');">
                     <div class="menu-icon-box">
                         <svg viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
