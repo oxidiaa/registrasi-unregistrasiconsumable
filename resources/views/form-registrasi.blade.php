@@ -1138,12 +1138,12 @@
             <div style="display:grid; grid-template-columns:1fr 2fr; gap:1rem; margin-bottom:1rem;">
                 <div class="form-group" style="margin-bottom:0;">
                     <label for="fi_kode">Kode Barang <span style="color:var(--color-danger);">*</span></label>
-                    <input type="text" id="fi_kode" name="kode_barang" class="form-control @error('kode_barang') is-invalid @enderror" placeholder="Cth: CDS-001" value="{{ old('kode_barang') }}" required>
+                    <input type="text" id="fi_kode" name="kode_barang" class="form-control @error('kode_barang') is-invalid @enderror" placeholder="Cth: SBM-001" value="{{ old('kode_barang') }}" required>
                     @error('kode_barang')<div class="error-text">{{ $message }}</div>@enderror
                 </div>
                 <div class="form-group" style="margin-bottom:0;">
                     <label for="fi_nama">Nama Barang <span style="color:var(--color-danger);">*</span></label>
-                    <input type="text" id="fi_nama" name="nama_barang" class="form-control @error('nama_barang') is-invalid @enderror" placeholder="Nama barang consumable" value="{{ old('nama_barang') }}" required>
+                    <input type="text" id="fi_nama" name="nama_barang" class="form-control @error('nama_barang') is-invalid @enderror" placeholder="Nama barang" value="{{ old('nama_barang') }}" required>
                     @error('nama_barang')<div class="error-text">{{ $message }}</div>@enderror
                 </div>
             </div>
@@ -1166,7 +1166,7 @@
             <div style="display:grid; grid-template-columns:1fr 1fr; gap:1rem; margin-bottom:1rem;">
                 <div class="form-group" style="margin-bottom:0;">
                     <label for="fi_katpenggunaan">Kategori Penggunaan <span style="color:var(--color-danger);">*</span></label>
-                    <input type="text" id="fi_katpenggunaan" name="kategori_penggunaan" class="form-control @error('kategori_penggunaan') is-invalid @enderror" placeholder="Cth: Produksi, Kantor" value="{{ old('kategori_penggunaan') }}" required>
+                    <input type="text" id="fi_katpenggunaan" name="kategori_penggunaan" class="form-control @error('kategori_penggunaan') is-invalid @enderror" placeholder="Cth: Produksi, Consumable" value="{{ old('kategori_penggunaan') }}" required>
                     @error('kategori_penggunaan')<div class="error-text">{{ $message }}</div>@enderror
                 </div>
                 <div class="form-group" style="margin-bottom:0;">
