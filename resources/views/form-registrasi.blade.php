@@ -5,6 +5,12 @@
 @section('content')
 @php
     $userDeptTag = strtoupper(Auth::user()->department ?? Auth::user()->name ?? 'PRODUCTION');
+    $userRoleRaw = strtoupper(trim(Auth::user()->role ?? 'USER'));
+    $canViewAllDept = in_array($userRoleRaw, ['MASTER', 'ADMIN'])
+        || str_contains($userRoleRaw, 'ACCOUNTING')
+        || str_contains($userRoleRaw, 'ACC')
+        || str_contains($userRoleRaw, 'WAREHOUSE');
+
     $defaultFormNo = '01/' . $userDeptTag . '/' . date('m-Y');
 
     $existingFormNumbers = $formItems->pluck('form_number')->filter()->unique()->values();
@@ -18,16 +24,23 @@
         $currentFormNo = $activeFormNoParam;
     } else if ($userForms->isNotEmpty()) {
         $currentFormNo = $userForms->first();
-    } else if ($existingFormNumbers->isNotEmpty()) {
+    } else if ($existingFormNumbers->isNotEmpty() && $canViewAllDept) {
         $currentFormNo = $existingFormNumbers->first();
     } else {
-        $currentFormNo = $activeFormNoParam ?? $defaultFormNo;
+        $currentFormNo = $defaultFormNo;
     }
 
     $currentFormItems = $formItems->filter(function($item) use ($currentFormNo, $defaultFormNo) {
         $itemFormNo = $item->form_number ?: $defaultFormNo;
         return $itemFormNo === $currentFormNo;
     });
+
+    // Dynamic metadata for current form preview
+    $currentApproval = $formApprovals->firstWhere('form_number', $currentFormNo);
+    $firstCurrentItem = $currentFormItems->first();
+    $currentFormReqName = $currentApproval?->requestor_name ?? $firstCurrentItem?->created_by_name ?? Auth::user()->name ?? 'User';
+    $currentFormReqDept = $currentApproval?->requestor_dept ?? $firstCurrentItem?->created_by_dept ?? Auth::user()->department ?? 'Production';
+    $currentFormDate = $currentApproval?->form_date ?? ($firstCurrentItem?->created_at ? $firstCurrentItem->created_at->format('d-m-Y') : date('d-m-Y'));
 @endphp
 <style>
     /* Sheet Tabs & Stepper Enhancements for Form Registrasi */
@@ -323,7 +336,7 @@
             </div>
             <div class="form-reg-header-center">
                 <h2 class="form-reg-title">FORM PENDAFTARAN BARANG CONSUMABLE</h2>
-                <p class="form-reg-nodoc" id="preview-docno">No Doc : W1-CDS-PP-20/F1 Rev 2 &nbsp;|&nbsp; No. Form: <span id="form-number-display" style="font-weight: 700; color: var(--color-primary);">01/{{ strtoupper(Auth::user()->department ?? Auth::user()->name ?? 'PRODUCTION') }}/{{ date('m-Y') }}</span></p>
+                <p class="form-reg-nodoc" id="preview-docno">No Doc : W1-CDS-PP-20/F1 Rev 2 &nbsp;|&nbsp; No. Form: <span id="form-number-display" style="font-weight: 700; color: var(--color-primary);">{{ $currentFormNo }}</span></p>
             </div>
             <div class="form-reg-header-right"></div>
         </div>
@@ -332,11 +345,11 @@
         <div class="form-reg-meta">
             <div class="form-reg-meta-item">
                 <span class="form-reg-meta-label">TANGGAL :</span>
-                <span class="form-reg-meta-line" id="preview-date">{{ date('d-m-Y') }}</span>
+                <span class="form-reg-meta-line" id="preview-date">{{ $currentFormDate }}</span>
             </div>
             <div class="form-reg-meta-item">
                 <span class="form-reg-meta-label">Requestor / User Dept :</span>
-                <span class="form-reg-meta-line" id="preview-requestor">{{ Auth::user()->name ?? 'Production User' }} / {{ Auth::user()->department ?? 'Production' }}</span>
+                <span class="form-reg-meta-line" id="preview-requestor">{{ $currentFormReqName }} / {{ $currentFormReqDept }}</span>
             </div>
         </div>
 
@@ -1303,8 +1316,8 @@
     @endif
 
     // TAB SYSTEM & MULTI-FORM ENGINE
-    const serverFormItems = @json($formItems);
-    const serverFormApprovals = @json($formApprovals ?? []);
+    const serverFormItems = @json($formItems, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
+    const serverFormApprovals = @json($formApprovals ?? [], JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
     const urlFormParam = '{{ $activeFormNoParam ?? "" }}';
     const userTag = '{{ strtoupper(Auth::user()->department ?? Auth::user()->name ?? "PRODUCTION") }}';
     const monthYearStr = '{{ date("m-Y") }}';
@@ -1326,16 +1339,25 @@
     } else {
         userRoleType = 'user';
     }
+
+    const canViewAllDepartments = (userRoleType === 'admin' || userRoleType === 'accounting' || userRoleType === 'warehouse');
     
     // Distinct existing form numbers in server items & database approvals
     const existingForms = [...new Set([
         ...serverFormItems.map(i => i.form_number).filter(Boolean),
         ...serverFormApprovals.map(a => a.form_number).filter(Boolean)
     ])];
+
+    const deptForms = existingForms.filter(fNo => {
+        const parts = fNo.split('/');
+        return parts.length >= 2 && parts[1].trim().toUpperCase() === userTag.toUpperCase();
+    });
     
-    const activeFormNo = (urlFormParam && (existingForms.includes(urlFormParam) || serverFormItems.length === 0))
-        ? urlFormParam
-        : (existingForms[0] || defaultFormNo);
+    const activeFormNo = (!canViewAllDepartments)
+        ? (deptForms[0] || defaultFormNo)
+        : ((urlFormParam && (existingForms.includes(urlFormParam) || serverFormItems.length === 0))
+            ? urlFormParam
+            : (existingForms[0] || defaultFormNo));
 
     let activeChecksheetHtml = '';
     let selectedChecksheetId = activeFormNo;
@@ -1633,6 +1655,14 @@
         select.innerHTML = '';
         for (const formNo in checksheets) {
             const cs = checksheets[formNo];
+            const formDept = getCsDepartment(cs, formNo);
+            const userDeptUpper = (authUserDept || '').trim().toUpperCase();
+
+            // Restricted roles (User, Staff) only see their own department's forms in the selector
+            if (!canViewAllDepartments && userDeptUpper && formDept && formDept !== userDeptUpper) {
+                continue;
+            }
+
             if ((cs.items && cs.items.length > 0) || formNo === selectedChecksheetId) {
                 const opt = document.createElement('option');
                 opt.value = formNo;
@@ -1668,6 +1698,14 @@
 
             // Filter out empty checksheets (0 items)
             if (!cs.items || cs.items.length === 0) {
+                continue;
+            }
+
+            const formDept = getCsDepartment(cs, formNo);
+            const userDeptUpper = (authUserDept || '').trim().toUpperCase();
+
+            // RULE: Role User and Staff only see forms of their own department
+            if (!canViewAllDepartments && userDeptUpper && formDept && formDept !== userDeptUpper) {
                 continue;
             }
 
@@ -1929,6 +1967,16 @@
     }
 
     function viewChecksheet(csId) {
+        if (!canViewAllDepartments) {
+            const parts = csId.split('/');
+            const csDept = parts.length >= 2 ? parts[1].trim().toUpperCase() : '';
+            const userDeptUpper = (authUserDept || '').trim().toUpperCase();
+            if (csDept && userDeptUpper && csDept !== userDeptUpper) {
+                alert('Akses Ditolak: Anda tidak dapat melihat formulir dari departemen lain.');
+                return;
+            }
+        }
+
         // Clean up previous empty draft form if user switched away without adding items
         if (selectedChecksheetId && selectedChecksheetId !== csId && selectedChecksheetId !== activeFormNo) {
             const prevCs = checksheets[selectedChecksheetId];
@@ -1950,6 +1998,15 @@
 
         const displayEl = document.getElementById('form-number-display');
         if (displayEl) displayEl.innerText = csId;
+
+        const toolbarFormNo = document.getElementById('toolbar-form-no');
+        if (toolbarFormNo) toolbarFormNo.innerText = csId;
+
+        const prevReq = document.getElementById('preview-requestor');
+        if (prevReq && cs.requestor) prevReq.innerText = cs.requestor;
+
+        const prevDate = document.getElementById('preview-date');
+        if (prevDate && cs.date) prevDate.innerText = cs.date;
         
         const signatureDibuat = document.getElementById('preview-sig-dibuat');
         const signatureStaff = document.getElementById('preview-sig-staff');
@@ -2323,15 +2380,12 @@
             if (!data) continue;
 
             const formDept = getCsDepartment(cs, formNo);
-            const staffDone = data.steps && data.steps[1] ? data.steps[1].completed : false;
+            const userDeptUpper = (authUserDept || '').trim().toUpperCase();
 
-            // RULE: Role Staff HANYA menampilkan no form yang BELUM approval di departmentnya sendiri
-            if (userRoleType === 'staff') {
-                if (staffDept && formDept && formDept !== staffDept) {
+            // RULE: Role User dan Staff HANYA dapat melihat form dari departmentnya sendiri
+            if (!canViewAllDepartments) {
+                if (userDeptUpper && formDept && formDept !== userDeptUpper) {
                     continue; // Skip form dari department lain
-                }
-                if (staffDone) {
-                    continue; // Skip form yang sudah diapprove oleh Staff
                 }
             }
 
@@ -2534,8 +2588,8 @@
 
         if (html === '') {
             let emptyMsg = 'Tidak ada formulir yang sesuai dengan filter alur approval.';
-            if (userRoleType === 'staff') {
-                emptyMsg = `Tidak ada formulir yang menunggu persetujuan Staff dari Departemen ${authUserDept || 'Anda'}. Semua formulir telah diproses atau belum ada pengajuan baru.`;
+            if (!canViewAllDepartments) {
+                emptyMsg = `Tidak ada formulir pengajuan untuk Departemen ${authUserDept || 'Anda'}.`;
             }
             html = `
                 <tr>

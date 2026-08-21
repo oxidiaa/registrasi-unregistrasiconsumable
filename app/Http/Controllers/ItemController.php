@@ -165,7 +165,9 @@ class ItemController extends Controller
 
             // Extract department tag and month-year if present
             $parts = explode('/', $oldFormNo);
-            $dept = (count($parts) >= 2 && !empty($parts[1])) ? strtoupper(trim($parts[1])) : $userDeptTag;
+            $firstItem = $items[0] ?? null;
+            $itemDept = $firstItem ? strtoupper(trim($firstItem->created_by_dept ?? $firstItem->user?->department ?? '')) : '';
+            $dept = (count($parts) >= 2 && !empty($parts[1])) ? strtoupper(trim($parts[1])) : ($itemDept ?: $userDeptTag);
             $my = (count($parts) >= 3 && !empty($parts[2])) ? trim($parts[2]) : $monthYear;
 
             $key = $dept . '_' . $my;
@@ -200,40 +202,94 @@ class ItemController extends Controller
     public function formRegistrasi(Request $request)
     {
         $activeTab = $request->query('tab');
-        $userRole = strtoupper(auth()->user()->role ?? '');
+        $currentUser = auth()->user();
+        $userRole = strtoupper(trim($currentUser->role ?? 'USER'));
+        $userDept = strtoupper(trim($currentUser->department ?? 'PRODUCTION'));
+
         if ($activeTab === 'account-master' && !in_array($userRole, ['MASTER', 'ADMIN'])) {
             return redirect()->route('form-registrasi')->with('error', 'Akses ditolak. Fitur Account Master hanya dapat diakses oleh Role Master.');
         }
 
         $resequenceMap = $this->resequenceFormNumbers();
-        $formItems = FormItem::with('user')->orderBy('created_at', 'asc')->orderBy('id', 'asc')->get();
+        $allExistingItems = FormItem::with('user')->orderBy('created_at', 'asc')->orderBy('id', 'asc')->get();
         $users = User::orderBy('id', 'asc')->get();
 
         // Auto-create FormApproval record for each unique form_number in form_items if not exists
-        $distinctForms = $formItems->pluck('form_number')->filter()->unique();
+        $distinctForms = $allExistingItems->pluck('form_number')->filter()->unique();
         foreach ($distinctForms as $fNo) {
-            $firstItem = $formItems->firstWhere('form_number', $fNo);
+            $firstItem = $allExistingItems->firstWhere('form_number', $fNo);
             $creator = $firstItem?->user;
+            $parts = explode('/', $fNo);
+            $fDept = (count($parts) >= 2 && !empty($parts[1])) ? $parts[1] : null;
+            $reqDept = $firstItem?->created_by_dept ?? $creator?->department ?? $fDept ?? ($currentUser->department ?? 'Production');
+
             FormApproval::firstOrCreate(
                 ['form_number' => $fNo],
                 [
-                    'user_id'          => $creator?->id ?? auth()->id(),
-                    'requestor_name'   => $firstItem?->created_by_name ?? $creator?->name ?? (auth()->user()->name ?? 'User'),
-                    'requestor_dept'   => $firstItem?->created_by_dept ?? $creator?->department ?? (auth()->user()->department ?? 'Production'),
+                    'user_id'          => $creator?->id ?? $currentUser->id,
+                    'requestor_name'   => $firstItem?->created_by_name ?? $creator?->name ?? ($currentUser->name ?? 'User'),
+                    'requestor_dept'   => $reqDept,
                     'form_date'        => $firstItem?->created_at ? $firstItem->created_at->format('d-m-Y') : date('d-m-Y'),
                     'status'           => 'BUTUH APPROVAL STAFF',
                     'user_signed_at'   => $firstItem?->created_at ?? now(),
-                    'user_signer_name' => $firstItem?->created_by_name ?? (auth()->user()->name ?? 'User'),
+                    'user_signer_name' => $firstItem?->created_by_name ?? ($currentUser->name ?? 'User'),
                     'user_comment'     => 'Formulir pendaftaran diajukan.',
                 ]
             );
         }
 
-        $formApprovals = FormApproval::with('user')->get();
+        // Unrestricted roles can see all forms: Master/Admin, Accounting, Warehouse Consumable
+        $canViewAllDepartments = in_array($userRole, ['MASTER', 'ADMIN'])
+            || str_contains($userRole, 'ACCOUNTING')
+            || str_contains($userRole, 'ACC')
+            || str_contains($userRole, 'WAREHOUSE');
+
+        if ($canViewAllDepartments) {
+            $formItems = $allExistingItems;
+            $formApprovals = FormApproval::with('user')->get();
+        } else {
+            // Restricted roles (User, Staff): only see forms created by their own department
+            $formItems = $allExistingItems->filter(function($item) use ($userDept) {
+                $itemDept = strtoupper(trim($item->created_by_dept ?? $item->user?->department ?? ''));
+                if ($itemDept === $userDept) {
+                    return true;
+                }
+                if ($item->form_number && str_contains($item->form_number, '/')) {
+                    $parts = explode('/', $item->form_number);
+                    if (isset($parts[1]) && strtoupper(trim($parts[1])) === $userDept) {
+                        return true;
+                    }
+                }
+                return false;
+            })->values();
+
+            $formApprovals = FormApproval::with('user')->get()->filter(function($approval) use ($userDept) {
+                $apprDept = strtoupper(trim($approval->requestor_dept ?? $approval->user?->department ?? ''));
+                if ($apprDept === $userDept) {
+                    return true;
+                }
+                if ($approval->form_number && str_contains($approval->form_number, '/')) {
+                    $parts = explode('/', $approval->form_number);
+                    if (isset($parts[1]) && strtoupper(trim($parts[1])) === $userDept) {
+                        return true;
+                    }
+                }
+                return false;
+            })->values();
+        }
 
         $activeFormNoParam = $request->query('form');
         if ($activeFormNoParam && isset($resequenceMap[$activeFormNoParam])) {
             $activeFormNoParam = $resequenceMap[$activeFormNoParam];
+        }
+
+        // If restricted user attempts to access a form parameter of another department, reset it
+        if (!$canViewAllDepartments && $activeFormNoParam) {
+            $parts = explode('/', $activeFormNoParam);
+            $targetDept = isset($parts[1]) ? strtoupper(trim($parts[1])) : '';
+            if ($targetDept && $targetDept !== $userDept) {
+                $activeFormNoParam = null;
+            }
         }
 
         return view('form-registrasi', compact('formItems', 'users', 'formApprovals', 'activeFormNoParam'));
@@ -279,13 +335,35 @@ class ItemController extends Controller
             'lead_time.required'           => 'Lead time wajib diisi.',
         ]);
 
-        $validated['is_b3']           = $request->has('is_b3');
-        $validated['is_non_b3']        = $request->has('is_non_b3');
-        $validated['user_id']         = auth()->id();
-        $validated['created_by_name'] = auth()->user()->name ?? 'User';
-        $validated['created_by_dept'] = auth()->user()->department ?? 'Production';
+        $currentUser = auth()->user();
+        $currentUserRole = strtoupper(trim($currentUser->role ?? 'USER'));
+        $currentUserDept = strtoupper(trim($currentUser->department ?? 'PRODUCTION'));
+        $canViewAllDepartments = in_array($currentUserRole, ['MASTER', 'ADMIN'])
+            || str_contains($currentUserRole, 'ACCOUNTING')
+            || str_contains($currentUserRole, 'ACC')
+            || str_contains($currentUserRole, 'WAREHOUSE');
 
         $targetForm = $request->input('form_number');
+        if (!$canViewAllDepartments && $targetForm) {
+            $parts = explode('/', $targetForm);
+            $targetDept = isset($parts[1]) ? strtoupper(trim($parts[1])) : '';
+            if ($targetDept && $targetDept !== $currentUserDept) {
+                $targetForm = null;
+            }
+        }
+
+        if (empty($targetForm)) {
+            $monthYear = date('m-Y');
+            $targetForm = "01/{$currentUserDept}/{$monthYear}";
+        }
+
+        $validated['form_number']     = $targetForm;
+        $validated['is_b3']           = $request->has('is_b3');
+        $validated['is_non_b3']        = $request->has('is_non_b3');
+        $validated['user_id']         = $currentUser->id;
+        $validated['created_by_name'] = $currentUser->name ?? 'User';
+        $validated['created_by_dept'] = $currentUser->department ?? 'Production';
+
         FormItem::create($validated);
 
         $map = $this->resequenceFormNumbers();
@@ -298,13 +376,13 @@ class ItemController extends Controller
             FormApproval::firstOrCreate(
                 ['form_number' => $targetForm],
                 [
-                    'user_id'          => auth()->id(),
-                    'requestor_name'   => auth()->user()->name ?? 'User',
-                    'requestor_dept'   => auth()->user()->department ?? 'Production',
+                    'user_id'          => $currentUser->id,
+                    'requestor_name'   => $currentUser->name ?? 'User',
+                    'requestor_dept'   => $currentUser->department ?? 'Production',
                     'form_date'        => date('d-m-Y'),
                     'status'           => 'BUTUH APPROVAL STAFF',
                     'user_signed_at'   => now(),
-                    'user_signer_name' => auth()->user()->name ?? 'User',
+                    'user_signer_name' => $currentUser->name ?? 'User',
                     'user_comment'     => 'Formulir pendaftaran diajukan.',
                 ]
             );
@@ -338,16 +416,23 @@ class ItemController extends Controller
         $currentUserRole = strtoupper(trim($currentUser->role ?? ''));
         $isMaster = in_array($currentUserRole, ['MASTER', 'ADMIN']);
 
+        $firstItem = FormItem::where('form_number', $formNo)->first();
+        $parts = explode('/', $formNo);
+        $inferredDept = (count($parts) >= 2 && !empty($parts[1])) ? strtoupper(trim($parts[1])) : null;
+        $reqDept = $firstItem?->created_by_dept ?? $inferredDept ?? ($currentUser->department ?? 'Production');
+        $reqName = $firstItem?->created_by_name ?? ($currentUser->name ?? 'User');
+        $reqUserId = $firstItem?->user_id ?? $currentUser->id;
+
         $approval = FormApproval::firstOrCreate(
             ['form_number' => $formNo],
             [
-                'user_id'          => $currentUser->id,
-                'requestor_name'   => $currentUser->name,
-                'requestor_dept'   => $currentUser->department ?? 'Production',
-                'form_date'        => date('d-m-Y'),
+                'user_id'          => $reqUserId,
+                'requestor_name'   => $reqName,
+                'requestor_dept'   => $reqDept,
+                'form_date'        => $firstItem?->created_at ? $firstItem->created_at->format('d-m-Y') : date('d-m-Y'),
                 'status'           => 'BUTUH APPROVAL STAFF',
                 'user_signed_at'   => now(),
-                'user_signer_name' => $currentUser->name,
+                'user_signer_name' => $reqName,
                 'user_comment'     => 'Formulir diajukan.',
             ]
         );
@@ -365,12 +450,10 @@ class ItemController extends Controller
             // Department authorization for Staff: Staff can only approve forms from their own department
             if (!$isMaster) {
                 $userDept = strtoupper(trim($currentUser->department ?? ''));
-                $formDept = strtoupper(trim($approval->requestor_dept ?? ''));
-
-                if (!$formDept && str_contains($formNo, '/')) {
-                    $parts = explode('/', $formNo);
-                    $formDept = isset($parts[1]) ? strtoupper(trim($parts[1])) : '';
-                }
+                $parts = explode('/', $formNo);
+                $formDept = (count($parts) >= 2 && !empty($parts[1]))
+                    ? strtoupper(trim($parts[1]))
+                    : strtoupper(trim($approval->requestor_dept ?? ''));
 
                 if ($userDept && $formDept && $userDept !== $formDept) {
                     $errMsg = "Akses Ditolak: Anda login sebagai Staff Departemen {$userDept}. Anda hanya berwenang menyetujui formulir dari departemen Anda sendiri (Form {$formNo} berasal dari Departemen {$formDept}).";
@@ -456,6 +539,26 @@ class ItemController extends Controller
             return redirect()->route('form-registrasi', ['tab' => 'data-view'])->with('error', 'Form number tidak valid.');
         }
 
+        $currentUser = auth()->user();
+        $currentUserRole = strtoupper(trim($currentUser->role ?? ''));
+        $currentUserDept = strtoupper(trim($currentUser->department ?? ''));
+        $isMaster = in_array($currentUserRole, ['MASTER', 'ADMIN']);
+
+        // Check department access for restricted users (User / Staff)
+        if (!$isMaster) {
+            $approval = FormApproval::where('form_number', $formNo)->first();
+            $firstItem = FormItem::where('form_number', $formNo)->first();
+            $formDept = strtoupper(trim($approval?->requestor_dept ?? $firstItem?->created_by_dept ?? ''));
+            if (!$formDept && str_contains($formNo, '/')) {
+                $parts = explode('/', $formNo);
+                $formDept = isset($parts[1]) ? strtoupper(trim($parts[1])) : '';
+            }
+            if ($currentUserDept && $formDept && $currentUserDept !== $formDept) {
+                return redirect()->route('form-registrasi', ['tab' => 'data-view'])
+                    ->with('error', 'Akses ditolak: Anda tidak memiliki wewenang menghapus formulir departemen lain.');
+            }
+        }
+
         FormItem::where('form_number', $formNo)->forceDelete();
         FormApproval::where('form_number', $formNo)->delete();
 
@@ -471,6 +574,23 @@ class ItemController extends Controller
     public function deleteFormItem($id)
     {
         $item = FormItem::findOrFail($id);
+        $currentUser = auth()->user();
+        $currentUserRole = strtoupper(trim($currentUser->role ?? ''));
+        $currentUserDept = strtoupper(trim($currentUser->department ?? ''));
+        $isMaster = in_array($currentUserRole, ['MASTER', 'ADMIN']);
+
+        if (!$isMaster) {
+            $itemDept = strtoupper(trim($item->created_by_dept ?? $item->user?->department ?? ''));
+            if (!$itemDept && str_contains($item->form_number, '/')) {
+                $parts = explode('/', $item->form_number);
+                $itemDept = isset($parts[1]) ? strtoupper(trim($parts[1])) : '';
+            }
+            if ($currentUserDept && $itemDept && $currentUserDept !== $itemDept) {
+                return redirect()->route('form-registrasi')
+                    ->with('error', 'Akses ditolak: Anda tidak memiliki wewenang menghapus barang dari departemen lain.');
+            }
+        }
+
         $name = $item->nama_barang;
         $targetForm = $item->form_number;
         $item->forceDelete();
