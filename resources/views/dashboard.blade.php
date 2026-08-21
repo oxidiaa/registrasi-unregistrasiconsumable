@@ -19,7 +19,7 @@
         <h1 class="galactic-title">
             <span>SATURNUS</span>
         </h1>
-        <p class="galactic-subtitle">Smart Asset Tracking, Registration & Unregistration Network Utility System</p>
+        <p class="galactic-subtitle"><span class="sat-letter sat-s">S</span>mart <span class="sat-letter sat-a">A</span>sset <span class="sat-letter sat-t">T</span>racking, Registration &amp; Unregistration Network Utility System</p>
     </div>
 
     <!-- Decorative Telemetry Status Badges -->
