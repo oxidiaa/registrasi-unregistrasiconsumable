@@ -78,6 +78,15 @@ class DatabaseSeeder extends Seeder
             'password'   => bcrypt('admin'),
         ]);
 
+        // 7. Staff Approver (Production / Dies Assy)
+        User::firstOrCreate(['email' => 'staff_proddies'], [
+            'name'       => 'Staff Prod & Dies Assy',
+            'department' => 'Production / Dies Assy',
+            'role'       => 'Staff (Production / Dies Assy)',
+            'status'     => 'Aktif',
+            'password'   => bcrypt('staff'),
+        ]);
+
         // Populate creator information for any existing FormItems
         foreach (\App\Models\FormItem::whereNull('created_by_name')->get() as $item) {
             $parts = explode('/', $item->form_number);

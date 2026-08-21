@@ -16,6 +16,8 @@ class DepartmentFormVisibilityTest extends TestCase
     protected User $staffProduction;
     protected User $userHrga;
     protected User $staffHrga;
+    protected User $userDiesAssy;
+    protected User $staffProdDies;
     protected User $accounting;
     protected User $warehouse;
     protected User $master;
@@ -58,6 +60,25 @@ class DepartmentFormVisibilityTest extends TestCase
             'email'      => 'staff_hrga@example.com',
             'department' => 'HRGA',
             'role'       => 'Staff',
+            'status'     => 'Aktif',
+            'password'   => bcrypt('password'),
+        ]);
+
+        // 2b. User in Dies Assy & Multi-department Staff (Production / Dies Assy)
+        $this->userDiesAssy = User::create([
+            'name'       => 'User Dies Assy',
+            'email'      => 'user_dies@example.com',
+            'department' => 'Dies Assy',
+            'role'       => 'User',
+            'status'     => 'Aktif',
+            'password'   => bcrypt('password'),
+        ]);
+
+        $this->staffProdDies = User::create([
+            'name'       => 'Staff Prod & Dies Assy',
+            'email'      => 'staff_proddies@example.com',
+            'department' => 'Production / Dies Assy',
+            'role'       => 'Staff (Production / Dies Assy)',
             'status'     => 'Aktif',
             'password'   => bcrypt('password'),
         ]);
@@ -108,6 +129,26 @@ class DepartmentFormVisibilityTest extends TestCase
             'titik_order'        => 10,
             'max'                => 20,
             'lead_time'          => '3 Hari',
+            'is_b3'              => false,
+            'is_non_b3'          => true,
+        ]);
+
+        // Create sample form items for Dies Assy
+        FormItem::create([
+            'form_number'        => '01/DIES ASSY/08-2026',
+            'user_id'            => $this->userDiesAssy->id,
+            'created_by_name'    => 'User Dies Assy',
+            'created_by_dept'    => 'Dies Assy',
+            'kode_barang'        => 'DIES-001',
+            'nama_barang'        => 'Guide Pin Dies',
+            'harga'              => 275000,
+            'estimasi_usia_pakai'=> '60 Hari',
+            'kategori_penggunaan'=> 'Dies Mold',
+            'kategori_ukuran'    => 'Sedang',
+            'min'                => 2,
+            'titik_order'        => 4,
+            'max'                => 10,
+            'lead_time'          => '5 Hari',
             'is_b3'              => false,
             'is_non_b3'          => true,
         ]);
@@ -346,5 +387,86 @@ class DepartmentFormVisibilityTest extends TestCase
         $this->assertEquals('TELAH DIDAFTARKAN', $approval->status);
         $this->assertNotNull($approval->warehouse_signed_at);
         $this->assertEquals('Warehouse Keeper', $approval->warehouse_signer_name);
+    }
+
+    /**
+     * Test Staff (Production / Dies Assy) can see forms from BOTH Production and Dies Assy departments.
+     */
+    public function test_staff_production_dies_assy_can_see_both_production_and_dies_assy_forms(): void
+    {
+        $response = $this->actingAs($this->staffProdDies)->get(route('form-registrasi'));
+
+        $response->assertStatus(200);
+        // Production form & items
+        $response->assertSee('01/PRODUCTION/08-2026');
+        $response->assertSee('Mata Bor CNC');
+
+        // Dies Assy form & items
+        $response->assertSee('01/DIES ASSY/08-2026');
+        $response->assertSee('Guide Pin Dies');
+
+        // Must NOT see HRGA forms
+        $response->assertDontSee('01/HRGA/08-2026');
+        $response->assertDontSee('Kertas A4 PaperOne');
+    }
+
+    /**
+     * Test Staff (Production / Dies Assy) can approve Production forms.
+     */
+    public function test_staff_production_dies_assy_can_approve_production_form(): void
+    {
+        $response = $this->actingAs($this->staffProdDies)
+            ->postJson(route('form-registrasi.approve'), [
+                'form_number' => '01/PRODUCTION/08-2026',
+                'role'        => 'staff',
+                'name'        => 'Staff Prod & Dies Assy',
+                'comment'     => 'Disetujui untuk production',
+            ]);
+
+        $response->assertStatus(200);
+        $response->assertJson(['success' => true]);
+
+        $approval = FormApproval::where('form_number', '01/PRODUCTION/08-2026')->first();
+        $this->assertNotNull($approval);
+        $this->assertEquals('APPROVAL ACCOUNTING', $approval->status);
+        $this->assertEquals('Staff Prod & Dies Assy', $approval->staff_signer_name);
+    }
+
+    /**
+     * Test Staff (Production / Dies Assy) can approve Dies Assy forms.
+     */
+    public function test_staff_production_dies_assy_can_approve_dies_assy_form(): void
+    {
+        $response = $this->actingAs($this->staffProdDies)
+            ->postJson(route('form-registrasi.approve'), [
+                'form_number' => '01/DIES ASSY/08-2026',
+                'role'        => 'staff',
+                'name'        => 'Staff Prod & Dies Assy',
+                'comment'     => 'Disetujui untuk dies assy',
+            ]);
+
+        $response->assertStatus(200);
+        $response->assertJson(['success' => true]);
+
+        $approval = FormApproval::where('form_number', '01/DIES ASSY/08-2026')->first();
+        $this->assertNotNull($approval);
+        $this->assertEquals('APPROVAL ACCOUNTING', $approval->status);
+        $this->assertEquals('Staff Prod & Dies Assy', $approval->staff_signer_name);
+    }
+
+    /**
+     * Test Staff (Production / Dies Assy) cannot approve HRGA forms.
+     */
+    public function test_staff_production_dies_assy_cannot_approve_hrga_form(): void
+    {
+        $response = $this->actingAs($this->staffProdDies)
+            ->postJson(route('form-registrasi.approve'), [
+                'form_number' => '01/HRGA/08-2026',
+                'role'        => 'staff',
+                'name'        => 'Staff Prod & Dies Assy',
+                'comment'     => 'Mencoba approve HRGA',
+            ]);
+
+        $response->assertStatus(403);
     }
 }

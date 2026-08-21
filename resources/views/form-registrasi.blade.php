@@ -11,13 +11,25 @@
         || str_contains($userRoleRaw, 'ACC')
         || str_contains($userRoleRaw, 'WAREHOUSE');
 
-    $defaultFormNo = '01/' . $userDeptTag . '/' . date('m-Y');
+    $allowedDepts = [strtoupper(trim(Auth::user()->department ?? 'PRODUCTION'))];
+    if (
+        (str_contains($userDeptTag, 'PRODUCTION') && str_contains($userDeptTag, 'DIES ASSY'))
+        || (str_contains($userRoleRaw, 'PRODUCTION') && str_contains($userRoleRaw, 'DIES ASSY'))
+        || $userDeptTag === 'PRODUCTION / DIES ASSY'
+        || $userDeptTag === 'PRODUCTION/DIES ASSY'
+    ) {
+        $allowedDepts = ['PRODUCTION', 'DIES ASSY', 'DIESASSY', 'DIES-ASSY', 'PRODUCTION / DIES ASSY', 'PRODUCTION/DIES ASSY'];
+    }
+
+    $defaultDeptTag = (str_contains($userDeptTag, 'PRODUCTION') && str_contains($userDeptTag, 'DIES ASSY')) ? 'PRODUCTION' : $userDeptTag;
+    $defaultFormNo = '01/' . $defaultDeptTag . '/' . date('m-Y');
 
     $existingFormNumbers = $formItems->pluck('form_number')->filter()->unique()->values();
 
-    $userForms = $existingFormNumbers->filter(function($fNo) use ($userDeptTag) {
+    $userForms = $existingFormNumbers->filter(function($fNo) use ($allowedDepts) {
         $parts = explode('/', $fNo);
-        return (count($parts) >= 2 && strtoupper(trim($parts[1])) === $userDeptTag);
+        $fDept = (count($parts) >= 2) ? strtoupper(trim($parts[1])) : '';
+        return in_array($fDept, $allowedDepts);
     });
 
     if ($activeFormNoParam && $existingFormNumbers->contains($activeFormNoParam)) {
@@ -646,7 +658,11 @@
             $roleColor = '#0f172a';
         } elseif (str_contains($curRole, 'staff')) {
             $staffDept = Auth::user()->department ?? 'Production';
-            $roleDesc = 'Anda login sebagai <strong>Staff Approver Departemen ' . e($staffDept) . ' (Tahap 1)</strong>. Hanya berwenang menyetujui formulir yang belum diapprove dari departemen <strong>' . e($staffDept) . '</strong> Anda.';
+            if (str_contains(strtoupper($staffDept), 'PRODUCTION') && str_contains(strtoupper($staffDept), 'DIES ASSY')) {
+                $roleDesc = 'Anda login sebagai <strong>Staff Approver Departemen Production / Dies Assy (Tahap 1)</strong>. Berwenang menyetujui formulir yang belum diapprove dari departemen <strong>Production</strong> dan <strong>Dies Assy</strong>.';
+            } else {
+                $roleDesc = 'Anda login sebagai <strong>Staff Approver Departemen ' . e($staffDept) . ' (Tahap 1)</strong>. Hanya berwenang menyetujui formulir yang belum diapprove dari departemen <strong>' . e($staffDept) . '</strong> Anda.';
+            }
             $roleColor = '#2563eb';
         } elseif (str_contains($curRole, 'accounting') || str_contains($curRole, 'acc')) {
             $roleDesc = 'Anda login sebagai <strong>Accounting Approver (Tahap 2)</strong>. Hanya dapat menyetujui formulir setelah disetujui oleh Staff.';
@@ -1004,6 +1020,7 @@
                     <option value="Production">Production</option>
                     <option value="Die Shop">Die Shop</option>
                     <option value="Dies Assy">Dies Assy</option>
+                    <option value="Production / Dies Assy">Production / Dies Assy</option>
                     <option value="Maintenance">Maintenance</option>
                     <option value="Accounting">Accounting</option>
                     <option value="Warehouse Consumable">Warehouse Consumable</option>
@@ -1017,6 +1034,7 @@
                     <option value="MASTER">Master (Akses Penuh & Account Master)</option>
                     <option value="User">User</option>
                     <option value="Staff">Staff</option>
+                    <option value="Staff (Production / Dies Assy)">Staff (Production / Dies Assy)</option>
                     <option value="Accounting">Accounting</option>
                     <option value="Warehouse Consumable">Warehouse Consumable</option>
                 </select>
@@ -1071,6 +1089,7 @@
                     <option value="Production">Production</option>
                     <option value="Die Shop">Die Shop</option>
                     <option value="Dies Assy">Dies Assy</option>
+                    <option value="Production / Dies Assy">Production / Dies Assy</option>
                     <option value="Maintenance">Maintenance</option>
                     <option value="Accounting">Accounting</option>
                     <option value="Warehouse Consumable">Warehouse Consumable</option>
@@ -1083,6 +1102,7 @@
                     <option value="MASTER">Master (Akses Penuh & Account Master)</option>
                     <option value="User">User</option>
                     <option value="Staff">Staff</option>
+                    <option value="Staff (Production / Dies Assy)">Staff (Production / Dies Assy)</option>
                     <option value="Accounting">Accounting</option>
                     <option value="Warehouse Consumable">Warehouse Consumable</option>
                 </select>
@@ -1317,7 +1337,8 @@
     const urlFormParam = '{{ $activeFormNoParam ?? "" }}';
     const userTag = '{{ strtoupper(Auth::user()->department ?? Auth::user()->name ?? "PRODUCTION") }}';
     const monthYearStr = '{{ date("m-Y") }}';
-    const defaultFormNo = `01/${userTag}/${monthYearStr}`;
+    const defaultDeptTag = (userTag.includes('PRODUCTION') && userTag.includes('DIES ASSY')) ? 'PRODUCTION' : userTag;
+    const defaultFormNo = `01/${defaultDeptTag}/${monthYearStr}`;
 
     // Current Authenticated User & Strict Role Definition
     const authRoleRaw = '{{ strtolower(trim(Auth::user()->role ?? "User")) }}';
@@ -1338,6 +1359,31 @@
 
     const canViewAllDepartments = (userRoleType === 'admin' || userRoleType === 'accounting' || userRoleType === 'warehouse');
     
+    function getUserAllowedDepartments() {
+        const userDept = (authUserDept || '').trim().toUpperCase();
+        const userRole = (authRoleRaw || '').trim().toUpperCase();
+        if (
+            (userDept.includes('PRODUCTION') && userDept.includes('DIES ASSY'))
+            || (userRole.includes('PRODUCTION') && userRole.includes('DIES ASSY'))
+            || userDept === 'PRODUCTION / DIES ASSY'
+            || userDept === 'PRODUCTION/DIES ASSY'
+        ) {
+            return ['PRODUCTION', 'DIES ASSY', 'DIESASSY', 'DIES-ASSY', 'PRODUCTION / DIES ASSY', 'PRODUCTION/DIES ASSY'];
+        }
+        if (userDept.includes('/')) {
+            return userDept.split('/').map(d => d.trim().toUpperCase()).filter(Boolean);
+        }
+        return [userDept];
+    }
+
+    function isDeptAllowed(dept) {
+        if (canViewAllDepartments) return true;
+        if (!dept) return false;
+        const dUpper = dept.trim().toUpperCase();
+        const allowed = getUserAllowedDepartments();
+        return allowed.includes(dUpper) || allowed.some(a => dUpper.includes(a) || a.includes(dUpper));
+    }
+
     // Distinct existing form numbers in server items & database approvals
     const existingForms = [...new Set([
         ...serverFormItems.map(i => i.form_number).filter(Boolean),
@@ -1346,7 +1392,8 @@
 
     const deptForms = existingForms.filter(fNo => {
         const parts = fNo.split('/');
-        return parts.length >= 2 && parts[1].trim().toUpperCase() === userTag.toUpperCase();
+        const fDept = parts.length >= 2 ? parts[1].trim().toUpperCase() : '';
+        return isDeptAllowed(fDept);
     });
     
     const activeFormNo = (!canViewAllDepartments)
@@ -1660,10 +1707,9 @@
             }
 
             const formDept = getCsDepartment(cs, formNo);
-            const userDeptUpper = (authUserDept || '').trim().toUpperCase();
 
-            // Restricted roles (User, Staff) only see their own department's forms in the selector
-            if (!canViewAllDepartments && userDeptUpper && formDept && formDept !== userDeptUpper) {
+            // Restricted roles (User, Staff) only see their allowed department's forms in the selector
+            if (!canViewAllDepartments && !isDeptAllowed(formDept)) {
                 continue;
             }
 
@@ -1706,10 +1752,9 @@
             }
 
             const formDept = getCsDepartment(cs, formNo);
-            const userDeptUpper = (authUserDept || '').trim().toUpperCase();
 
-            // RULE: Role User and Staff only see forms of their own department
-            if (!canViewAllDepartments && userDeptUpper && formDept && formDept !== userDeptUpper) {
+            // RULE: Role User and Staff only see forms of their allowed department(s)
+            if (!canViewAllDepartments && !isDeptAllowed(formDept)) {
                 continue;
             }
 
@@ -1974,8 +2019,7 @@
         if (!canViewAllDepartments) {
             const parts = csId.split('/');
             const csDept = parts.length >= 2 ? parts[1].trim().toUpperCase() : '';
-            const userDeptUpper = (authUserDept || '').trim().toUpperCase();
-            if (csDept && userDeptUpper && csDept !== userDeptUpper) {
+            if (csDept && !isDeptAllowed(csDept)) {
                 alert('Akses Ditolak: Anda tidak dapat melihat formulir dari departemen lain.');
                 return;
             }
@@ -2390,13 +2434,10 @@
             }
 
             const formDept = getCsDepartment(cs, formNo);
-            const userDeptUpper = (authUserDept || '').trim().toUpperCase();
 
-            // RULE 2: Role User dan Staff HANYA dapat melihat form dari departmentnya sendiri
-            if (!canViewAllDepartments) {
-                if (userDeptUpper && formDept && formDept !== userDeptUpper) {
-                    continue; // Skip form dari department lain
-                }
+            // RULE 2: Role User dan Staff HANYA dapat melihat form dari department yang diizinkan
+            if (!canViewAllDepartments && !isDeptAllowed(formDept)) {
+                continue; // Skip form dari department lain
             }
 
             statTotal++;
@@ -2630,10 +2671,9 @@
         if (userRoleType === 'staff') {
             // Rule 2: Role Staff HANYA BISA APPROVAL sesuai dengan department dari usernya saja
             const formDept = getCsDepartment(cs, csId);
-            const staffDept = (authUserDept || '').trim().toUpperCase();
 
-            if (formDept && staffDept && formDept !== staffDept) {
-                alert(`Akses Ditolak: Anda login sebagai Staff Departemen ${staffDept}. Anda hanya berwenang menyetujui formulir dari departemen Anda sendiri (Formulir ${csId} berasal dari Departemen ${formDept}).`);
+            if (formDept && !isDeptAllowed(formDept)) {
+                alert(`Akses Ditolak: Anda login sebagai Staff Departemen ${authUserDept}. Anda hanya berwenang menyetujui formulir dari departemen Anda sendiri (Formulir ${csId} berasal dari Departemen ${formDept}).`);
                 return;
             }
 
@@ -2643,7 +2683,7 @@
             }
         } else if (userRoleType === 'accounting') {
             // Rule 3: Role Accounting HANYA DAPAT APPROVAL setelah role staff approval
-            if (activeStepIndex === 1) {
+            if (activeStepIndex === 0 || activeStepIndex === 1) {
                 alert('Akses Ditolak: Role Accounting hanya dapat melakukan approval setelah formulir disetujui oleh Staff terlebih dahulu.');
                 return;
             } else if (activeStepIndex !== 2) {
@@ -2652,7 +2692,7 @@
             }
         } else if (userRoleType === 'warehouse') {
             // Rule 4: Role Warehouse Consumable HANYA BISA REGIST / APPROVAL setelah role accounting sudah approval
-            if (activeStepIndex === 1) {
+            if (activeStepIndex === 0 || activeStepIndex === 1) {
                 alert('Akses Ditolak: Warehouse Consumable baru dapat meregistrasi barang setelah formulir disetujui oleh Staff dan Accounting.');
                 return;
             } else if (activeStepIndex === 2) {
@@ -2768,9 +2808,8 @@
         // Sequential & Department validation before sending
         if (role === 'staff' && userRoleType !== 'admin') {
             const formDept = getCsDepartment(cs, csId);
-            const staffDept = (authUserDept || '').trim().toUpperCase();
-            if (formDept && staffDept && formDept !== staffDept) {
-                alert(`Akses Ditolak: Anda login sebagai Staff Departemen ${staffDept}. Anda hanya berwenang menyetujui formulir dari departemen Anda sendiri.`);
+            if (formDept && !isDeptAllowed(formDept)) {
+                alert(`Akses Ditolak: Anda login sebagai Staff Departemen ${authUserDept}. Anda hanya berwenang menyetujui formulir dari departemen Anda sendiri.`);
                 return;
             }
             if (!steps[0].completed) {
@@ -2941,9 +2980,9 @@
             } else if (rLower === 'user') {
                 userCount++;
                 roleBadge = `<span style="background-color: rgba(59, 130, 246, 0.15); color: rgb(29, 78, 216); padding: 0.25rem 0.6rem; border-radius: 4px; font-weight: 700; font-size: 0.75rem;">User</span>`;
-            } else if (rLower === 'staff') {
+            } else if (rLower.includes('staff')) {
                 staffCount++;
-                roleBadge = `<span style="background-color: var(--color-warning-light); color: var(--color-warning); padding: 0.25rem 0.6rem; border-radius: 4px; font-weight: 700; font-size: 0.75rem;">Staff</span>`;
+                roleBadge = `<span style="background-color: var(--color-warning-light); color: var(--color-warning); padding: 0.25rem 0.6rem; border-radius: 4px; font-weight: 700; font-size: 0.75rem;">${acc.role}</span>`;
             } else if (rLower === 'accounting' || rLower.includes('acc')) {
                 accCount++;
                 roleBadge = `<span style="background-color: rgba(168, 85, 247, 0.15); color: #9333ea; padding: 0.25rem 0.6rem; border-radius: 4px; font-weight: 700; font-size: 0.75rem;">Accounting</span>`;

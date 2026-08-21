@@ -197,6 +197,69 @@ class ItemController extends Controller
     }
 
     /**
+     * Get list of allowed departments for a given user.
+     *
+     * @param  \App\Models\User  $user
+     * @return array<string>
+     */
+    public function getUserAllowedDepartments($user): array
+    {
+        $userDept = strtoupper(trim($user->department ?? ''));
+        $userRole = strtoupper(trim($user->role ?? ''));
+
+        // If department is 'Production / Dies Assy' or role contains both 'PRODUCTION' and 'DIES ASSY'
+        if (
+            (str_contains($userDept, 'PRODUCTION') && str_contains($userDept, 'DIES ASSY'))
+            || (str_contains($userRole, 'PRODUCTION') && str_contains($userRole, 'DIES ASSY'))
+            || $userDept === 'PRODUCTION / DIES ASSY'
+            || $userDept === 'PRODUCTION/DIES ASSY'
+        ) {
+            return ['PRODUCTION', 'DIES ASSY', 'DIESASSY', 'DIES-ASSY', 'PRODUCTION / DIES ASSY', 'PRODUCTION/DIES ASSY'];
+        }
+
+        if (str_contains($userDept, '/')) {
+            $splits = array_map('trim', explode('/', $userDept));
+            return array_values(array_filter($splits));
+        }
+
+        return $userDept ? [$userDept] : ['PRODUCTION'];
+    }
+
+    /**
+     * Check if a form's department is allowed for a user.
+     *
+     * @param  \App\Models\User  $user
+     * @param  string|null       $formDept
+     * @return bool
+     */
+    public function isDepartmentAllowed($user, ?string $formDept): bool
+    {
+        if (empty($formDept)) {
+            return true;
+        }
+        $userRole = strtoupper(trim($user->role ?? ''));
+        if (
+            in_array($userRole, ['MASTER', 'ADMIN'])
+            || str_contains($userRole, 'ACCOUNTING')
+            || str_contains($userRole, 'ACC')
+            || str_contains($userRole, 'WAREHOUSE')
+        ) {
+            return true;
+        }
+
+        $formDeptUpper = strtoupper(trim($formDept));
+        $allowed = $this->getUserAllowedDepartments($user);
+
+        foreach ($allowed as $a) {
+            if ($formDeptUpper === $a || str_contains($formDeptUpper, $a) || str_contains($a, $formDeptUpper)) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    /**
      * Display the Form Pendaftaran Barang Consumable page.
      */
     public function formRegistrasi(Request $request)
@@ -248,29 +311,29 @@ class ItemController extends Controller
             $formItems = $allExistingItems;
             $formApprovals = FormApproval::with('user')->get();
         } else {
-            // Restricted roles (User, Staff): only see forms created by their own department
-            $formItems = $allExistingItems->filter(function($item) use ($userDept) {
+            // Restricted roles (User, Staff): only see forms created by their allowed department(s)
+            $formItems = $allExistingItems->filter(function($item) use ($currentUser) {
                 $itemDept = strtoupper(trim($item->created_by_dept ?? $item->user?->department ?? ''));
-                if ($itemDept === $userDept) {
+                if ($this->isDepartmentAllowed($currentUser, $itemDept)) {
                     return true;
                 }
                 if ($item->form_number && str_contains($item->form_number, '/')) {
                     $parts = explode('/', $item->form_number);
-                    if (isset($parts[1]) && strtoupper(trim($parts[1])) === $userDept) {
+                    if (isset($parts[1]) && $this->isDepartmentAllowed($currentUser, $parts[1])) {
                         return true;
                     }
                 }
                 return false;
             })->values();
 
-            $formApprovals = FormApproval::with('user')->get()->filter(function($approval) use ($userDept) {
+            $formApprovals = FormApproval::with('user')->get()->filter(function($approval) use ($currentUser) {
                 $apprDept = strtoupper(trim($approval->requestor_dept ?? $approval->user?->department ?? ''));
-                if ($apprDept === $userDept) {
+                if ($this->isDepartmentAllowed($currentUser, $apprDept)) {
                     return true;
                 }
                 if ($approval->form_number && str_contains($approval->form_number, '/')) {
                     $parts = explode('/', $approval->form_number);
-                    if (isset($parts[1]) && strtoupper(trim($parts[1])) === $userDept) {
+                    if (isset($parts[1]) && $this->isDepartmentAllowed($currentUser, $parts[1])) {
                         return true;
                     }
                 }
@@ -287,7 +350,7 @@ class ItemController extends Controller
         if (!$canViewAllDepartments && $activeFormNoParam) {
             $parts = explode('/', $activeFormNoParam);
             $targetDept = isset($parts[1]) ? strtoupper(trim($parts[1])) : '';
-            if ($targetDept && $targetDept !== $userDept) {
+            if ($targetDept && !$this->isDepartmentAllowed($currentUser, $targetDept)) {
                 $activeFormNoParam = null;
             }
         }
@@ -347,14 +410,15 @@ class ItemController extends Controller
         if (!$canViewAllDepartments && $targetForm) {
             $parts = explode('/', $targetForm);
             $targetDept = isset($parts[1]) ? strtoupper(trim($parts[1])) : '';
-            if ($targetDept && $targetDept !== $currentUserDept) {
+            if ($targetDept && !$this->isDepartmentAllowed($currentUser, $targetDept)) {
                 $targetForm = null;
             }
         }
 
         if (empty($targetForm)) {
             $monthYear = date('m-Y');
-            $targetForm = "01/{$currentUserDept}/{$monthYear}";
+            $defaultDept = (str_contains($currentUserDept, 'PRODUCTION') && str_contains($currentUserDept, 'DIES ASSY')) ? 'PRODUCTION' : $currentUserDept;
+            $targetForm = "01/{$defaultDept}/{$monthYear}";
         }
 
         $validated['form_number']     = $targetForm;
@@ -447,16 +511,16 @@ class ItemController extends Controller
                 return back()->with('error', 'Akses Ditolak: Hanya Role Staff atau Master yang dapat menyetujui tahap ini.');
             }
 
-            // Department authorization for Staff: Staff can only approve forms from their own department
+            // Department authorization for Staff: Staff can only approve forms from their allowed department(s)
             if (!$isMaster) {
-                $userDept = strtoupper(trim($currentUser->department ?? ''));
                 $parts = explode('/', $formNo);
                 $formDept = (count($parts) >= 2 && !empty($parts[1]))
                     ? strtoupper(trim($parts[1]))
                     : strtoupper(trim($approval->requestor_dept ?? ''));
 
-                if ($userDept && $formDept && $userDept !== $formDept) {
-                    $errMsg = "Akses Ditolak: Anda login sebagai Staff Departemen {$userDept}. Anda hanya berwenang menyetujui formulir dari departemen Anda sendiri (Form {$formNo} berasal dari Departemen {$formDept}).";
+                if ($formDept && !$this->isDepartmentAllowed($currentUser, $formDept)) {
+                    $userDeptName = $currentUser->department ?? 'Anda';
+                    $errMsg = "Akses Ditolak: Anda login sebagai Staff Departemen {$userDeptName}. Anda hanya berwenang menyetujui formulir dari departemen Anda sendiri (Form {$formNo} berasal dari Departemen {$formDept}).";
                     if ($request->wantsJson() || $request->ajax()) {
                         return response()->json(['success' => false, 'message' => $errMsg], 403);
                     }
@@ -553,7 +617,7 @@ class ItemController extends Controller
                 $parts = explode('/', $formNo);
                 $formDept = isset($parts[1]) ? strtoupper(trim($parts[1])) : '';
             }
-            if ($currentUserDept && $formDept && $currentUserDept !== $formDept) {
+            if ($formDept && !$this->isDepartmentAllowed($currentUser, $formDept)) {
                 return redirect()->route('form-registrasi', ['tab' => 'data-view'])
                     ->with('error', 'Akses ditolak: Anda tidak memiliki wewenang menghapus formulir departemen lain.');
             }
@@ -585,7 +649,7 @@ class ItemController extends Controller
                 $parts = explode('/', $item->form_number);
                 $itemDept = isset($parts[1]) ? strtoupper(trim($parts[1])) : '';
             }
-            if ($currentUserDept && $itemDept && $currentUserDept !== $itemDept) {
+            if ($itemDept && !$this->isDepartmentAllowed($currentUser, $itemDept)) {
                 return redirect()->route('form-registrasi')
                     ->with('error', 'Akses ditolak: Anda tidak memiliki wewenang menghapus barang dari departemen lain.');
             }
