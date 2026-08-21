@@ -592,7 +592,7 @@
                 </svg>
             </div>
             <div>
-                <span style="font-size: 0.75rem; color: var(--text-muted); font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em;">Total Form</span>
+                <span style="font-size: 0.75rem; color: var(--text-muted); font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em;">Total Form (Proses)</span>
                 <span style="font-size: 1.4rem; font-weight: 800; color: var(--text-primary);" id="approval-stat-total">0</span>
             </div>
         </div>
@@ -626,13 +626,12 @@
         <div class="dataview-stat-card">
             <div style="background-color: var(--color-success-light); color: var(--color-success); padding: 0.75rem; border-radius: var(--radius-md); display: flex; align-items: center; justify-content: center;">
                 <svg viewBox="0 0 24 24" width="22" height="22" stroke="currentColor" stroke-width="2.5" fill="none">
-                    <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
-                    <polyline points="22 4 12 14.01 9 11.01"></polyline>
+                    <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"></polyline>
                 </svg>
             </div>
             <div>
-                <span style="font-size: 0.75rem; color: var(--text-muted); font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em;">Didaftarkan Warehouse</span>
-                <span style="font-size: 1.4rem; font-weight: 800; color: var(--text-primary);" id="approval-stat-registered">0</span>
+                <span style="font-size: 0.75rem; color: var(--text-muted); font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em;">Registrasi Warehouse</span>
+                <span style="font-size: 1.4rem; font-weight: 800; color: var(--text-primary);" id="approval-stat-warehouse">0</span>
             </div>
         </div>
     </div>
@@ -692,7 +691,7 @@
             {{-- Quick Stage Filter Pills --}}
             <div style="display: flex; gap: 0.4rem; flex-wrap: wrap;" id="approval-filter-pills">
                 <button class="btn btn-sm btn-primary filter-pill-btn active" onclick="filterApprovalStage('', this)" style="border-radius: 20px; font-size: 0.78rem; font-weight: 600; padding: 0.35rem 0.85rem;">
-                    Semua Form
+                    Semua Form (Proses)
                 </button>
                 <button class="btn btn-sm btn-secondary filter-pill-btn" onclick="filterApprovalStage('staff', this)" style="border-radius: 20px; font-size: 0.78rem; font-weight: 600; padding: 0.35rem 0.85rem;">
                     Butuh Staff
@@ -702,9 +701,6 @@
                 </button>
                 <button class="btn btn-sm btn-secondary filter-pill-btn" onclick="filterApprovalStage('warehouse', this)" style="border-radius: 20px; font-size: 0.78rem; font-weight: 600; padding: 0.35rem 0.85rem;">
                     Warehouse
-                </button>
-                <button class="btn btn-sm btn-secondary filter-pill-btn" onclick="filterApprovalStage('completed', this)" style="border-radius: 20px; font-size: 0.78rem; font-weight: 600; padding: 0.35rem 0.85rem;">
-                    Telah Didaftarkan
                 </button>
             </div>
         </div>
@@ -1655,6 +1651,14 @@
         select.innerHTML = '';
         for (const formNo in checksheets) {
             const cs = checksheets[formNo];
+            const data = stepperData[formNo];
+            const isCompleted = (cs.status === 'Selesai' || (data && data.statusText === 'TELAH DIDAFTARKAN') || (data && data.steps && data.steps[3] && data.steps[3].completed));
+
+            // Completed / already-registered forms do not appear in the approval workflow selector
+            if (isCompleted && formNo !== selectedChecksheetId) {
+                continue;
+            }
+
             const formDept = getCsDepartment(cs, formNo);
             const userDeptUpper = (authUserDept || '').trim().toUpperCase();
 
@@ -2368,7 +2372,7 @@
         let statTotal = 0;
         let statStaff = 0;
         let statAccounting = 0;
-        let statRegistered = 0;
+        let statWarehouse = 0;
 
         const staffDept = (authUserDept || '').trim().toUpperCase();
 
@@ -2379,10 +2383,16 @@
             const data = stepperData[formNo];
             if (!data) continue;
 
+            // RULE 1: Formulir yang statusnya sudah didaftarkan (TELAH DIDAFTARKAN / Selesai) TIDAK MUNCUL di sheet Proses Approval
+            const isCompleted = (cs.status === 'Selesai' || data.statusText === 'TELAH DIDAFTARKAN' || (data.steps && data.steps[3] && data.steps[3].completed));
+            if (isCompleted) {
+                continue;
+            }
+
             const formDept = getCsDepartment(cs, formNo);
             const userDeptUpper = (authUserDept || '').trim().toUpperCase();
 
-            // RULE: Role User dan Staff HANYA dapat melihat form dari departmentnya sendiri
+            // RULE 2: Role User dan Staff HANYA dapat melihat form dari departmentnya sendiri
             if (!canViewAllDepartments) {
                 if (userDeptUpper && formDept && formDept !== userDeptUpper) {
                     continue; // Skip form dari department lain
@@ -2392,8 +2402,8 @@
             statTotal++;
 
             const activeStepIndex = data.steps.findIndex(s => s.active);
-            let stageKey = 'completed';
-            let currentStageName = 'Telah Didaftarkan';
+            let stageKey = 'user';
+            let currentStageName = 'Pembuatan (User)';
 
             if (activeStepIndex === 0) {
                 stageKey = 'user';
@@ -2409,8 +2419,7 @@
             } else if (activeStepIndex === 3) {
                 stageKey = 'warehouse';
                 currentStageName = 'Warehouse';
-            } else if (cs.status === 'Selesai' || data.statusText === 'TELAH DIDAFTARKAN') {
-                statRegistered++;
+                statWarehouse++;
             }
 
             if (currentApprovalFilterStage && currentApprovalFilterStage !== stageKey) {
@@ -2421,11 +2430,7 @@
             let badgeColor = 'var(--color-warning)';
             let badgeText = data.statusText;
 
-            if (data.statusText === 'TELAH DIDAFTARKAN' || cs.status === 'Selesai') {
-                badgeBg = 'var(--color-success-light)';
-                badgeColor = 'var(--color-success)';
-                badgeText = 'TELAH DIDAFTARKAN';
-            } else if (data.statusText === 'APPROVAL ACCOUNTING') {
+            if (data.statusText === 'APPROVAL ACCOUNTING') {
                 badgeBg = 'rgba(99, 102, 241, 0.15)';
                 badgeColor = 'rgb(79, 70, 229)';
             } else if (data.statusText === 'REGISTRASI WAREHOUSE') {
@@ -2455,16 +2460,8 @@
 
             // Role-Based Strict Action Button Generator
             let actionBtnHtml = '';
-            const isCompleted = (stageKey === 'completed' || cs.status === 'Selesai' || data.statusText === 'TELAH DIDAFTARKAN');
 
-            if (isCompleted) {
-                actionBtnHtml = `
-                    <button class="btn btn-secondary btn-sm" onclick="viewChecksheet('${cs.formNo}')" style="padding: 0.35rem 0.65rem; font-size: 0.75rem; border-radius: 6px; display: inline-flex; align-items: center; gap: 0.25rem;">
-                        <svg viewBox="0 0 24 24" width="12" height="12" stroke="currentColor" stroke-width="2.5" fill="none"><polyline points="20 6 9 17 4 12"></polyline></svg>
-                        Selesai
-                    </button>
-                `;
-            } else if (userRoleType === 'user') {
+            if (userRoleType === 'user') {
                 // Rule: Role User TIDAK BISA APPROVAL (Hanya membuat form)
                 actionBtnHtml = `
                     <div style="display: inline-flex; flex-direction: column; align-items: center; gap: 2px;">
@@ -2587,9 +2584,9 @@
         }
 
         if (html === '') {
-            let emptyMsg = 'Tidak ada formulir yang sesuai dengan filter alur approval.';
+            let emptyMsg = 'Tidak ada formulir dalam proses yang sesuai dengan filter alur approval.';
             if (!canViewAllDepartments) {
-                emptyMsg = `Tidak ada formulir pengajuan untuk Departemen ${authUserDept || 'Anda'}.`;
+                emptyMsg = `Tidak ada formulir pengajuan aktif / dalam proses untuk Departemen ${authUserDept || 'Anda'}.`;
             }
             html = `
                 <tr>
@@ -2611,8 +2608,8 @@
         const elAcc = document.getElementById('approval-stat-accounting');
         if (elAcc) elAcc.innerText = statAccounting;
 
-        const elReg = document.getElementById('approval-stat-registered');
-        if (elReg) elReg.innerText = statRegistered;
+        const elWh = document.getElementById('approval-stat-warehouse') || document.getElementById('approval-stat-registered');
+        if (elWh) elWh.innerText = statWarehouse;
     }
 
     function openQuickApprovalModal(csId) {

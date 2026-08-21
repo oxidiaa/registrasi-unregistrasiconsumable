@@ -308,4 +308,43 @@ class DepartmentFormVisibilityTest extends TestCase
         $response->assertDontSee('Kertas A4 PaperOne');
         $response->assertSee('Mata Bor CNC');
     }
+
+    /**
+     * Test complete approval cycle through Staff, Accounting, and Warehouse registration.
+     */
+    public function test_full_approval_and_registration_flow(): void
+    {
+        // 1. Staff approves
+        $this->actingAs($this->staffProduction)
+            ->postJson(route('form-registrasi.approve'), [
+                'form_number' => '01/PRODUCTION/08-2026',
+                'role'        => 'staff',
+                'name'        => 'Staff Production',
+                'comment'     => 'Staff approved',
+            ])->assertStatus(200);
+
+        // 2. Accounting approves
+        $this->actingAs($this->accounting)
+            ->postJson(route('form-registrasi.approve'), [
+                'form_number' => '01/PRODUCTION/08-2026',
+                'role'        => 'accounting',
+                'name'        => 'Accounting Officer',
+                'comment'     => 'Accounting approved',
+            ])->assertStatus(200);
+
+        // 3. Warehouse registers
+        $this->actingAs($this->warehouse)
+            ->postJson(route('form-registrasi.approve'), [
+                'form_number' => '01/PRODUCTION/08-2026',
+                'role'        => 'warehouse',
+                'name'        => 'Warehouse Keeper',
+                'comment'     => 'Registered into warehouse',
+            ])->assertStatus(200);
+
+        $approval = FormApproval::where('form_number', '01/PRODUCTION/08-2026')->first();
+        $this->assertNotNull($approval);
+        $this->assertEquals('TELAH DIDAFTARKAN', $approval->status);
+        $this->assertNotNull($approval->warehouse_signed_at);
+        $this->assertEquals('Warehouse Keeper', $approval->warehouse_signer_name);
+    }
 }
