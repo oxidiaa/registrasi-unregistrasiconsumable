@@ -11,7 +11,7 @@
             <img src="{{ asset('assets/images/MAI TERANG.png') }}?v={{ file_exists(public_path('assets/images/MAI TERANG.png')) ? filemtime(public_path('assets/images/MAI TERANG.png')) : time() }}" alt="MAI Metalart Astra Indonesia" class="sidebar-mai-logo">
         </div>
         <div class="sidebar-brand-text">
-            <div class="brand-title">SMART WAREHOUSE</div>
+            <div class="brand-title">SATURNUS</div>
             <div class="brand-subtitle">Consumable Registry</div>
         </div>
     </div>

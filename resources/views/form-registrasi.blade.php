@@ -567,7 +567,7 @@
                 <div class="sig-line"></div>
             </div>
             <div class="sig-box">
-                <div class="sig-label">Approved Staff</div>
+                <div class="sig-label">Approved Staff / Section Head</div>
                 <div class="sig-space" id="preview-sig-staff" style="display: flex; flex-direction: column; align-items: center; justify-content: center; height: 64px; font-size: 0.8rem; font-weight: 600;">
                     <span style="color: var(--text-muted); font-size: 0.75rem; font-style: italic;">...................</span>
                 </div>
