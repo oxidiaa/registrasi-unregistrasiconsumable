@@ -616,49 +616,7 @@
                             </div>
                         </td>
                     </tr>
-
-                    <!-- Print-only blank lined rows when no data is present -->
-                    @for($p = 0; $p < 13; $p++)
-                    <tr class="print-only-row {{ $p % 2 != 0 ? 'tr-even' : '' }}">
-                        <td class="td-center td-no" style="color:#cbd5e1;">{{ $p + 1 }}</td>
-                        <td class="td-input"></td>
-                        <td class="td-input"></td>
-                        <td class="td-input"></td>
-                        <td class="td-input"></td>
-                        <td class="td-input"></td>
-                        <td class="td-input"></td>
-                        <td class="td-input"></td>
-                        <td class="td-input"></td>
-                        <td class="td-input"></td>
-                        <td class="td-input"></td>
-                        <td class="td-input"></td>
-                        <td class="td-input"></td>
-                        <td class="td-input"></td>
-                    </tr>
-                    @endfor
                     @endforelse
-
-                    {{-- Baris kosong sisa jika ada data tetapi kurang dari 13 --}}
-                    @if($currentFormItems->count() > 0 && $currentFormItems->count() < 13)
-                        @for($i = $currentFormItems->count(); $i < 13; $i++)
-                        <tr class="{{ $i % 2 != 0 ? 'tr-even' : '' }}">
-                            <td class="td-center td-no" style="color:#cbd5e1;">{{ $i + 1 }}</td>
-                            <td class="td-input"></td>
-                            <td class="td-input"></td>
-                            <td class="td-input"></td>
-                            <td class="td-input"></td>
-                            <td class="td-input"></td>
-                            <td class="td-input"></td>
-                            <td class="td-input"></td>
-                            <td class="td-input"></td>
-                            <td class="td-input"></td>
-                            <td class="td-input"></td>
-                            <td class="td-input"></td>
-                            <td class="td-input"></td>
-                            <td class="td-input"></td>
-                        </tr>
-                        @endfor
-                    @endif
                 </tbody>
             </table>
         </div>
@@ -1561,11 +1519,8 @@
         return allowed.includes(dUpper) || allowed.some(a => dUpper.includes(a) || a.includes(dUpper));
     }
 
-    // Distinct existing form numbers in server items & database approvals
-    const existingForms = [...new Set([
-        ...serverFormItems.map(i => i.form_number).filter(Boolean),
-        ...serverFormApprovals.map(a => a.form_number).filter(Boolean)
-    ])];
+    // Distinct existing form numbers strictly from server items
+    const existingForms = [...new Set(serverFormItems.map(i => i.form_number).filter(Boolean))];
 
     const deptForms = existingForms.filter(fNo => {
         const parts = fNo.split('/');
@@ -1627,24 +1582,6 @@
                 </div>
             </td>
         </tr>
-        ${Array.from({length: 13}, (_, p) => `
-            <tr class="print-only-row ${p % 2 !== 0 ? 'tr-even' : ''}">
-                <td class="td-center td-no" style="color:#cbd5e1;">${p + 1}</td>
-                <td class="td-input"></td>
-                <td class="td-input"></td>
-                <td class="td-input"></td>
-                <td class="td-input"></td>
-                <td class="td-input"></td>
-                <td class="td-input"></td>
-                <td class="td-input"></td>
-                <td class="td-input"></td>
-                <td class="td-input"></td>
-                <td class="td-input"></td>
-                <td class="td-input"></td>
-                <td class="td-input"></td>
-                <td class="td-input"></td>
-            </tr>
-        `).join('')}
     `;
 
     function formatApprovalDateStr(val) {
@@ -2117,18 +2054,21 @@
             }
         }
 
-        // Count existing forms specifically for the current user's department and current month-year
-        let deptFormsCount = 0;
+        // Find the highest sequence number specifically for current user's department and current month-year
+        let maxSeq = 0;
         for (const fNo in checksheets) {
             const parts = fNo.split('/');
             const fDept = parts.length >= 2 ? parts[1].trim().toUpperCase() : '';
             const fMY = parts.length >= 3 ? parts[2].trim() : '';
             if (fDept === userTag.toUpperCase() && fMY === monthYearStr) {
-                deptFormsCount++;
+                const seq = parseInt(parts[0], 10);
+                if (!isNaN(seq) && seq > maxSeq) {
+                    maxSeq = seq;
+                }
             }
         }
 
-        const nextSeq = String(deptFormsCount + 1).padStart(2, '0');
+        const nextSeq = String(maxSeq + 1).padStart(2, '0');
         const todayStr = '{{ date("d-m-Y") }}';
         const nextFormNo = `${nextSeq}/${userTag}/${monthYearStr}`;
         
@@ -2306,30 +2246,6 @@
                 `;
             });
 
-            if (cs.items.length < 13) {
-                for (let i = cs.items.length; i < 13; i++) {
-                    const isEven = i % 2 !== 0;
-                    const rowClass = isEven ? 'tr-even' : '';
-                    rowsHtml += `
-                        <tr class="${rowClass}">
-                            <td class="td-center td-no" style="color:#cbd5e1;">${i + 1}</td>
-                            <td class="td-input"></td>
-                            <td class="td-input"></td>
-                            <td class="td-input"></td>
-                            <td class="td-input"></td>
-                            <td class="td-input"></td>
-                            <td class="td-input"></td>
-                            <td class="td-input"></td>
-                            <td class="td-input"></td>
-                            <td class="td-input"></td>
-                            <td class="td-input"></td>
-                            <td class="td-input"></td>
-                            <td class="td-input"></td>
-                            <td class="td-input"></td>
-                        </tr>
-                    `;
-                }
-            }
             tbody.innerHTML = rowsHtml;
         }
         

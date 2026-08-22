@@ -134,68 +134,13 @@ class ItemController extends Controller
     }
 
     /**
-     * Re-sequence form numbers so that only forms with items are kept and strictly numbered per department (01, 02, 03...).
-     * Empty forms (0 items) are eliminated from sequence.
+     * Clean up any orphan FormApproval or FormComment records whose form_number no longer exists in FormItem.
      */
-    private function resequenceFormNumbers()
+    private function cleanupOrphanFormRecords(): void
     {
-        $allFormItems = FormItem::orderBy('created_at', 'asc')->orderBy('id', 'asc')->get();
-        if ($allFormItems->isEmpty()) {
-            return [];
-        }
-
-        // Group items by their existing form_number preserving insertion order
-        $grouped = [];
-        foreach ($allFormItems as $item) {
-            $fNo = $item->form_number ?: '01';
-            if (!isset($grouped[$fNo])) {
-                $grouped[$fNo] = [];
-            }
-            $grouped[$fNo][] = $item;
-        }
-
-        $map = [];
-        $deptSeqs = [];
-        $userDeptTag = strtoupper(auth()->user()->department ?? auth()->user()->name ?? 'PRODUCTION');
-        $monthYear = date('m-Y');
-
-        foreach ($grouped as $oldFormNo => $items) {
-            if (count($items) === 0) {
-                continue;
-            }
-
-            // Extract department tag and month-year if present
-            $parts = explode('/', $oldFormNo);
-            $firstItem = $items[0] ?? null;
-            $itemDept = $firstItem ? strtoupper(trim($firstItem->created_by_dept ?? $firstItem->user?->department ?? '')) : '';
-            $dept = (count($parts) >= 2 && !empty($parts[1])) ? strtoupper(trim($parts[1])) : ($itemDept ?: $userDeptTag);
-            $my = (count($parts) >= 3 && !empty($parts[2])) ? trim($parts[2]) : $monthYear;
-
-            $key = $dept . '_' . $my;
-            if (!isset($deptSeqs[$key])) {
-                $deptSeqs[$key] = 1;
-            } else {
-                $deptSeqs[$key]++;
-            }
-
-            $newSeqStr = str_pad($deptSeqs[$key], 2, '0', STR_PAD_LEFT);
-            $newFormNo = "{$newSeqStr}/{$dept}/{$my}";
-
-            $map[$oldFormNo] = $newFormNo;
-
-            foreach ($items as $item) {
-                if ($item->form_number !== $newFormNo) {
-                    $item->update(['form_number' => $newFormNo]);
-                }
-            }
-
-            if ($oldFormNo !== $newFormNo) {
-                FormApproval::where('form_number', $oldFormNo)->update(['form_number' => $newFormNo]);
-                FormComment::where('form_number', $oldFormNo)->update(['form_number' => $newFormNo]);
-            }
-        }
-
-        return $map;
+        $allActiveFormNumbers = FormItem::pluck('form_number')->filter()->unique()->toArray();
+        FormApproval::whereNotIn('form_number', $allActiveFormNumbers)->delete();
+        FormComment::whereNotIn('form_number', $allActiveFormNumbers)->delete();
     }
 
     /**
@@ -275,7 +220,7 @@ class ItemController extends Controller
             return redirect()->route('form-registrasi')->with('error', 'Akses ditolak. Fitur Account Master hanya dapat diakses oleh Role Master.');
         }
 
-        $resequenceMap = $this->resequenceFormNumbers();
+        $this->cleanupOrphanFormRecords();
         $allExistingItems = FormItem::with('user')->orderBy('created_at', 'asc')->orderBy('id', 'asc')->get();
         $users = User::orderBy('id', 'asc')->get();
 
@@ -446,11 +391,6 @@ class ItemController extends Controller
         $validated['created_by_dept'] = $currentUser->department ?? 'Production';
 
         FormItem::create($validated);
-
-        $map = $this->resequenceFormNumbers();
-        if ($targetForm && isset($map[$targetForm])) {
-            $targetForm = $map[$targetForm];
-        }
 
         // Ensure FormApproval exists for the targetForm
         if ($targetForm) {
@@ -643,8 +583,7 @@ class ItemController extends Controller
         FormItem::where('form_number', $formNo)->forceDelete();
         FormApproval::where('form_number', $formNo)->delete();
         FormComment::where('form_number', $formNo)->delete();
-
-        $this->resequenceFormNumbers();
+        $this->cleanupOrphanFormRecords();
 
         return redirect()->route('form-registrasi', ['tab' => 'data-view'])
             ->with('success', 'Formulir "' . $formNo . '" berhasil dihapus secara permanen.');
@@ -677,14 +616,14 @@ class ItemController extends Controller
         $targetForm = $item->form_number;
         $item->forceDelete();
 
-        $map = $this->resequenceFormNumbers();
-        if ($targetForm && isset($map[$targetForm])) {
-            $targetForm = $map[$targetForm];
-        } else {
-            // Form became empty after item deletion. Redirect to first available form with items if any.
+        if (FormItem::where('form_number', $targetForm)->count() === 0) {
+            FormApproval::where('form_number', $targetForm)->delete();
+            FormComment::where('form_number', $targetForm)->delete();
             $firstItem = FormItem::orderBy('created_at', 'asc')->first();
             $targetForm = $firstItem ? $firstItem->form_number : null;
         }
+
+        $this->cleanupOrphanFormRecords();
 
         $redirectParams = $targetForm ? ['form' => $targetForm] : [];
 
