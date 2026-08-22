@@ -34,7 +34,7 @@
                 </a>
             </li>
             
-            <li class="menu-item {{ request()->routeIs('form-registrasi') ? 'active' : '' }}">
+            <li class="menu-item {{ request()->routeIs('form-registrasi*') ? 'active' : '' }}">
                 <a href="{{ route('form-registrasi') }}">
                     <div class="menu-icon-box">
                         <svg viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -46,6 +46,21 @@
                         </svg>
                     </div>
                     <span>Form Registrasi</span>
+                </a>
+            </li>
+
+            <li class="menu-item {{ request()->routeIs('form-unregistrasi*') ? 'active' : '' }}">
+                <a href="{{ route('form-unregistrasi') }}">
+                    <div class="menu-icon-box">
+                        <svg viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                            <polyline points="14 2 14 8 20 8"></polyline>
+                            <line x1="9" y1="13" x2="15" y2="13"></line>
+                            <line x1="9" y1="17" x2="15" y2="17"></line>
+                            <circle cx="12" cy="9" r="1"></circle>
+                        </svg>
+                    </div>
+                    <span>Form Unregistrasi</span>
                 </a>
             </li>
 

@@ -3,6 +3,7 @@
 use Illuminate\Support\Facades\Route;
 
 use App\Http\Controllers\ItemController;
+use App\Http\Controllers\UnregistrasiController;
 use App\Http\Controllers\AuthController;
 
 // Public Guest Routes
@@ -25,8 +26,18 @@ Route::middleware('auth')->group(function () {
     Route::post('/form-registrasi/comments', [ItemController::class, 'storeComment'])->name('form-registrasi.comments.store');
     Route::delete('/form-registrasi/comments/{id}', [ItemController::class, 'deleteComment'])->name('form-registrasi.comments.delete');
 
+    // Form Unregistrasi (Unregistrasion / Discontinue) Routes
+    Route::get('/form-unregistrasi', [UnregistrasiController::class, 'formUnregistrasi'])->name('form-unregistrasi');
+    Route::post('/form-unregistrasi', [UnregistrasiController::class, 'storeFormItem'])->name('form-unregistrasi.store');
+    Route::post('/form-unregistrasi/approve', [UnregistrasiController::class, 'approveForm'])->name('form-unregistrasi.approve');
+    Route::delete('/form-unregistrasi/form/delete', [UnregistrasiController::class, 'deleteFormChecksheet'])->name('form-unregistrasi.delete-checksheet');
+    Route::delete('/form-unregistrasi/{id}', [UnregistrasiController::class, 'deleteFormItem'])->name('form-unregistrasi.delete');
+    Route::post('/form-unregistrasi/comments', [UnregistrasiController::class, 'storeComment'])->name('form-unregistrasi.comments.store');
+    Route::delete('/form-unregistrasi/comments/{id}', [UnregistrasiController::class, 'deleteComment'])->name('form-unregistrasi.comments.delete');
+
     // Account Master User Routes
     Route::post('/users', [ItemController::class, 'storeUser'])->name('users.store');
     Route::put('/users/{id}', [ItemController::class, 'updateUser'])->name('users.update');
     Route::delete('/users/{id}', [ItemController::class, 'deleteUser'])->name('users.delete');
+    Route::delete('/users/{id}/destroy', [ItemController::class, 'deleteUser'])->name('users.destroy');
 });
