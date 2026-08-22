@@ -1197,7 +1197,8 @@
 
             <div class="form-group" style="margin-bottom: 1rem;">
                 <label for="fi_kode">Kode Barang <span style="color:var(--color-danger);">*</span></label>
-                <input type="text" id="fi_kode" name="kode_barang" class="form-control @error('kode_barang') is-invalid @enderror" placeholder="Cth: SBM-001" value="{{ old('kode_barang') }}" required>
+                <input type="text" id="fi_kode" name="kode_barang" class="form-control @error('kode_barang') is-invalid @enderror" placeholder="Cth: SBM-001" value="{{ old('kode_barang') }}" required oninput="checkUnregistrasiKodeBarang(this.value)" onblur="checkUnregistrasiKodeBarang(this.value, true)">
+                <div id="fi_kode_alert_box" style="display:none; margin-top:0.35rem; font-size:0.78rem; font-weight:600; padding:0.4rem 0.65rem; border-radius:6px;"></div>
                 @error('kode_barang')<div class="error-text" style="color:var(--color-danger); font-size:0.75rem; margin-top:0.25rem;">{{ $message }}</div>@enderror
             </div>
 
@@ -1287,6 +1288,59 @@
     const serverFormItems = @json($formItems, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
     const serverFormApprovals = @json($formApprovals ?? [], JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
     const serverFormComments = @json($formComments ?? [], JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
+    const allRegisteredCodes = @json($allRegisteredCodes ?? [], JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
+    const allUnregisteredCodes = @json($allUnregisteredCodes ?? [], JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
+
+    function checkUnregistrasiKodeBarang(val, showAlert = false) {
+        const code = (val || '').trim().toUpperCase();
+        const alertBox = document.getElementById('fi_kode_alert_box');
+        if (!alertBox) return;
+
+        if (!code) {
+            alertBox.style.display = 'none';
+            alertBox.innerHTML = '';
+            return;
+        }
+
+        // Check if already in Unregistrasi
+        const unregMatch = allUnregisteredCodes.find(i => (i.kode_barang || '').trim().toUpperCase() === code);
+        if (unregMatch) {
+            alertBox.style.display = 'block';
+            alertBox.style.background = 'rgba(239, 68, 68, 0.12)';
+            alertBox.style.border = '1px solid rgba(239, 68, 68, 0.3)';
+            alertBox.style.color = '#b91c1c';
+            alertBox.innerHTML = `🚫 <strong>PERINGATAN:</strong> Item dengan Kode Barang <strong>${escapeHtml(code)}</strong> (${escapeHtml(unregMatch.nama_barang || '')}) telah di-discontinue sebelumnya pada <strong>Form Unregistrasi ${escapeHtml(unregMatch.form_number || '')}</strong>!`;
+            if (showAlert) {
+                alert(`Peringatan: Item dengan Kode Barang "${code}" (${unregMatch.nama_barang || ''}) telah di-discontinue sebelumnya pada Form Unregistrasi ${unregMatch.form_number || ''}!`);
+            }
+            return;
+        }
+
+        // Check if registered in FormItem (Informative match & auto-fill)
+        const regMatch = allRegisteredCodes.find(i => (i.kode_barang || '').trim().toUpperCase() === code);
+        if (regMatch) {
+            alertBox.style.display = 'block';
+            alertBox.style.background = 'rgba(16, 185, 129, 0.1)';
+            alertBox.style.border = '1px solid rgba(16, 185, 129, 0.3)';
+            alertBox.style.color = '#047857';
+            alertBox.innerHTML = `✓ <strong>Ditemukan pada Form Registrasi ${escapeHtml(regMatch.form_number || '')}</strong>: ${escapeHtml(regMatch.nama_barang || '')}`;
+            
+            // Auto-fill fields if empty
+            const nameInput = document.getElementById('fi_nama');
+            const specInput = document.getElementById('fi_spesifikasi');
+            if (nameInput && !nameInput.value.trim() && regMatch.nama_barang) {
+                nameInput.value = regMatch.nama_barang;
+            }
+            if (specInput && !specInput.value.trim() && regMatch.spesifikasi) {
+                specInput.value = regMatch.spesifikasi;
+            }
+            return;
+        }
+
+        alertBox.style.display = 'none';
+        alertBox.innerHTML = '';
+    }
+
     const urlFormParam = '{{ $activeFormNoParam ?? "" }}';
     const userTag = '{{ strtoupper(Auth::user()->department ?? Auth::user()->name ?? "PRODUCTION") }}';
     const monthYearStr = '{{ date("m-Y") }}';

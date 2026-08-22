@@ -281,4 +281,63 @@ class UnregistrasiTest extends TestCase
 
         $res->assertSessionHasErrors(['kode_barang', 'nama_barang', 'spesifikasi', 'kategori', 'keterangan']);
     }
+
+    public function test_cannot_add_duplicate_discontinued_code_in_unregistrasi(): void
+    {
+        UnregistrasiItem::create([
+            'form_number'     => '01/PRODUCTION/08-2026',
+            'user_id'         => $this->userProd->id,
+            'created_by_name' => $this->userProd->name,
+            'created_by_dept' => $this->userProd->department,
+            'kode_barang'     => 'SBM-DUP-01',
+            'nama_barang'     => 'Barang Lama',
+            'spesifikasi'     => 'Reguler',
+            'kategori'        => 'CONSUMABLE',
+            'keterangan'      => 'Sudah discontinue',
+        ]);
+
+        $res = $this->actingAs($this->userProd)->post('/form-unregistrasi', [
+            'form_number' => '02/PRODUCTION/08-2026',
+            'kode_barang' => 'SBM-DUP-01',
+            'nama_barang' => 'Barang Baru tapi Kode Sama',
+            'spesifikasi' => 'Reguler',
+            'kategori'    => 'CONSUMABLE',
+            'keterangan'  => 'Coba discontinue lagi',
+        ]);
+
+        $res->assertSessionHasErrors(['kode_barang']);
+    }
+
+    public function test_cannot_add_duplicate_or_discontinued_code_in_registrasi(): void
+    {
+        UnregistrasiItem::create([
+            'form_number'     => '01/PRODUCTION/08-2026',
+            'user_id'         => $this->userProd->id,
+            'created_by_name' => $this->userProd->name,
+            'created_by_dept' => $this->userProd->department,
+            'kode_barang'     => 'SBM-DISC-99',
+            'nama_barang'     => 'Barang Discontinue',
+            'spesifikasi'     => 'Reguler',
+            'kategori'        => 'CONSUMABLE',
+            'keterangan'      => 'Discontinue',
+        ]);
+
+        // Attempt to register item with discontinued code
+        $res = $this->actingAs($this->userProd)->post('/form-registrasi', [
+            'form_number'         => '01/PRODUCTION/08-2026',
+            'kode_barang'         => 'SBM-DISC-99',
+            'nama_barang'         => 'Barang Coba Regist',
+            'harga'               => 100000,
+            'estimasi_usia_pakai' => '30 Hari',
+            'kategori_penggunaan' => 'Produksi',
+            'kategori_ukuran'     => 'Pcs',
+            'min'                 => 10,
+            'titik_order'         => 20,
+            'max'                 => 50,
+            'lead_time'           => '7 Hari',
+            'is_non_b3'           => 1,
+        ]);
+
+        $res->assertSessionHasErrors(['kode_barang']);
+    }
 }

@@ -6,6 +6,7 @@ use Illuminate\Http\Request;
 
 use App\Models\Item;
 use App\Models\FormItem;
+use App\Models\UnregistrasiItem;
 use App\Models\User;
 use App\Models\FormApproval;
 use App\Models\FormComment;
@@ -317,7 +318,23 @@ class ItemController extends Controller
             }
         }
 
-        return view('form-registrasi', compact('formItems', 'users', 'formApprovals', 'activeFormNoParam', 'formComments'));
+        $rawRegistered = FormItem::select('kode_barang', 'nama_barang', 'form_number', 'created_by_dept')->whereNotNull('kode_barang')->get();
+        $rawUnregistered = UnregistrasiItem::select('kode_barang', 'nama_barang', 'form_number', 'created_by_dept')->whereNotNull('kode_barang')->get();
+
+        if ($canViewAllDepartments) {
+            $allRegisteredCodes = $rawRegistered;
+            $allUnregisteredCodes = $rawUnregistered;
+        } else {
+            $allRegisteredCodes = $rawRegistered->filter(function($i) use ($currentUser) {
+                return $this->isDepartmentAllowed($currentUser, $i->created_by_dept ?? '');
+            })->values();
+
+            $allUnregisteredCodes = $rawUnregistered->filter(function($i) use ($currentUser) {
+                return $this->isDepartmentAllowed($currentUser, $i->created_by_dept ?? '');
+            })->values();
+        }
+
+        return view('form-registrasi', compact('formItems', 'users', 'formApprovals', 'activeFormNoParam', 'formComments', 'allRegisteredCodes', 'allUnregisteredCodes'));
     }
 
     /**
@@ -367,6 +384,25 @@ class ItemController extends Controller
             || str_contains($currentUserRole, 'ACCOUNTING')
             || str_contains($currentUserRole, 'ACC')
             || str_contains($currentUserRole, 'WAREHOUSE');
+
+        // Duplicate checks
+        $existingUnreg = UnregistrasiItem::where('kode_barang', $validated['kode_barang'])->latest()->first();
+        if ($existingUnreg) {
+            $isAllowedDept = $canViewAllDepartments || $this->isDepartmentAllowed($currentUser, $existingUnreg->created_by_dept ?? '');
+            $formRef = $isAllowedDept ? "pada Form Unregistrasi {$existingUnreg->form_number}" : "pada sistem";
+            $nameRef = ($isAllowedDept && !empty($existingUnreg->nama_barang)) ? " ({$existingUnreg->nama_barang})" : "";
+            $msg = "Peringatan: Kode barang '{$validated['kode_barang']}'{$nameRef} telah di-discontinue sebelumnya {$formRef}!";
+            return back()->withErrors(['kode_barang' => $msg])->withInput()->with('error', $msg);
+        }
+
+        $existingReg = FormItem::where('kode_barang', $validated['kode_barang'])->latest()->first();
+        if ($existingReg) {
+            $isAllowedDept = $canViewAllDepartments || $this->isDepartmentAllowed($currentUser, $existingReg->created_by_dept ?? '');
+            $formRef = $isAllowedDept ? "pada Form {$existingReg->form_number}" : "pada sistem";
+            $nameRef = ($isAllowedDept && !empty($existingReg->nama_barang)) ? " ({$existingReg->nama_barang})" : "";
+            $msg = "Peringatan: Kode barang '{$validated['kode_barang']}'{$nameRef} telah didaftarkan sebelumnya {$formRef}!";
+            return back()->withErrors(['kode_barang' => $msg])->withInput()->with('error', $msg);
+        }
 
         $targetForm = $request->input('form_number');
         if (!$canViewAllDepartments && $targetForm) {

@@ -6,6 +6,7 @@ use Illuminate\Http\Request;
 use App\Models\UnregistrasiItem;
 use App\Models\UnregistrasiApproval;
 use App\Models\UnregistrasiComment;
+use App\Models\FormItem;
 use App\Models\User;
 
 class UnregistrasiController extends Controller
@@ -148,8 +149,23 @@ class UnregistrasiController extends Controller
         }
 
         $users = User::orderBy('name')->get();
+        $rawRegistered = FormItem::select('kode_barang', 'nama_barang', 'spesifikasi', 'kategori_penggunaan', 'form_number', 'created_by_dept')->whereNotNull('kode_barang')->get();
+        $rawUnregistered = UnregistrasiItem::select('kode_barang', 'nama_barang', 'spesifikasi', 'kategori', 'keterangan', 'form_number', 'created_by_dept')->whereNotNull('kode_barang')->get();
 
-        return view('form-unregistrasi', compact('formItems', 'formApprovals', 'formComments', 'activeFormNoParam', 'users'));
+        if (!$isRestricted) {
+            $allRegisteredCodes = $rawRegistered;
+            $allUnregisteredCodes = $rawUnregistered;
+        } else {
+            $allRegisteredCodes = $rawRegistered->filter(function($i) use ($currentUser) {
+                return $this->isDepartmentAllowed($currentUser, $i->created_by_dept ?? '');
+            })->values();
+
+            $allUnregisteredCodes = $rawUnregistered->filter(function($i) use ($currentUser) {
+                return $this->isDepartmentAllowed($currentUser, $i->created_by_dept ?? '');
+            })->values();
+        }
+
+        return view('form-unregistrasi', compact('formItems', 'formApprovals', 'formComments', 'activeFormNoParam', 'users', 'allRegisteredCodes', 'allUnregisteredCodes'));
     }
 
     /**
@@ -173,6 +189,18 @@ class UnregistrasiController extends Controller
         ]);
 
         $currentUser = auth()->user();
+        $currentUserRole = strtoupper(trim($currentUser->role ?? 'USER'));
+        $isMaster = in_array($currentUserRole, ['MASTER', 'ADMIN']) || str_contains($currentUserRole, 'WAREHOUSE');
+
+        // Duplicate checks
+        $existingUnreg = UnregistrasiItem::where('kode_barang', $validated['kode_barang'])->latest()->first();
+        if ($existingUnreg) {
+            $isAllowedDept = $isMaster || $this->isDepartmentAllowed($currentUser, $existingUnreg->created_by_dept ?? '');
+            $formRef = $isAllowedDept ? "pada Form Unregistrasi {$existingUnreg->form_number}" : "pada sistem";
+            $nameRef = ($isAllowedDept && !empty($existingUnreg->nama_barang)) ? " ({$existingUnreg->nama_barang})" : "";
+            $msg = "Peringatan: Kode barang '{$validated['kode_barang']}'{$nameRef} telah di-discontinue sebelumnya {$formRef}!";
+            return back()->withErrors(['kode_barang' => $msg])->withInput()->with('error', $msg);
+        }
         $userTag = strtoupper($currentUser->department ?? $currentUser->name ?? 'PRODUCTION');
         if (str_contains($userTag, 'PRODUCTION') && str_contains($userTag, 'DIES ASSY')) {
             $userTag = 'PRODUCTION';
