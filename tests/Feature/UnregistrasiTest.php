@@ -249,7 +249,14 @@ class UnregistrasiTest extends TestCase
             'comment'     => 'Comment to be deleted',
         ]);
 
-        // Delete entire form
+        // Regular user cannot delete unregistrasi form
+        $resUser = $this->actingAs($this->userProd)->delete('/form-unregistrasi/form/delete', [
+            'form_number' => $formNo,
+        ]);
+        $resUser->assertSessionHas('error');
+        $this->assertDatabaseCount('unregistrasi_items', 1);
+
+        // Delete entire form as Master
         $res = $this->actingAs($this->master)->delete('/form-unregistrasi/form/delete', [
             'form_number' => $formNo,
         ]);

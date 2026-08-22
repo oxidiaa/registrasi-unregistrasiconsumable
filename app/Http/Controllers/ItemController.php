@@ -598,22 +598,12 @@ class ItemController extends Controller
 
         $currentUser = auth()->user();
         $currentUserRole = strtoupper(trim($currentUser->role ?? ''));
-        $currentUserDept = strtoupper(trim($currentUser->department ?? ''));
         $isMaster = in_array($currentUserRole, ['MASTER', 'ADMIN']);
 
-        // Check department access for restricted users (User / Staff)
+        // Only Master / Admin can delete form checksheet
         if (!$isMaster) {
-            $approval = FormApproval::where('form_number', $formNo)->first();
-            $firstItem = FormItem::where('form_number', $formNo)->first();
-            $formDept = strtoupper(trim($approval?->requestor_dept ?? $firstItem?->created_by_dept ?? ''));
-            if (!$formDept && str_contains($formNo, '/')) {
-                $parts = explode('/', $formNo);
-                $formDept = isset($parts[1]) ? strtoupper(trim($parts[1])) : '';
-            }
-            if ($formDept && !$this->isDepartmentAllowed($currentUser, $formDept)) {
-                return redirect()->route('form-registrasi', ['tab' => 'data-view'])
-                    ->with('error', 'Akses ditolak: Anda tidak memiliki wewenang menghapus formulir departemen lain.');
-            }
+            return redirect()->route('form-registrasi', ['tab' => 'data-view'])
+                ->with('error', 'Akses ditolak: Hanya Role Master yang memiliki wewenang untuk menghapus form registrasi.');
         }
 
         FormItem::where('form_number', $formNo)->forceDelete();

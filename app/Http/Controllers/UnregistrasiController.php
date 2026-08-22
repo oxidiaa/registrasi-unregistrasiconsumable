@@ -377,19 +377,10 @@ class UnregistrasiController extends Controller
         $currentUserRole = strtoupper(trim($currentUser->role ?? ''));
         $isMaster = in_array($currentUserRole, ['MASTER', 'ADMIN']);
 
-        // Check department access for restricted users (User / Staff)
+        // Only Master / Admin can delete unregistrasi form checksheet
         if (!$isMaster) {
-            $approval = UnregistrasiApproval::where('form_number', $formNo)->first();
-            $firstItem = UnregistrasiItem::where('form_number', $formNo)->first();
-            $formDept = strtoupper(trim($approval?->requestor_dept ?? $firstItem?->created_by_dept ?? ''));
-            if (!$formDept && str_contains($formNo, '/')) {
-                $parts = explode('/', $formNo);
-                $formDept = isset($parts[1]) ? strtoupper(trim($parts[1])) : '';
-            }
-            if ($formDept && !$this->isDepartmentAllowed($currentUser, $formDept)) {
-                return redirect()->route('form-unregistrasi', ['tab' => 'data-view'])
-                    ->with('error', 'Akses ditolak: Anda tidak memiliki wewenang menghapus formulir departemen lain.');
-            }
+            return redirect()->route('form-unregistrasi', ['tab' => 'data-view'])
+                ->with('error', 'Akses ditolak: Hanya Role Master yang memiliki wewenang untuk menghapus form unregistrasi.');
         }
 
         UnregistrasiItem::where('form_number', $formNo)->forceDelete();

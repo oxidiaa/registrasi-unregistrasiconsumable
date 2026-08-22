@@ -303,7 +303,7 @@ class DepartmentFormVisibilityTest extends TestCase
     }
 
     /**
-     * Test User/Staff cannot delete form belonging to other department.
+     * Test Non-Master (User/Staff) cannot delete any form checksheet (only Master can).
      */
     public function test_user_cannot_delete_form_of_other_department(): void
     {
@@ -316,6 +316,29 @@ class DepartmentFormVisibilityTest extends TestCase
         $this->assertDatabaseHas('form_items', [
             'form_number' => '01/HRGA/08-2026',
             'nama_barang' => 'Kertas A4 PaperOne',
+        ]);
+
+        // User also cannot delete own department form checksheet (only Master can)
+        $responseOwn = $this->actingAs($this->userProduction)
+            ->delete(route('form-registrasi.delete-checksheet'), [
+                'form_number' => '01/PRODUCTION/08-2026',
+            ]);
+
+        $responseOwn->assertSessionHas('error');
+        $this->assertDatabaseHas('form_items', [
+            'form_number' => '01/PRODUCTION/08-2026',
+            'nama_barang' => 'Mata Bor CNC',
+        ]);
+
+        // Master can delete form checksheet
+        $responseMaster = $this->actingAs($this->master)
+            ->delete(route('form-registrasi.delete-checksheet'), [
+                'form_number' => '01/PRODUCTION/08-2026',
+            ]);
+
+        $responseMaster->assertSessionHas('success');
+        $this->assertDatabaseMissing('form_items', [
+            'form_number' => '01/PRODUCTION/08-2026',
         ]);
     }
 

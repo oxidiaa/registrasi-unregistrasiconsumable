@@ -890,7 +890,9 @@
                         <th class="th-center">JUMLAH BARANG</th>
                         <th class="th-center">STATUS</th>
                         <th class="th-center" style="width: 170px;">AKSI</th>
-                        <th class="th-center" style="width: 170px;">HAPUS</th>
+                        @if(in_array(strtoupper(Auth::user()->role ?? ''), ['MASTER', 'ADMIN']))
+                        <th class="th-center" style="width: 140px;">HAPUS</th>
+                        @endif
                     </tr>
                 </thead>
                 <tbody id="dataview-tbody">
@@ -2327,12 +2329,14 @@
                 <button class="btn btn-primary btn-sm" onclick="viewChecksheet('${cs.formNo}')" style="padding: 0.35rem 0.75rem; font-size: 0.75rem; font-family: var(--font-body); font-weight: 600; border-radius: 6px;">Lihat Preview</button>
                 <button class="btn btn-secondary btn-sm" onclick="printChecksheet('${cs.formNo}')" style="padding: 0.35rem 0.75rem; font-size: 0.75rem; margin-left: 0.25rem; font-family: var(--font-body); font-weight: 600; border-radius: 6px;">Cetak</button>
             `;
-            const deleteColumnHtml = `
-                <button class="btn btn-sm" onclick="deleteChecksheetForm('${cs.formNo}')" style="padding: 0.35rem 0.75rem; font-size: 0.75rem; font-family: var(--font-body); font-weight: 600; border-radius: 6px; background-color: #ef4444; color: white; border: none; cursor: pointer; display: inline-flex; align-items: center; gap: 0.25rem;">
-                    <svg viewBox="0 0 24 24" width="13" height="13" stroke="currentColor" stroke-width="2.5" fill="none"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6l-1 14H6L5 6"></path><path d="M10 11v6M14 11v6"></path><path d="M9 6V4h6v2"></path></svg>
-                    Hapus Form
-                </button>
-            `;
+            const deleteColumnHtml = (userRoleType === 'admin') ? `
+                <td class="td-center" style="padding: 0 0.5rem;">
+                    <button class="btn btn-sm" onclick="deleteChecksheetForm('${cs.formNo}')" style="padding: 0.35rem 0.75rem; font-size: 0.75rem; font-family: var(--font-body); font-weight: 600; border-radius: 6px; background-color: #ef4444; color: white; border: none; cursor: pointer; display: inline-flex; align-items: center; gap: 0.25rem;">
+                        <svg viewBox="0 0 24 24" width="13" height="13" stroke="currentColor" stroke-width="2.5" fill="none"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6l-1 14H6L5 6"></path><path d="M10 11v6M14 11v6"></path><path d="M9 6V4h6v2"></path></svg>
+                        Hapus Form
+                    </button>
+                </td>
+            ` : '';
 
             html += `
                 <tr>
@@ -2345,18 +2349,19 @@
                         <span style="background-color: ${statusBg}; color: ${statusColor}; padding: 0.25rem 0.5rem; border-radius: 4px; font-weight: 700; font-size: 0.75rem; display: inline-block;">${displayStatus}</span>
                     </td>
                     <td class="td-center" style="padding: 0 0.5rem;">${actionButtonsHtml}</td>
-                    <td class="td-center" style="padding: 0 0.5rem;">${deleteColumnHtml}</td>
+                    ${deleteColumnHtml}
                 </tr>
             `;
             no++;
         }
 
         const isFiltered = Boolean(selectedMonth || selectedYear);
+        const colSpanCount = (userRoleType === 'admin') ? 8 : 7;
 
         if (totalChecksheets === 0) {
             tbody.innerHTML = `
                 <tr>
-                    <td colspan="8" style="padding: 0; border: none;">
+                    <td colspan="${colSpanCount}" style="padding: 0; border: none;">
                         <div class="empty-state-wrapper" style="margin: 1.25rem 0;">
                             <div class="empty-state-card" style="gap: 0.75rem;">
                                 <div class="empty-state-icon-container" style="width: 60px; height: 60px;">
@@ -2387,6 +2392,11 @@
     }
 
     function deleteChecksheetForm(formNo) {
+        if (userRoleType !== 'admin') {
+            alert('Akses ditolak: Hanya Role Master yang memiliki wewenang untuk menghapus form.');
+            return;
+        }
+
         if (!confirm(`Apakah Anda yakin ingin menghapus PERMANEN seluruh Form Unregistrasi "${formNo}" ini?`)) {
             return;
         }
