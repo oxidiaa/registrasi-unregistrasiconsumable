@@ -53,6 +53,21 @@
     $currentFormReqName = $currentApproval?->requestor_name ?? $firstCurrentItem?->created_by_name ?? Auth::user()->name ?? 'User';
     $currentFormReqDept = $currentApproval?->requestor_dept ?? $firstCurrentItem?->created_by_dept ?? Auth::user()->department ?? 'Production';
     $currentFormDate = $currentApproval?->form_date ?? ($firstCurrentItem?->created_at ? $firstCurrentItem->created_at->format('d-m-Y') : date('d-m-Y'));
+
+    $userSigDate = $currentApproval?->user_signed_at ? \Carbon\Carbon::parse($currentApproval->user_signed_at)->format('d-m-Y') : $currentFormDate;
+    $staffSigDate = $currentApproval?->staff_signed_at ? \Carbon\Carbon::parse($currentApproval->staff_signed_at)->format('d-m-Y') : $currentFormDate;
+    $accSigDate = $currentApproval?->accounting_signed_at ? \Carbon\Carbon::parse($currentApproval->accounting_signed_at)->format('d-m-Y') : $currentFormDate;
+    $whSigDate = $currentApproval?->warehouse_signed_at ? \Carbon\Carbon::parse($currentApproval->warehouse_signed_at)->format('d-m-Y') : $currentFormDate;
+
+    $userSigner = $currentApproval?->user_signer_name ?? $currentFormReqName;
+    $staffSigner = $currentApproval?->staff_signer_name ?? 'Staff / Section Head';
+    $accSigner = $currentApproval?->accounting_signer_name ?? 'Accounting';
+    $whSigner = $currentApproval?->warehouse_signer_name ?? 'Warehouse Consumable';
+
+    $hasUserSig = ($currentApproval && $currentApproval->user_signed_at) || $firstCurrentItem;
+    $hasStaffSig = (bool)($currentApproval && ($currentApproval->staff_signed_at || $currentApproval->staff_signer_name));
+    $hasAccSig = (bool)($currentApproval && ($currentApproval->accounting_signed_at || $currentApproval->accounting_signer_name));
+    $hasWhSig = (bool)($currentApproval && ($currentApproval->warehouse_signed_at || $currentApproval->warehouse_signer_name));
 @endphp
 <style>
     /* Sheet Tabs & Stepper Enhancements for Form Registrasi */
@@ -626,28 +641,48 @@
             <div class="sig-box">
                 <div class="sig-label">Dibuat (User)</div>
                 <div class="sig-space" id="preview-sig-dibuat" style="display: flex; flex-direction: column; align-items: center; justify-content: center; height: 64px; font-size: 0.8rem; font-weight: 600;">
-                    <span style="color: var(--text-muted); font-size: 0.75rem; font-style: italic;">...................</span>
+                    @if($hasUserSig)
+                        <div style="color: var(--color-success); font-weight: 700; margin-bottom: 0.25rem;">✓ USER SUBMITTED</div>
+                        <div style="font-size: 0.65rem; color: var(--text-muted);">{{ $userSigner }} (Tgl: {{ $userSigDate }})</div>
+                    @else
+                        <span style="color: var(--text-muted); font-size: 0.75rem; font-style: italic;">...................</span>
+                    @endif
                 </div>
                 <div class="sig-line"></div>
             </div>
             <div class="sig-box">
                 <div class="sig-label">Approved Staff / Section Head</div>
                 <div class="sig-space" id="preview-sig-staff" style="display: flex; flex-direction: column; align-items: center; justify-content: center; height: 64px; font-size: 0.8rem; font-weight: 600;">
-                    <span style="color: var(--text-muted); font-size: 0.75rem; font-style: italic;">...................</span>
+                    @if($hasStaffSig)
+                        <div style="color: var(--color-success); font-weight: 700; margin-bottom: 0.25rem;">✓ APPROVED BY STAFF</div>
+                        <div style="font-size: 0.65rem; color: var(--text-muted);">{{ $staffSigner }} (Tgl: {{ $staffSigDate }})</div>
+                    @else
+                        <span style="color: var(--text-muted); font-size: 0.75rem; font-style: italic;">...................</span>
+                    @endif
                 </div>
                 <div class="sig-line"></div>
             </div>
             <div class="sig-box">
                 <div class="sig-label">Approved Accounting</div>
                 <div class="sig-space" id="preview-sig-accounting" style="display: flex; flex-direction: column; align-items: center; justify-content: center; height: 64px; font-size: 0.8rem; font-weight: 600;">
-                    <span style="color: var(--text-muted); font-size: 0.75rem; font-style: italic;">...................</span>
+                    @if($hasAccSig)
+                        <div style="color: var(--color-success); font-weight: 700; margin-bottom: 0.25rem;">✓ APPROVED ACCOUNTING</div>
+                        <div style="font-size: 0.65rem; color: var(--text-muted);">{{ $accSigner }} (Tgl: {{ $accSigDate }})</div>
+                    @else
+                        <span style="color: var(--text-muted); font-size: 0.75rem; font-style: italic;">...................</span>
+                    @endif
                 </div>
                 <div class="sig-line"></div>
             </div>
             <div class="sig-box">
                 <div class="sig-label">Didaftarkan (Warehouse)</div>
                 <div class="sig-space" id="preview-sig-warehouse" style="display: flex; flex-direction: column; align-items: center; justify-content: center; height: 64px; font-size: 0.8rem; font-weight: 600;">
-                    <span style="color: var(--text-muted); font-size: 0.75rem; font-style: italic;">...................</span>
+                    @if($hasWhSig)
+                        <div style="color: var(--color-success); font-weight: 700; margin-bottom: 0.25rem;">✓ REGISTERED WAREHOUSE</div>
+                        <div style="font-size: 0.65rem; color: var(--text-muted);">{{ $whSigner }} (Tgl: {{ $whSigDate }})</div>
+                    @else
+                        <span style="color: var(--text-muted); font-size: 0.75rem; font-style: italic;">...................</span>
+                    @endif
                 </div>
                 <div class="sig-line"></div>
             </div>
@@ -2031,17 +2066,14 @@
         populateDateFilterOptions();
         renderDataViewTable();
         updateApprovalSelect();
-        updateApprovalStepper(selectedChecksheetId);
         renderApprovalMonitoringTable();
         renderAccountTable();
-        renderComments(selectedChecksheetId);
 
         const urlParams = new URLSearchParams(window.location.search);
         const activeTabParam = urlParams.get('tab') || '{{ request()->query("tab") }}';
 
-        if (urlFormParam && urlFormParam !== defaultFormNo && activeTabParam !== 'data-view') {
-            viewChecksheet(urlFormParam);
-        }
+        const initialTargetForm = (urlFormParam && checksheets[urlFormParam]) ? urlFormParam : selectedChecksheetId;
+        viewChecksheet(initialTargetForm, false);
 
         if (activeTabParam === 'proses-approval' || window.location.hash === '#proses-approval') {
             switchSheet('proses-approval');
@@ -2140,7 +2172,7 @@
         if (matchingTab) matchingTab.classList.add('active');
     }
 
-    function viewChecksheet(csId) {
+    function viewChecksheet(csId, switchToPrintPreview = true) {
         if (!canViewAllDepartments) {
             const parts = csId.split('/');
             const csDept = parts.length >= 2 ? parts[1].trim().toUpperCase() : '';
@@ -2161,7 +2193,9 @@
         }
 
         selectedChecksheetId = csId;
-        switchSheet('print-preview');
+        if (switchToPrintPreview) {
+            switchSheet('print-preview');
+        }
         
         const cs = checksheets[csId];
         if (!cs) return;
@@ -3208,7 +3242,7 @@
             user_role: c.user_role,
             comment: c.comment,
             created_at: formatCommentDate(c.created_at),
-            is_owner: (c.user_id === {{ auth()->id() ?? 0 }} || userRoleType === 'admin')
+            can_delete: (userRoleType === 'admin')
         });
     });
 
@@ -3289,8 +3323,9 @@
         comments.forEach(c => {
             const roleCfg = getRoleBadgeConfig(c.user_role);
             const initial = (c.user_name || 'U').charAt(0).toUpperCase();
-            const deleteBtn = c.is_owner ? `
-                <button type="button" class="comment-delete-btn" onclick="deleteFormComment(${c.id})" title="Hapus Komentar">
+            const canDelete = (userRoleType === 'admin');
+            const deleteBtn = canDelete ? `
+                <button type="button" class="comment-delete-btn" onclick="deleteFormComment(${c.id})" title="Hapus Komentar (Khusus Master)">
                     <svg viewBox="0 0 24 24" width="14" height="14" stroke="currentColor" stroke-width="2" fill="none">
                         <polyline points="3 6 5 6 21 6"></polyline>
                         <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
@@ -3398,7 +3433,19 @@
                 formCommentsMap[targetForm] = [];
             }
 
-            formCommentsMap[targetForm].push(data.comment);
+            const commentObj = {
+                id: data.comment.id,
+                form_number: data.comment.form_number,
+                user_id: data.comment.user_id,
+                user_name: data.comment.user_name,
+                user_dept: data.comment.user_dept,
+                user_role: data.comment.user_role,
+                comment: data.comment.comment,
+                created_at: formatCommentDate(data.comment.created_at_raw || data.comment.created_at || new Date()),
+                can_delete: (userRoleType === 'admin')
+            };
+
+            formCommentsMap[targetForm].push(commentObj);
             textarea.value = '';
 
             renderComments(targetForm);

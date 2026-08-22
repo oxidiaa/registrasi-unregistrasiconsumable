@@ -679,15 +679,16 @@ class ItemController extends Controller
                 'success' => true,
                 'message' => 'Komentar berhasil ditambahkan.',
                 'comment' => [
-                    'id'         => $comment->id,
-                    'form_number'=> $comment->form_number,
-                    'user_id'    => $comment->user_id,
-                    'user_name'  => $comment->user_name,
-                    'user_dept'  => $comment->user_dept,
-                    'user_role'  => $comment->user_role,
-                    'comment'    => $comment->comment,
-                    'created_at' => $comment->created_at ? $comment->created_at->format('d-m-Y H:i') : date('d-m-Y H:i'),
-                    'is_owner'   => true,
+                    'id'             => $comment->id,
+                    'form_number'    => $comment->form_number,
+                    'user_id'        => $comment->user_id,
+                    'user_name'      => $comment->user_name,
+                    'user_dept'      => $comment->user_dept,
+                    'user_role'      => $comment->user_role,
+                    'comment'        => $comment->comment,
+                    'created_at_raw' => $comment->created_at?->toISOString() ?? now()->toISOString(),
+                    'created_at'     => $comment->created_at ? $comment->created_at->setTimezone('Asia/Jakarta')->format('d-m-Y H:i') : now('Asia/Jakarta')->format('d-m-Y H:i'),
+                    'can_delete'     => in_array(strtoupper(trim($currentUser->role ?? '')), ['MASTER', 'ADMIN']),
                 ],
             ]);
         }
@@ -697,7 +698,7 @@ class ItemController extends Controller
     }
 
     /**
-     * Delete a comment. Author of comment or Master/Admin can delete.
+     * Delete a comment. Only Master/Admin role can delete comments.
      */
     public function deleteComment(Request $request, $id)
     {
@@ -706,11 +707,11 @@ class ItemController extends Controller
         $userRole = strtoupper(trim($currentUser->role ?? 'USER'));
         $isMaster = in_array($userRole, ['MASTER', 'ADMIN']);
 
-        if ($comment->user_id !== $currentUser->id && !$isMaster) {
+        if (!$isMaster) {
             if ($request->wantsJson() || $request->ajax()) {
-                return response()->json(['success' => false, 'message' => 'Anda tidak memiliki hak untuk menghapus komentar ini.'], 403);
+                return response()->json(['success' => false, 'message' => 'Akses Ditolak: Hanya Role Master yang memiliki hak untuk menghapus komentar.'], 403);
             }
-            return back()->with('error', 'Anda tidak memiliki hak untuk menghapus komentar ini.');
+            return back()->with('error', 'Akses Ditolak: Hanya Role Master yang memiliki hak untuk menghapus komentar.');
         }
 
         $formNo = $comment->form_number;

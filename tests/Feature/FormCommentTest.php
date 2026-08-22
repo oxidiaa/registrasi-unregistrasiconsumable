@@ -175,7 +175,7 @@ class FormCommentTest extends TestCase
         $res->assertStatus(403);
     }
 
-    public function test_author_and_master_can_delete_comment_but_others_cannot(): void
+    public function test_only_master_can_delete_comments(): void
     {
         $formNo = '01/PRODUCTION/08-2026';
         $this->createForm($formNo, $this->userProd);
@@ -189,29 +189,20 @@ class FormCommentTest extends TestCase
             'comment' => 'Komentar untuk dihapus',
         ]);
 
-        // Another user (e.g. staffProd who is not author and not master) cannot delete it
-        $resOther = $this->actingAs($this->staffProd)->deleteJson('/form-registrasi/comments/' . $comment->id);
-        $resOther->assertStatus(403);
+        // Regular staff cannot delete it
+        $resStaff = $this->actingAs($this->staffProd)->deleteJson('/form-registrasi/comments/' . $comment->id);
+        $resStaff->assertStatus(403);
         $this->assertDatabaseHas('form_comments', ['id' => $comment->id]);
 
-        // Author can delete it
+        // Regular user (even the author) cannot delete it
         $resAuthor = $this->actingAs($this->userProd)->deleteJson('/form-registrasi/comments/' . $comment->id);
-        $resAuthor->assertStatus(200);
-        $this->assertDatabaseMissing('form_comments', ['id' => $comment->id]);
+        $resAuthor->assertStatus(403);
+        $this->assertDatabaseHas('form_comments', ['id' => $comment->id]);
 
-        // Create another comment and verify Master can delete it
-        $comment2 = FormComment::create([
-            'form_number' => $formNo,
-            'user_id' => $this->userProd->id,
-            'user_name' => $this->userProd->name,
-            'user_dept' => $this->userProd->department,
-            'user_role' => $this->userProd->role,
-            'comment' => 'Komentar 2',
-        ]);
-
-        $resMaster = $this->actingAs($this->master)->deleteJson('/form-registrasi/comments/' . $comment2->id);
+        // Master CAN delete it
+        $resMaster = $this->actingAs($this->master)->deleteJson('/form-registrasi/comments/' . $comment->id);
         $resMaster->assertStatus(200);
-        $this->assertDatabaseMissing('form_comments', ['id' => $comment2->id]);
+        $this->assertDatabaseMissing('form_comments', ['id' => $comment->id]);
     }
 
     public function test_deleting_form_checksheet_cleans_up_comments(): void
