@@ -8,6 +8,7 @@ use App\Models\Item;
 use App\Models\FormItem;
 use App\Models\User;
 use App\Models\FormApproval;
+use App\Models\FormComment;
 use Illuminate\Support\Facades\DB;
 
 class ItemController extends Controller
@@ -190,6 +191,7 @@ class ItemController extends Controller
 
             if ($oldFormNo !== $newFormNo) {
                 FormApproval::where('form_number', $oldFormNo)->update(['form_number' => $newFormNo]);
+                FormComment::where('form_number', $oldFormNo)->update(['form_number' => $newFormNo]);
             }
         }
 
@@ -310,6 +312,7 @@ class ItemController extends Controller
         if ($canViewAllDepartments) {
             $formItems = $allExistingItems;
             $formApprovals = FormApproval::with('user')->get();
+            $formComments = FormComment::with('user')->orderBy('created_at', 'asc')->get();
         } else {
             // Restricted roles (User, Staff): only see forms created by their allowed department(s)
             $formItems = $allExistingItems->filter(function($item) use ($currentUser) {
@@ -339,6 +342,20 @@ class ItemController extends Controller
                 }
                 return false;
             })->values();
+
+            $allComments = FormComment::with('user')->orderBy('created_at', 'asc')->get();
+            $formComments = $allComments->filter(function($c) use ($currentUser) {
+                if ($this->isDepartmentAllowed($currentUser, $c->user_dept)) {
+                    return true;
+                }
+                if ($c->form_number && str_contains($c->form_number, '/')) {
+                    $parts = explode('/', $c->form_number);
+                    if (isset($parts[1]) && $this->isDepartmentAllowed($currentUser, $parts[1])) {
+                        return true;
+                    }
+                }
+                return false;
+            })->values();
         }
 
         $activeFormNoParam = $request->query('form');
@@ -355,7 +372,7 @@ class ItemController extends Controller
             }
         }
 
-        return view('form-registrasi', compact('formItems', 'users', 'formApprovals', 'activeFormNoParam'));
+        return view('form-registrasi', compact('formItems', 'users', 'formApprovals', 'activeFormNoParam', 'formComments'));
     }
 
     /**
@@ -625,6 +642,7 @@ class ItemController extends Controller
 
         FormItem::where('form_number', $formNo)->forceDelete();
         FormApproval::where('form_number', $formNo)->delete();
+        FormComment::where('form_number', $formNo)->delete();
 
         $this->resequenceFormNumbers();
 
@@ -672,6 +690,102 @@ class ItemController extends Controller
 
         return redirect()->route('form-registrasi', $redirectParams)
             ->with('success', 'Data "' . $name . '" berhasil dihapus.');
+    }
+
+    /**
+     * Store a comment for a form checksheet. All authenticated roles can post comments.
+     */
+    public function storeComment(Request $request)
+    {
+        $request->validate([
+            'form_number' => 'required|string',
+            'comment'     => 'required|string|min:1|max:2000',
+        ], [
+            'comment.required' => 'Komentar tidak boleh kosong.',
+            'comment.max'      => 'Komentar maksimal 2000 karakter.',
+        ]);
+
+        $formNo = $request->input('form_number');
+        $commentText = trim($request->input('comment'));
+        $currentUser = auth()->user();
+
+        $userRole = strtoupper(trim($currentUser->role ?? 'USER'));
+        $canViewAllDepartments = in_array($userRole, ['MASTER', 'ADMIN'])
+            || str_contains($userRole, 'ACCOUNTING')
+            || str_contains($userRole, 'ACC')
+            || str_contains($userRole, 'WAREHOUSE');
+
+        if (!$canViewAllDepartments) {
+            $parts = explode('/', $formNo);
+            $formDept = (count($parts) >= 2 && !empty($parts[1])) ? strtoupper(trim($parts[1])) : '';
+            if ($formDept && !$this->isDepartmentAllowed($currentUser, $formDept)) {
+                if ($request->wantsJson() || $request->ajax()) {
+                    return response()->json(['success' => false, 'message' => 'Akses ditolak untuk formulir departemen lain.'], 403);
+                }
+                return back()->with('error', 'Akses ditolak untuk formulir departemen lain.');
+            }
+        }
+
+        $comment = FormComment::create([
+            'form_number' => $formNo,
+            'user_id'     => $currentUser->id,
+            'user_name'   => $currentUser->name ?? 'User',
+            'user_dept'   => $currentUser->department ?? 'Production',
+            'user_role'   => $currentUser->role ?? 'User',
+            'comment'     => $commentText,
+        ]);
+
+        if ($request->wantsJson() || $request->ajax()) {
+            return response()->json([
+                'success' => true,
+                'message' => 'Komentar berhasil ditambahkan.',
+                'comment' => [
+                    'id'         => $comment->id,
+                    'form_number'=> $comment->form_number,
+                    'user_id'    => $comment->user_id,
+                    'user_name'  => $comment->user_name,
+                    'user_dept'  => $comment->user_dept,
+                    'user_role'  => $comment->user_role,
+                    'comment'    => $comment->comment,
+                    'created_at' => $comment->created_at ? $comment->created_at->format('d-m-Y H:i') : date('d-m-Y H:i'),
+                    'is_owner'   => true,
+                ],
+            ]);
+        }
+
+        return redirect()->route('form-registrasi', ['form' => $formNo])
+            ->with('success', 'Komentar berhasil ditambahkan.');
+    }
+
+    /**
+     * Delete a comment. Author of comment or Master/Admin can delete.
+     */
+    public function deleteComment(Request $request, $id)
+    {
+        $comment = FormComment::findOrFail($id);
+        $currentUser = auth()->user();
+        $userRole = strtoupper(trim($currentUser->role ?? 'USER'));
+        $isMaster = in_array($userRole, ['MASTER', 'ADMIN']);
+
+        if ($comment->user_id !== $currentUser->id && !$isMaster) {
+            if ($request->wantsJson() || $request->ajax()) {
+                return response()->json(['success' => false, 'message' => 'Anda tidak memiliki hak untuk menghapus komentar ini.'], 403);
+            }
+            return back()->with('error', 'Anda tidak memiliki hak untuk menghapus komentar ini.');
+        }
+
+        $formNo = $comment->form_number;
+        $comment->delete();
+
+        if ($request->wantsJson() || $request->ajax()) {
+            return response()->json([
+                'success' => true,
+                'message' => 'Komentar berhasil dihapus.',
+            ]);
+        }
+
+        return redirect()->route('form-registrasi', ['form' => $formNo])
+            ->with('success', 'Komentar berhasil dihapus.');
     }
 
     /**

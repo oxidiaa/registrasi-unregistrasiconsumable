@@ -69,6 +69,106 @@
         color: #ffffff !important;
         box-shadow: 0 2px 8px rgba(26, 63, 168, 0.3);
     }
+
+    /* Form Comments & Discussion Styling */
+    .form-comments-card {
+        background: #ffffff !important;
+        border: 1px solid #e2e8f0 !important;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05) !important;
+    }
+    .comment-item {
+        display: flex;
+        gap: 0.85rem;
+        align-items: flex-start;
+        padding: 0.85rem 1rem;
+        background: #f8fafc;
+        border-radius: 12px;
+        border: 1px solid #edf2f7;
+        transition: var(--transition-smooth);
+    }
+    .comment-item:hover {
+        background: #f1f5f9;
+        border-color: #cbd5e1;
+    }
+    .comment-avatar {
+        width: 36px;
+        height: 36px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: 800;
+        font-size: 0.82rem;
+        color: #ffffff;
+        flex-shrink: 0;
+        box-shadow: 0 2px 6px rgba(0,0,0,0.15);
+    }
+    .comment-bubble {
+        flex: 1;
+        min-width: 0;
+    }
+    .comment-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-bottom: 0.3rem;
+        flex-wrap: wrap;
+        gap: 0.4rem;
+    }
+    .comment-author {
+        font-weight: 700;
+        font-size: 0.86rem;
+        color: #0f172a;
+        display: flex;
+        align-items: center;
+        gap: 0.45rem;
+    }
+    .comment-role-badge {
+        font-size: 0.68rem;
+        font-weight: 700;
+        padding: 0.12rem 0.45rem;
+        border-radius: 4px;
+        text-transform: uppercase;
+    }
+    .comment-time {
+        font-size: 0.72rem;
+        color: var(--text-muted);
+        font-weight: 500;
+    }
+    .comment-body {
+        font-size: 0.85rem;
+        color: #334155;
+        line-height: 1.5;
+        white-space: pre-wrap;
+        word-break: break-word;
+    }
+    .comment-delete-btn {
+        background: transparent;
+        border: none;
+        color: #94a3b8;
+        cursor: pointer;
+        padding: 0.25rem;
+        border-radius: 4px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        transition: color 0.2s ease, background 0.2s ease;
+    }
+    .comment-delete-btn:hover {
+        color: #ef4444;
+        background: rgba(239, 68, 68, 0.1);
+    }
+    .comment-pill {
+        cursor: pointer;
+        transition: var(--transition-smooth);
+        display: inline-flex;
+        align-items: center;
+        gap: 0.35rem;
+    }
+    .comment-pill:hover {
+        transform: translateY(-1px);
+        box-shadow: 0 2px 8px rgba(0, 173, 239, 0.2);
+    }
     
     /* Print optimizations for sheets tabs & A4 Landscape */
     @media print {
@@ -317,6 +417,12 @@
             </div>
             <div class="doc-badge-pill secondary">
                 <span>NO FORM: <strong id="toolbar-form-no">{{ $currentFormNo }}</strong></span>
+            </div>
+            <div class="doc-badge-pill comment-pill" onclick="scrollToComments()" title="Lihat Diskusi & Komentar Form">
+                <svg viewBox="0 0 24 24" width="13" height="13" stroke="currentColor" stroke-width="2.5" fill="none">
+                    <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
+                </svg>
+                <span>KOMENTAR: <strong id="toolbar-comment-count">0</strong></span>
             </div>
         </div>
         <div class="doc-toolbar-right">
@@ -589,6 +695,76 @@
             </div>
         </div>
 
+    </div>
+
+    {{-- ===== FORM COMMENTS & DISCUSSION SECTION (NO PRINT) ===== --}}
+    <div class="glass-card form-comments-card no-print" id="form-comments-section" style="margin-top: 1.5rem; padding: 1.5rem 1.75rem; border-radius: var(--radius-lg);">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.25rem; flex-wrap: wrap; gap: 0.75rem; border-bottom: 1px solid rgba(0, 173, 239, 0.15); padding-bottom: 1rem;">
+            <div style="display: flex; align-items: center; gap: 0.75rem;">
+                <div style="width: 38px; height: 38px; border-radius: 10px; background: rgba(0, 173, 239, 0.12); color: var(--color-primary); display: flex; align-items: center; justify-content: center; font-weight: 700;">
+                    <svg viewBox="0 0 24 24" width="20" height="20" stroke="currentColor" stroke-width="2.5" fill="none">
+                        <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
+                    </svg>
+                </div>
+                <div>
+                    <h3 style="font-family: var(--font-heading); font-size: 1.15rem; font-weight: 700; color: var(--text-primary); margin: 0; display: flex; align-items: center; gap: 0.5rem;">
+                        <span>Diskusi & Komentar Form</span>
+                        <span class="badge" id="comments-count-badge" style="background: rgba(0, 173, 239, 0.15); color: var(--color-primary); font-size: 0.75rem; padding: 0.2rem 0.55rem; border-radius: 12px;">0 Komentar</span>
+                    </h3>
+                    <p style="font-size: 0.8rem; color: var(--text-muted); margin: 0.15rem 0 0 0;">
+                        Semua role (User, Staff, Accounting, Warehouse, Master) dapat saling memberikan catatan, revisi, atau konfirmasi di sini.
+                    </p>
+                </div>
+            </div>
+            <div>
+                <span class="badge" style="background: #f1f5f9; color: #475569; font-weight: 700; font-size: 0.78rem; padding: 0.35rem 0.75rem; border-radius: 8px;">
+                    Form: <strong id="comments-form-no" style="color: var(--color-primary);">{{ $currentFormNo }}</strong>
+                </span>
+            </div>
+        </div>
+
+        {{-- Comments List Container --}}
+        <div id="form-comments-list" style="display: flex; flex-direction: column; gap: 0.85rem; margin-bottom: 1.5rem; max-height: 480px; overflow-y: auto; padding-right: 0.35rem;">
+            {{-- Rendered dynamically by JS renderComments() --}}
+        </div>
+
+        {{-- Comment Input Box --}}
+        <form id="form-comment-input-box" onsubmit="submitFormComment(event)" style="background: #f8fafc; border: 1.5px solid #e2e8f0; border-radius: 12px; padding: 1rem 1.25rem; transition: border-color 0.2s ease;">
+            <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 0.6rem; flex-wrap: wrap; gap: 0.5rem;">
+                <div style="display: flex; align-items: center; gap: 0.5rem;">
+                    <div class="user-avatar-chip" style="width: 26px; height: 26px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 0.72rem; font-weight: 800; color: white; background: var(--mai-blue);">
+                        {{ strtoupper(substr(Auth::user()->name ?? 'U', 0, 1)) }}
+                    </div>
+                    <span style="font-size: 0.82rem; font-weight: 700; color: var(--text-dark);">
+                        {{ Auth::user()->name ?? 'User' }}
+                    </span>
+                    <span style="font-size: 0.72rem; color: var(--text-muted);">
+                        ({{ Auth::user()->role ?? 'User' }} - {{ Auth::user()->department ?? 'Production' }})
+                    </span>
+                </div>
+                <span style="font-size: 0.72rem; color: var(--text-muted);">
+                    Tekan <strong>Ctrl + Enter</strong> untuk mengirim
+                </span>
+            </div>
+
+            <div style="position: relative;">
+                <textarea id="comment-textarea" class="form-control" rows="3" placeholder="Tulis komentar, catatan revisi, atau pertanyaan terkait formulir ini..." style="resize: vertical; min-height: 75px; font-size: 0.875rem; line-height: 1.5; border-radius: 8px; border: 1px solid #cbd5e1; padding: 0.65rem 0.85rem;" required onkeydown="handleCommentKeydown(event)"></textarea>
+            </div>
+
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 0.75rem; flex-wrap: wrap; gap: 0.5rem;">
+                <div style="display: flex; align-items: center; gap: 0.4rem; font-size: 0.75rem; color: var(--text-muted);">
+                    <svg viewBox="0 0 24 24" width="14" height="14" stroke="currentColor" stroke-width="2" fill="none"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg>
+                    Komentar tersimpan permanen & dapat dilihat oleh seluruh pengguna.
+                </div>
+                <button type="submit" id="btn-submit-comment" class="btn btn-primary" style="display: inline-flex; align-items: center; gap: 0.45rem; font-weight: 700; padding: 0.55rem 1.25rem; border-radius: 8px; font-size: 0.85rem;">
+                    <svg viewBox="0 0 24 24" width="15" height="15" stroke="currentColor" stroke-width="2.5" fill="none">
+                        <line x1="22" y1="2" x2="11" y2="13"></line>
+                        <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
+                    </svg>
+                    <span>Kirim Komentar</span>
+                </button>
+            </div>
+        </form>
     </div>
 </div>
 
@@ -1334,6 +1510,7 @@
     // TAB SYSTEM & MULTI-FORM ENGINE
     const serverFormItems = @json($formItems, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
     const serverFormApprovals = @json($formApprovals ?? [], JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
+    const serverFormComments = @json($formComments ?? [], JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
     const urlFormParam = '{{ $activeFormNoParam ?? "" }}';
     const userTag = '{{ strtoupper(Auth::user()->department ?? Auth::user()->name ?? "PRODUCTION") }}';
     const monthYearStr = '{{ date("m-Y") }}';
@@ -1913,6 +2090,7 @@
         updateApprovalStepper(selectedChecksheetId);
         renderApprovalMonitoringTable();
         renderAccountTable();
+        renderComments(selectedChecksheetId);
 
         const urlParams = new URLSearchParams(window.location.search);
         const activeTabParam = urlParams.get('tab') || '{{ request()->query("tab") }}';
@@ -1990,6 +2168,7 @@
         renderDataViewTable();
         renderApprovalMonitoringTable();
         viewChecksheet(nextFormNo);
+        renderComments(nextFormNo);
         openModal('addItemModal');
 
         showToast(`Formulir Baru (${nextFormNo}) Berhasil Dibuat! Silakan isi data barang.`, 'success');
@@ -2159,6 +2338,8 @@
             select.value = csId;
             updateApprovalStepper(csId);
         }
+
+        renderComments(csId);
     }
 
     window.addEventListener('beforeprint', function() {
@@ -3060,6 +3241,289 @@
 
         document.getElementById('acc_edit_password').value = '';
         openModal('editAccountModal');
+    }
+
+    // =========================================================================
+    // 💬 FORM COMMENTS & REAL-TIME DISCUSSION ENGINE
+    // =========================================================================
+    const formCommentsMap = {};
+
+    function formatCommentDate(val) {
+        if (!val) return 'Baru saja';
+        try {
+            const d = new Date(val);
+            if (isNaN(d.getTime())) return val;
+            const dd = String(d.getDate()).padStart(2, '0');
+            const mm = String(d.getMonth() + 1).padStart(2, '0');
+            const yyyy = d.getFullYear();
+            const hh = String(d.getHours()).padStart(2, '0');
+            const min = String(d.getMinutes()).padStart(2, '0');
+            return `${dd}-${mm}-${yyyy} ${hh}:${min}`;
+        } catch (e) {
+            return val;
+        }
+    }
+
+    serverFormComments.forEach(c => {
+        const fNo = c.form_number;
+        if (!formCommentsMap[fNo]) formCommentsMap[fNo] = [];
+        formCommentsMap[fNo].push({
+            id: c.id,
+            form_number: c.form_number,
+            user_id: c.user_id,
+            user_name: c.user_name,
+            user_dept: c.user_dept,
+            user_role: c.user_role,
+            comment: c.comment,
+            created_at: formatCommentDate(c.created_at),
+            is_owner: (c.user_id === {{ auth()->id() ?? 0 }} || userRoleType === 'admin')
+        });
+    });
+
+    function getRoleBadgeConfig(role) {
+        const r = (role || 'USER').toUpperCase();
+        if (r.includes('MASTER') || r.includes('ADMIN')) {
+            return {
+                bg: 'rgba(99, 102, 241, 0.15)',
+                color: '#4f46e5',
+                avatarBg: 'linear-gradient(135deg, #4f46e5, #7c3aed)',
+                label: 'MASTER'
+            };
+        } else if (r.includes('STAFF')) {
+            return {
+                bg: 'rgba(245, 158, 11, 0.15)',
+                color: '#d97706',
+                avatarBg: 'linear-gradient(135deg, #f59e0b, #d97706)',
+                label: 'STAFF'
+            };
+        } else if (r.includes('ACCOUNTING') || r.includes('ACC')) {
+            return {
+                bg: 'rgba(168, 85, 247, 0.15)',
+                color: '#9333ea',
+                avatarBg: 'linear-gradient(135deg, #9333ea, #c026d3)',
+                label: 'ACCOUNTING'
+            };
+        } else if (r.includes('WAREHOUSE')) {
+            return {
+                bg: 'rgba(16, 185, 129, 0.15)',
+                color: '#059669',
+                avatarBg: 'linear-gradient(135deg, #10b981, #059669)',
+                label: 'WAREHOUSE'
+            };
+        } else {
+            return {
+                bg: 'rgba(59, 130, 246, 0.15)',
+                color: 'rgb(29, 78, 216)',
+                avatarBg: 'linear-gradient(135deg, #0ea5e9, #2563eb)',
+                label: 'USER'
+            };
+        }
+    }
+
+    function renderComments(formNo) {
+        const listEl = document.getElementById('form-comments-list');
+        const countBadge = document.getElementById('comments-count-badge');
+        const toolbarCount = document.getElementById('toolbar-comment-count');
+        const formNoEl = document.getElementById('comments-form-no');
+
+        if (formNoEl) formNoEl.innerText = formNo;
+
+        const comments = formCommentsMap[formNo] || [];
+        const count = comments.length;
+
+        if (countBadge) countBadge.innerText = `${count} Komentar`;
+        if (toolbarCount) toolbarCount.innerText = count;
+
+        if (!listEl) return;
+
+        if (count === 0) {
+            listEl.innerHTML = `
+                <div style="text-align: center; padding: 2rem 1rem; background: #f8fafc; border-radius: 12px; border: 1.5px dashed #cbd5e1;">
+                    <div style="width: 48px; height: 48px; border-radius: 50%; background: rgba(0, 173, 239, 0.1); color: var(--color-primary); display: flex; align-items: center; justify-content: center; margin: 0 auto 0.75rem;">
+                        <svg viewBox="0 0 24 24" width="24" height="24" stroke="currentColor" stroke-width="2" fill="none">
+                            <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
+                        </svg>
+                    </div>
+                    <div style="font-weight: 700; color: var(--text-dark); font-size: 0.95rem; margin-bottom: 0.25rem;">Belum Ada Komentar</div>
+                    <div style="font-size: 0.8rem; color: var(--text-muted); max-width: 420px; margin: 0 auto;">
+                        Belum ada diskusi atau catatan pada formulir <strong>${formNo}</strong>. Semua role (User, Staff, Accounting, Warehouse, Master) dapat menuliskan komentar di bawah.
+                    </div>
+                </div>
+            `;
+            return;
+        }
+
+        let html = '';
+        comments.forEach(c => {
+            const roleCfg = getRoleBadgeConfig(c.user_role);
+            const initial = (c.user_name || 'U').charAt(0).toUpperCase();
+            const deleteBtn = c.is_owner ? `
+                <button type="button" class="comment-delete-btn" onclick="deleteFormComment(${c.id})" title="Hapus Komentar">
+                    <svg viewBox="0 0 24 24" width="14" height="14" stroke="currentColor" stroke-width="2" fill="none">
+                        <polyline points="3 6 5 6 21 6"></polyline>
+                        <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+                    </svg>
+                </button>
+            ` : '';
+
+            html += `
+                <div class="comment-item" id="comment-node-${c.id}">
+                    <div class="comment-avatar" style="background: ${roleCfg.avatarBg};">
+                        ${initial}
+                    </div>
+                    <div class="comment-bubble">
+                        <div class="comment-header">
+                            <div class="comment-author">
+                                <span>${c.user_name}</span>
+                                <span class="comment-role-badge" style="background: ${roleCfg.bg}; color: ${roleCfg.color};">${roleCfg.label}</span>
+                                <span style="font-size: 0.72rem; color: var(--text-muted); font-weight: normal;">• ${c.user_dept || 'Production'}</span>
+                            </div>
+                            <div style="display: flex; align-items: center; gap: 0.5rem;">
+                                <span class="comment-time">${c.created_at}</span>
+                                ${deleteBtn}
+                            </div>
+                        </div>
+                        <div class="comment-body">${escapeHtml(c.comment)}</div>
+                    </div>
+                </div>
+            `;
+        });
+
+        listEl.innerHTML = html;
+    }
+
+    function escapeHtml(text) {
+        if (!text) return '';
+        const div = document.createElement('div');
+        div.innerText = text;
+        return div.innerHTML;
+    }
+
+    function scrollToComments() {
+        const el = document.getElementById('form-comments-section');
+        if (el) {
+            el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            const textarea = document.getElementById('comment-textarea');
+            if (textarea) setTimeout(() => textarea.focus(), 400);
+        }
+    }
+
+    function handleCommentKeydown(event) {
+        if ((event.ctrlKey || event.metaKey) && event.key === 'Enter') {
+            event.preventDefault();
+            submitFormComment(event);
+        }
+    }
+
+    async function submitFormComment(event) {
+        if (event) event.preventDefault();
+
+        const textarea = document.getElementById('comment-textarea');
+        if (!textarea) return;
+
+        const commentText = textarea.value.trim();
+        if (!commentText) {
+            alert('Silakan tulis komentar terlebih dahulu.');
+            textarea.focus();
+            return;
+        }
+
+        const targetForm = selectedChecksheetId || activeFormNo;
+        const submitBtn = document.getElementById('btn-submit-comment');
+        const origHtml = submitBtn ? submitBtn.innerHTML : '';
+
+        if (submitBtn) {
+            submitBtn.disabled = true;
+            submitBtn.innerHTML = '<svg class="spinner" viewBox="0 0 24 24" width="15" height="15" stroke="currentColor" stroke-width="2" fill="none"><circle cx="12" cy="12" r="10"></circle></svg> Mengirim...';
+        }
+
+        try {
+            const response = await fetch('{{ route("form-registrasi.comments.store") }}', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                    'Accept': 'application/json'
+                },
+                body: JSON.stringify({
+                    form_number: targetForm,
+                    comment: commentText
+                })
+            });
+
+            const data = await response.json();
+
+            if (!response.ok || !data.success) {
+                alert('Gagal mengirim komentar: ' + (data.message || 'Terjadi kesalahan sistem.'));
+                if (submitBtn) {
+                    submitBtn.disabled = false;
+                    submitBtn.innerHTML = origHtml;
+                }
+                return;
+            }
+
+            if (!formCommentsMap[targetForm]) {
+                formCommentsMap[targetForm] = [];
+            }
+
+            formCommentsMap[targetForm].push(data.comment);
+            textarea.value = '';
+
+            renderComments(targetForm);
+            showToast('Komentar berhasil dikirim!', 'success');
+
+            // Scroll comment list to bottom smoothly
+            const listEl = document.getElementById('form-comments-list');
+            if (listEl) {
+                listEl.scrollTop = listEl.scrollHeight;
+            }
+
+        } catch (err) {
+            console.error('Submit comment error:', err);
+            alert('Terjadi kesalahan koneksi saat mengirim komentar.');
+        } finally {
+            if (submitBtn) {
+                submitBtn.disabled = false;
+                submitBtn.innerHTML = origHtml;
+            }
+        }
+    }
+
+    async function deleteFormComment(commentId) {
+        if (!confirm('Apakah Anda yakin ingin menghapus komentar ini?')) {
+            return;
+        }
+
+        const targetForm = selectedChecksheetId || activeFormNo;
+
+        try {
+            const response = await fetch(`/form-registrasi/comments/${commentId}`, {
+                method: 'DELETE',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                    'Accept': 'application/json'
+                }
+            });
+
+            const data = await response.json();
+
+            if (!response.ok || !data.success) {
+                alert('Gagal menghapus komentar: ' + (data.message || 'Terjadi kesalahan sistem.'));
+                return;
+            }
+
+            if (formCommentsMap[targetForm]) {
+                formCommentsMap[targetForm] = formCommentsMap[targetForm].filter(c => c.id !== commentId);
+            }
+
+            renderComments(targetForm);
+            showToast('Komentar berhasil dihapus.', 'success');
+
+        } catch (err) {
+            console.error('Delete comment error:', err);
+            alert('Terjadi kesalahan koneksi saat menghapus komentar.');
+        }
     }
 </script>
 @endsection

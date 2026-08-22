@@ -21,6 +21,10 @@ Route::middleware('auth')->group(function () {
     Route::delete('/form-registrasi/form/delete', [ItemController::class, 'deleteFormChecksheet'])->name('form-registrasi.delete-checksheet');
     Route::delete('/form-registrasi/{id}', [ItemController::class, 'deleteFormItem'])->name('form-registrasi.delete');
 
+    // Form Comments Routes
+    Route::post('/form-registrasi/comments', [ItemController::class, 'storeComment'])->name('form-registrasi.comments.store');
+    Route::delete('/form-registrasi/comments/{id}', [ItemController::class, 'deleteComment'])->name('form-registrasi.comments.delete');
+
     // Account Master User Routes
     Route::post('/users', [ItemController::class, 'storeUser'])->name('users.store');
     Route::put('/users/{id}', [ItemController::class, 'updateUser'])->name('users.update');
