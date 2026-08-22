@@ -240,7 +240,7 @@ class ItemController extends Controller
                     'requestor_name'   => $firstItem?->created_by_name ?? $creator?->name ?? ($currentUser->name ?? 'User'),
                     'requestor_dept'   => $reqDept,
                     'form_date'        => $firstItem?->created_at ? $firstItem->created_at->format('d-m-Y') : date('d-m-Y'),
-                    'status'           => 'BUTUH APPROVAL STAFF',
+                    'status'           => 'Butuh Approval Staff / Section Head',
                     'user_signed_at'   => $firstItem?->created_at ?? now(),
                     'user_signer_name' => $firstItem?->created_by_name ?? ($currentUser->name ?? 'User'),
                     'user_comment'     => 'Formulir pendaftaran diajukan.',
@@ -401,7 +401,7 @@ class ItemController extends Controller
                     'requestor_name'   => $currentUser->name ?? 'User',
                     'requestor_dept'   => $currentUser->department ?? 'Production',
                     'form_date'        => date('d-m-Y'),
-                    'status'           => 'BUTUH APPROVAL STAFF',
+                    'status'           => 'Butuh Approval Staff / Section Head',
                     'user_signed_at'   => now(),
                     'user_signer_name' => $currentUser->name ?? 'User',
                     'user_comment'     => 'Formulir pendaftaran diajukan.',
@@ -451,7 +451,7 @@ class ItemController extends Controller
                 'requestor_name'   => $reqName,
                 'requestor_dept'   => $reqDept,
                 'form_date'        => $firstItem?->created_at ? $firstItem->created_at->format('d-m-Y') : date('d-m-Y'),
-                'status'           => 'BUTUH APPROVAL STAFF',
+                'status'           => 'Butuh Approval Staff / Section Head',
                 'user_signed_at'   => now(),
                 'user_signer_name' => $reqName,
                 'user_comment'     => 'Formulir diajukan.',
@@ -488,10 +488,10 @@ class ItemController extends Controller
             $approval->staff_signed_at = now();
             $approval->staff_signer_name = $name;
             $approval->staff_comment = $comment;
-            $approval->status = 'APPROVAL ACCOUNTING';
+            $approval->status = 'Butuh Approval Accounting';
             $approval->save();
 
-            $msg = "Form $formNo berhasil disetujui oleh Staff ($name). Tahap selanjutnya: Approval Accounting.";
+            $msg = "Form $formNo berhasil disetujui oleh Staff ($name). Tahap selanjutnya: Butuh Approval Accounting.";
         } elseif ($role === 'accounting') {
             if (!$isMaster && !str_contains($currentUserRole, 'ACC')) {
                 if ($request->wantsJson() || $request->ajax()) {
@@ -510,10 +510,10 @@ class ItemController extends Controller
             $approval->accounting_signed_at = now();
             $approval->accounting_signer_name = $name;
             $approval->accounting_comment = $comment;
-            $approval->status = 'REGISTRASI WAREHOUSE';
+            $approval->status = 'Butuh Approval Warehouse Consumable';
             $approval->save();
 
-            $msg = "Form $formNo berhasil disetujui oleh Accounting ($name). Tahap selanjutnya: Registrasi Warehouse.";
+            $msg = "Form $formNo berhasil disetujui oleh Accounting ($name). Tahap selanjutnya: Butuh Approval Warehouse Consumable.";
         } elseif ($role === 'warehouse') {
             if (!$isMaster && !str_contains($currentUserRole, 'WAREHOUSE')) {
                 if ($request->wantsJson() || $request->ajax()) {
@@ -532,7 +532,7 @@ class ItemController extends Controller
             $approval->warehouse_signed_at = now();
             $approval->warehouse_signer_name = $name;
             $approval->warehouse_comment = $comment;
-            $approval->status = 'TELAH DIDAFTARKAN';
+            $approval->status = 'Item Telah didaftarkan';
             $approval->save();
 
             $msg = "Form $formNo telah berhasil diregistrasi oleh Warehouse Consumable ($name). Proses Selesai.";

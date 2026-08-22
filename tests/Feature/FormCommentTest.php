@@ -88,7 +88,7 @@ class FormCommentTest extends TestCase
             'requestor_name' => $creator->name,
             'requestor_dept' => $creator->department,
             'form_date' => date('d-m-Y'),
-            'status' => 'BUTUH APPROVAL STAFF',
+            'status' => 'Butuh Approval Staff / Section Head',
             'user_signed_at' => now(),
             'user_signer_name' => $creator->name,
             'user_comment' => 'Pengajuan form',

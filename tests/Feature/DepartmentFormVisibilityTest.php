@@ -298,7 +298,7 @@ class DepartmentFormVisibilityTest extends TestCase
 
         $approval = FormApproval::where('form_number', '01/PRODUCTION/08-2026')->first();
         $this->assertNotNull($approval);
-        $this->assertEquals('APPROVAL ACCOUNTING', $approval->status);
+        $this->assertEquals('Butuh Approval Accounting', $approval->status);
         $this->assertEquals('Staff Production', $approval->staff_signer_name);
     }
 
@@ -384,7 +384,7 @@ class DepartmentFormVisibilityTest extends TestCase
 
         $approval = FormApproval::where('form_number', '01/PRODUCTION/08-2026')->first();
         $this->assertNotNull($approval);
-        $this->assertEquals('TELAH DIDAFTARKAN', $approval->status);
+        $this->assertEquals('Item Telah didaftarkan', $approval->status);
         $this->assertNotNull($approval->warehouse_signed_at);
         $this->assertEquals('Warehouse Keeper', $approval->warehouse_signer_name);
     }
@@ -428,7 +428,7 @@ class DepartmentFormVisibilityTest extends TestCase
 
         $approval = FormApproval::where('form_number', '01/PRODUCTION/08-2026')->first();
         $this->assertNotNull($approval);
-        $this->assertEquals('APPROVAL ACCOUNTING', $approval->status);
+        $this->assertEquals('Butuh Approval Accounting', $approval->status);
         $this->assertEquals('Staff Prod & Dies Assy', $approval->staff_signer_name);
     }
 
@@ -450,7 +450,7 @@ class DepartmentFormVisibilityTest extends TestCase
 
         $approval = FormApproval::where('form_number', '01/DIES ASSY/08-2026')->first();
         $this->assertNotNull($approval);
-        $this->assertEquals('APPROVAL ACCOUNTING', $approval->status);
+        $this->assertEquals('Butuh Approval Accounting', $approval->status);
         $this->assertEquals('Staff Prod & Dies Assy', $approval->staff_signer_name);
     }
 

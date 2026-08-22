@@ -361,7 +361,7 @@
 
 {{-- ===== SHEET TABS SELECTOR (SEGMENTED CONTROL) ===== --}}
 <div class="sheet-tabs-container no-print">
-    <button type="button" class="sheet-tab active" onclick="switchSheet('print-preview')">
+    <button type="button" class="sheet-tab active" data-tab="print-preview" onclick="switchSheet('print-preview')">
         <svg viewBox="0 0 24 24" width="17" height="17" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round">
             <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
             <polyline points="14 2 14 8 20 8"></polyline>
@@ -372,7 +372,7 @@
         <span>Print Preview (Lembar Cetak)</span>
     </button>
 
-    <button type="button" class="sheet-tab" onclick="switchSheet('proses-approval')">
+    <button type="button" class="sheet-tab" data-tab="proses-approval" onclick="switchSheet('proses-approval')">
         <svg viewBox="0 0 24 24" width="17" height="17" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round">
             <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
             <polyline points="22 4 12 14.01 9 11.01"></polyline>
@@ -380,7 +380,7 @@
         <span>Proses Approval</span>
     </button>
 
-    <button type="button" class="sheet-tab" onclick="switchSheet('data-view')">
+    <button type="button" class="sheet-tab" data-tab="data-view" onclick="switchSheet('data-view')">
         <svg viewBox="0 0 24 24" width="17" height="17" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round">
             <line x1="8" y1="6" x2="21" y2="6"></line>
             <line x1="8" y1="12" x2="21" y2="12"></line>
@@ -393,7 +393,7 @@
     </button>
 
     @if(in_array(strtoupper(Auth::user()->role ?? ''), ['MASTER', 'ADMIN']))
-    <button type="button" class="sheet-tab" onclick="switchSheet('account-master')">
+    <button type="button" class="sheet-tab" data-tab="account-master" onclick="switchSheet('account-master')">
         <svg viewBox="0 0 24 24" width="17" height="17" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round">
             <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
             <circle cx="9" cy="7" r="4"></circle>
@@ -751,7 +751,7 @@
                 </svg>
             </div>
             <div>
-                <span style="font-size: 0.75rem; color: var(--text-muted); font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em;">Butuh Approval Staff</span>
+                <span style="font-size: 0.75rem; color: var(--text-muted); font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em;">Butuh Staff / Section Head</span>
                 <span style="font-size: 1.4rem; font-weight: 800; color: var(--text-primary);" id="approval-stat-staff">0</span>
             </div>
         </div>
@@ -764,7 +764,7 @@
                 </svg>
             </div>
             <div>
-                <span style="font-size: 0.75rem; color: var(--text-muted); font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em;">Approval Accounting</span>
+                <span style="font-size: 0.75rem; color: var(--text-muted); font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em;">Butuh Accounting</span>
                 <span style="font-size: 1.4rem; font-weight: 800; color: var(--text-primary);" id="approval-stat-accounting">0</span>
             </div>
         </div>
@@ -776,7 +776,7 @@
                 </svg>
             </div>
             <div>
-                <span style="font-size: 0.75rem; color: var(--text-muted); font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em;">Registrasi Warehouse</span>
+                <span style="font-size: 0.75rem; color: var(--text-muted); font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em;">Butuh Warehouse</span>
                 <span style="font-size: 1.4rem; font-weight: 800; color: var(--text-primary);" id="approval-stat-warehouse">0</span>
             </div>
         </div>
@@ -793,19 +793,19 @@
         } elseif (str_contains($curRole, 'staff')) {
             $staffDept = Auth::user()->department ?? 'Production';
             if (str_contains(strtoupper($staffDept), 'PRODUCTION') && str_contains(strtoupper($staffDept), 'DIES ASSY')) {
-                $roleDesc = 'Anda login sebagai <strong>Staff Approver Departemen Production / Dies Assy (Tahap 1)</strong>. Berwenang menyetujui formulir yang belum diapprove dari departemen <strong>Production</strong> dan <strong>Dies Assy</strong>.';
+                $roleDesc = 'Anda login sebagai <strong>Staff / Section Head Departemen Production / Dies Assy (Tahap 1)</strong>. Berwenang menyetujui formulir yang belum diapprove dari departemen <strong>Production</strong> dan <strong>Dies Assy</strong>.';
             } else {
-                $roleDesc = 'Anda login sebagai <strong>Staff Approver Departemen ' . e($staffDept) . ' (Tahap 1)</strong>. Hanya berwenang menyetujui formulir yang belum diapprove dari departemen <strong>' . e($staffDept) . '</strong> Anda.';
+                $roleDesc = 'Anda login sebagai <strong>Staff / Section Head Departemen ' . e($staffDept) . ' (Tahap 1)</strong>. Hanya berwenang menyetujui formulir yang belum diapprove dari departemen <strong>' . e($staffDept) . '</strong> Anda.';
             }
             $roleColor = '#2563eb';
         } elseif (str_contains($curRole, 'accounting') || str_contains($curRole, 'acc')) {
-            $roleDesc = 'Anda login sebagai <strong>Accounting Approver (Tahap 2)</strong>. Hanya dapat menyetujui formulir setelah disetujui oleh Staff.';
+            $roleDesc = 'Anda login sebagai <strong>Accounting Approver (Tahap 2)</strong>. Hanya dapat menyetujui formulir setelah disetujui oleh Staff / Section Head.';
             $roleColor = '#4f46e5';
         } elseif (str_contains($curRole, 'warehouse')) {
             $roleDesc = 'Anda login sebagai <strong>Warehouse Consumable (Tahap 3)</strong>. Hanya dapat meregistrasi barang setelah formulir disetujui oleh Accounting.';
             $roleColor = '#059669';
         } else {
-            $roleDesc = 'Anda login sebagai <strong>User (Pembuat Form)</strong>. Bertugas membuat FORM Baru & mengajukannya ke Staff. <em>(Akun User tidak memiliki wewenang approval)</em>.';
+            $roleDesc = 'Anda login sebagai <strong>User (Pembuat Form)</strong>. Bertugas membuat FORM Baru & mengajukannya ke Staff / Section Head. <em>(Akun User tidak memiliki wewenang approval)</em>.';
             $roleColor = '#d97706';
         }
     @endphp
@@ -834,7 +834,7 @@
                     Daftar Form & Tahap Approval
                 </h3>
                 <p style="color: var(--text-muted); font-size: 0.82rem; margin-top: 0.2rem; margin-bottom: 0;">
-                    Alur persetujuan: <strong>User (Pembuat)</strong> ➔ <strong>Staff</strong> ➔ <strong>Accounting</strong> ➔ <strong>Warehouse Consumable</strong>.
+                    Alur persetujuan: <strong>User (Pembuat)</strong> ➔ <strong>Staff / Section Head</strong> ➔ <strong>Accounting</strong> ➔ <strong>Warehouse Consumable</strong>.
                 </p>
             </div>
 
@@ -844,13 +844,13 @@
                     Semua Form (Proses)
                 </button>
                 <button class="btn btn-sm btn-secondary filter-pill-btn" onclick="filterApprovalStage('staff', this)" style="border-radius: 20px; font-size: 0.78rem; font-weight: 600; padding: 0.35rem 0.85rem;">
-                    Butuh Staff
+                    Butuh Staff / Section Head
                 </button>
                 <button class="btn btn-sm btn-secondary filter-pill-btn" onclick="filterApprovalStage('accounting', this)" style="border-radius: 20px; font-size: 0.78rem; font-weight: 600; padding: 0.35rem 0.85rem;">
-                    Accounting
+                    Butuh Accounting
                 </button>
                 <button class="btn btn-sm btn-secondary filter-pill-btn" onclick="filterApprovalStage('warehouse', this)" style="border-radius: 20px; font-size: 0.78rem; font-weight: 600; padding: 0.35rem 0.85rem;">
-                    Warehouse
+                    Butuh Warehouse
                 </button>
             </div>
         </div>
@@ -1632,30 +1632,25 @@
 
         const requestorStr = `${reqName} / ${reqDept}`;
 
-        // Accurate persistent status determination
+        // Accurate persistent status determination matching the 4 exact stages
         const staffDone = !!(dbAppr && (dbAppr.staff_signed_at || dbAppr.staff_signer_name));
         const accDone = !!(dbAppr && (dbAppr.accounting_signed_at || dbAppr.accounting_signer_name));
         const whDone = !!(dbAppr && (dbAppr.warehouse_signed_at || dbAppr.warehouse_signer_name));
 
-        let overallStatus = 'Draft';
-        let statusText = 'BUTUH APPROVAL STAFF';
+        let statusText = 'Butuh Approval Staff / Section Head';
         let statusClass = 'badge-warning';
 
-        if (whDone || (dbAppr && dbAppr.status === 'TELAH DIDAFTARKAN')) {
-            overallStatus = 'Selesai';
-            statusText = 'TELAH DIDAFTARKAN';
+        if (whDone || (dbAppr && (dbAppr.status === 'Item Telah didaftarkan' || dbAppr.status === 'TELAH DIDAFTARKAN' || dbAppr.status === 'Item Telah Didaftarkan' || dbAppr.status === 'Selesai'))) {
+            statusText = 'Item Telah didaftarkan';
             statusClass = 'badge-success';
-        } else if (accDone || (dbAppr && dbAppr.status === 'REGISTRASI WAREHOUSE')) {
-            overallStatus = 'Pending Warehouse';
-            statusText = 'REGISTRASI WAREHOUSE';
+        } else if (accDone || (dbAppr && (dbAppr.status === 'Butuh Approval Warehouse Consumable' || dbAppr.status === 'REGISTRASI WAREHOUSE' || dbAppr.status === 'Pending Warehouse'))) {
+            statusText = 'Butuh Approval Warehouse Consumable';
             statusClass = 'badge-info';
-        } else if (staffDone || (dbAppr && dbAppr.status === 'APPROVAL ACCOUNTING')) {
-            overallStatus = 'Pending Accounting';
-            statusText = 'APPROVAL ACCOUNTING';
+        } else if (staffDone || (dbAppr && (dbAppr.status === 'Butuh Approval Accounting' || dbAppr.status === 'Butuh Approval Accouting' || dbAppr.status === 'APPROVAL ACCOUNTING' || dbAppr.status === 'Pending Accounting'))) {
+            statusText = 'Butuh Approval Accounting';
             statusClass = 'badge-primary';
         } else {
-            overallStatus = 'Draft';
-            statusText = 'BUTUH APPROVAL STAFF';
+            statusText = 'Butuh Approval Staff / Section Head';
             statusClass = 'badge-warning';
         }
 
@@ -1664,7 +1659,7 @@
         const accSigDate = (dbAppr && dbAppr.accounting_signed_at) ? formatApprovalDateStr(dbAppr.accounting_signed_at) : formDateStr;
         const whSigDate = (dbAppr && dbAppr.warehouse_signed_at) ? formatApprovalDateStr(dbAppr.warehouse_signed_at) : formDateStr;
 
-        const staffSigner = (dbAppr && dbAppr.staff_signer_name) ? dbAppr.staff_signer_name : 'Staff Approver';
+        const staffSigner = (dbAppr && dbAppr.staff_signer_name) ? dbAppr.staff_signer_name : 'Staff / Section Head';
         const accSigner = (dbAppr && dbAppr.accounting_signer_name) ? dbAppr.accounting_signer_name : 'Accounting Approver';
         const whSigner = (dbAppr && dbAppr.warehouse_signer_name) ? dbAppr.warehouse_signer_name : 'Warehouse Consumable';
 
@@ -1675,7 +1670,7 @@
             requestor: requestorStr,
             requestorName: reqName,
             requestorDept: reqDept,
-            status: overallStatus,
+            status: statusText,
             items: [],
             signatures: {
                 dibuat: `${reqName} (Tgl: ${userSigDate})`,
@@ -1706,11 +1701,11 @@
                 },
                 {
                     role: 'staff',
-                    title: '2. Approval Staff',
+                    title: '2. Approval Staff / Section Head',
                     completed: staffDone,
                     active: !staffDone,
-                    details: staffDone ? `${staffSigner} (Staff - Tanggal: ${staffSigDate})` : 'Menunggu persetujuan Staff...',
-                    status: staffDone ? 'Disetujui oleh Staff.' : 'Butuh Approval Staff.',
+                    details: staffDone ? `${staffSigner} (Staff / Section Head - Tanggal: ${staffSigDate})` : 'Menunggu persetujuan Staff / Section Head...',
+                    status: staffDone ? 'Disetujui oleh Staff / Section Head.' : 'Butuh Approval Staff / Section Head.',
                     color: staffDone ? 'var(--color-success)' : (!staffDone ? 'var(--color-primary)' : 'var(--text-muted)')
                 },
                 {
@@ -1718,17 +1713,17 @@
                     title: '3. Approval Accounting',
                     completed: accDone,
                     active: staffDone && !accDone,
-                    details: accDone ? `${accSigner} (Accounting - Tanggal: ${accSigDate})` : (staffDone ? 'Menunggu persetujuan Accounting...' : 'Menunggu persetujuan Staff...'),
-                    status: accDone ? 'Disetujui oleh Accounting.' : 'Pemeriksaan anggaran & persetujuan.',
+                    details: accDone ? `${accSigner} (Accounting - Tanggal: ${accSigDate})` : (staffDone ? 'Menunggu persetujuan Accounting...' : 'Menunggu Approval Staff / Section Head...'),
+                    status: accDone ? 'Disetujui oleh Accounting.' : 'Butuh Approval Accounting.',
                     color: accDone ? 'var(--color-success)' : (staffDone && !accDone ? 'var(--color-primary)' : 'var(--text-muted)')
                 },
                 {
                     role: 'warehouse',
-                    title: '4. Didaftarkan Warehouse Consumable',
+                    title: '4. Registrasi Warehouse Consumable',
                     completed: whDone,
                     active: accDone && !whDone,
-                    details: whDone ? `${whSigner} (Warehouse - Tanggal: ${whSigDate})` : (accDone ? 'Menunggu registrasi oleh Warehouse...' : 'Menunggu persetujuan Accounting...'),
-                    status: whDone ? 'Telah didaftarkan oleh Warehouse Consumable.' : 'Registrasi database ERP.',
+                    details: whDone ? `${whSigner} (Warehouse - Tanggal: ${whSigDate})` : (accDone ? 'Menunggu registrasi oleh Warehouse...' : 'Menunggu Approval Accounting...'),
+                    status: whDone ? 'Item Telah didaftarkan.' : 'Butuh Approval Warehouse Consumable.',
                     color: whDone ? 'var(--color-success)' : (accDone && !whDone ? 'var(--color-primary)' : 'var(--text-muted)')
                 }
             ]
@@ -1903,17 +1898,29 @@
 
             totalChecksheets++;
 
-            let statusBg = 'var(--color-warning-light)';
-            let statusColor = 'var(--color-warning)';
-            let displayStatus = cs.status.toUpperCase();
+            let statusBg = 'rgba(245, 158, 11, 0.12)';
+            let statusColor = '#d97706';
+            let displayStatus = cs.status;
 
-            if (cs.status === 'Approved' || cs.status === 'Selesai') {
-                statusBg = 'var(--color-success-light)';
-                statusColor = 'var(--color-success)';
+            if (cs.status === 'Item Telah didaftarkan' || cs.status === 'TELAH DIDAFTARKAN' || cs.status === 'Selesai' || cs.status === 'Approved') {
+                displayStatus = 'Item Telah didaftarkan';
+                statusBg = 'rgba(16, 185, 129, 0.15)';
+                statusColor = '#059669';
                 approvedChecksheets++;
+            } else if (cs.status === 'Butuh Approval Warehouse Consumable' || cs.status === 'REGISTRASI WAREHOUSE' || cs.status === 'Pending Warehouse') {
+                displayStatus = 'Butuh Approval Warehouse Consumable';
+                statusBg = 'rgba(147, 51, 234, 0.12)';
+                statusColor = '#7c3aed';
+                processChecksheets++;
+            } else if (cs.status === 'Butuh Approval Accounting' || cs.status === 'Butuh Approval Accouting' || cs.status === 'APPROVAL ACCOUNTING' || cs.status === 'Pending Accounting') {
+                displayStatus = 'Butuh Approval Accounting';
+                statusBg = 'rgba(59, 130, 246, 0.12)';
+                statusColor = '#2563eb';
+                processChecksheets++;
             } else {
-                statusBg = 'rgba(59, 130, 246, 0.1)';
-                statusColor = 'rgb(29, 78, 216)';
+                displayStatus = 'Butuh Approval Staff / Section Head';
+                statusBg = 'rgba(245, 158, 11, 0.12)';
+                statusColor = '#d97706';
                 processChecksheets++;
             }
 
@@ -2077,7 +2084,7 @@
             formNo: nextFormNo,
             date: todayStr,
             requestor: '{{ Auth::user()->name ?? "User" }} / {{ Auth::user()->department ?? "Production" }}',
-            status: 'Draft',
+            status: 'Butuh Approval Staff / Section Head',
             items: [],
             signatures: {
                 dibuat: '{{ Auth::user()->name ?? "User" }} (Tgl: ' + todayStr + ')',
@@ -2094,13 +2101,13 @@
         };
 
         stepperData[nextFormNo] = {
-            statusText: 'BUTUH APPROVAL STAFF',
+            statusText: 'Butuh Approval Staff / Section Head',
             statusClass: 'badge-warning',
             steps: [
                 { role: 'user', title: '1. User Membuat Form', completed: true, active: false, details: '{{ Auth::user()->name ?? "User" }} - ' + userTag + ' (Tanggal: ' + todayStr + ')', status: 'Selesai dibuat & diajukan.', color: 'var(--color-success)' },
-                { role: 'staff', title: '2. Approval Staff', completed: false, active: true, details: 'Menunggu persetujuan Staff...', status: 'Butuh Approval Staff.', color: 'var(--color-primary)' },
-                { role: 'accounting', title: '3. Approval Accounting', completed: false, active: false, details: 'Menunggu persetujuan Accounting...', status: 'Pemeriksaan anggaran.', color: 'var(--text-muted)' },
-                { role: 'warehouse', title: '4. Didaftarkan Warehouse Consumable', completed: false, active: false, details: 'Menunggu registrasi oleh Warehouse...', status: 'Registrasi database ERP.', color: 'var(--text-muted)' }
+                { role: 'staff', title: '2. Approval Staff / Section Head', completed: false, active: true, details: 'Menunggu Approval Staff / Section Head...', status: 'Butuh Approval Staff / Section Head.', color: 'var(--color-primary)' },
+                { role: 'accounting', title: '3. Approval Accounting', completed: false, active: false, details: 'Menunggu Approval Accounting...', status: 'Pemeriksaan anggaran & persetujuan.', color: 'var(--text-muted)' },
+                { role: 'warehouse', title: '4. Registrasi Warehouse Consumable', completed: false, active: false, details: 'Menunggu Registrasi Warehouse...', status: 'Registrasi database ERP.', color: 'var(--text-muted)' }
             ]
         };
 
@@ -2126,10 +2133,9 @@
         const activePane = document.getElementById(tabId + '-pane');
         if (activePane) activePane.classList.add('active');
         
-        const tabs = Array.from(document.querySelectorAll('.sheet-tab'));
-        const matchingTab = tabs.find(t => {
-            const attr = t.getAttribute('onclick');
-            return attr && attr.includes(`'${tabId}'`);
+        const matchingTab = document.querySelector(`.sheet-tab[data-tab="${tabId}"]`) || Array.from(document.querySelectorAll('.sheet-tab')).find(t => {
+            const attr = t.getAttribute('onclick') || '';
+            return attr.includes(`'${tabId}'`) || attr.includes(`"${tabId}"`);
         });
         if (matchingTab) matchingTab.classList.add('active');
     }
@@ -2309,12 +2315,12 @@
             steps[0].color = 'var(--color-success)';
             
             steps[1].active = true;
-            steps[1].details = 'Menunggu persetujuan Staff...';
-            steps[1].status = 'Butuh Approval Staff.';
+            steps[1].details = 'Menunggu persetujuan Staff / Section Head...';
+            steps[1].status = 'Butuh Approval Staff / Section Head.';
             steps[1].color = 'var(--color-primary)';
 
-            cs.status = 'Draft';
-            stepperData[selectedChecksheetId].statusText = 'BUTUH APPROVAL STAFF';
+            cs.status = 'Butuh Approval Staff / Section Head';
+            stepperData[selectedChecksheetId].statusText = 'Butuh Approval Staff / Section Head';
             stepperData[selectedChecksheetId].statusClass = 'badge-warning';
         } 
         else if (role === 'staff') {
@@ -2327,22 +2333,22 @@
             
             steps[1].completed = true;
             steps[1].active = false;
-            steps[1].details = name + ' (Staff - Tanggal: ' + cs.date + ')';
-            steps[1].status = 'Disetujui oleh Staff.';
+            steps[1].details = name + ' (Staff / Section Head - Tanggal: ' + cs.date + ')';
+            steps[1].status = 'Disetujui oleh Staff / Section Head.';
             steps[1].color = 'var(--color-success)';
             
             steps[2].active = true;
             steps[2].details = 'Menunggu persetujuan Accounting...';
-            steps[2].status = 'Pemeriksaan & Approval Accounting.';
+            steps[2].status = 'Butuh Approval Accounting.';
             steps[2].color = 'var(--color-primary)';
 
-            cs.status = 'Pending Accounting';
-            stepperData[selectedChecksheetId].statusText = 'APPROVAL ACCOUNTING';
+            cs.status = 'Butuh Approval Accounting';
+            stepperData[selectedChecksheetId].statusText = 'Butuh Approval Accounting';
             stepperData[selectedChecksheetId].statusClass = 'badge-primary';
         } 
         else if (role === 'accounting') {
             if (!steps[1].completed) {
-                alert('Approval Staff harus diselesaikan terlebih dahulu!');
+                alert('Approval Staff / Section Head harus diselesaikan terlebih dahulu!');
                 return;
             }
             cs.signatures.accounting = name + ' (Tgl: ' + cs.date + ')';
@@ -2356,11 +2362,11 @@
             
             steps[3].active = true;
             steps[3].details = 'Menunggu registrasi oleh Warehouse Consumable...';
-            steps[3].status = 'Proses input kode barang ke ERP oleh Warehouse Consumable.';
+            steps[3].status = 'Butuh Approval Warehouse Consumable.';
             steps[3].color = 'var(--color-primary)';
 
-            cs.status = 'Pending Warehouse';
-            stepperData[selectedChecksheetId].statusText = 'REGISTRASI WAREHOUSE';
+            cs.status = 'Butuh Approval Warehouse Consumable';
+            stepperData[selectedChecksheetId].statusText = 'Butuh Approval Warehouse Consumable';
             stepperData[selectedChecksheetId].statusClass = 'badge-info';
         }
         else if (role === 'warehouse') {
@@ -2374,11 +2380,11 @@
             steps[3].completed = true;
             steps[3].active = false;
             steps[3].details = name + ' (Warehouse Consumable - Tanggal: ' + cs.date + ')';
-            steps[3].status = 'Telah didaftarkan oleh Warehouse Consumable.';
+            steps[3].status = 'Item Telah didaftarkan.';
             steps[3].color = 'var(--color-success)';
             
-            cs.status = 'Selesai';
-            stepperData[selectedChecksheetId].statusText = 'TELAH DIDAFTARKAN';
+            cs.status = 'Item Telah didaftarkan';
+            stepperData[selectedChecksheetId].statusText = 'Item Telah didaftarkan';
             stepperData[selectedChecksheetId].statusClass = 'badge-success';
         }
 
@@ -2415,18 +2421,18 @@
         if (badge) {
             badge.innerText = data.statusText;
             badge.className = 'badge';
-            if (data.statusText === 'TELAH DIDAFTARKAN' || data.statusText === 'APPROVED') {
-                badge.style.backgroundColor = 'var(--color-success-light)';
-                badge.style.color = 'var(--color-success)';
-            } else if (data.statusText === 'BUTUH APPROVAL STAFF' || data.statusText === 'DRAFT') {
-                badge.style.backgroundColor = 'var(--color-warning-light)';
-                badge.style.color = 'var(--color-warning)';
-            } else if (data.statusText === 'APPROVAL ACCOUNTING') {
-                badge.style.backgroundColor = 'rgba(99, 102, 241, 0.1)';
-                badge.style.color = 'rgb(79, 70, 229)';
-            } else if (data.statusText === 'REGISTRASI WAREHOUSE') {
-                badge.style.backgroundColor = 'rgba(59, 130, 246, 0.1)';
-                badge.style.color = 'rgb(29, 78, 216)';
+            if (data.statusText === 'Item Telah didaftarkan' || data.statusText === 'TELAH DIDAFTARKAN' || data.statusText === 'APPROVED') {
+                badge.style.backgroundColor = 'rgba(16, 185, 129, 0.15)';
+                badge.style.color = '#059669';
+            } else if (data.statusText === 'Butuh Approval Warehouse Consumable' || data.statusText === 'REGISTRASI WAREHOUSE') {
+                badge.style.backgroundColor = 'rgba(147, 51, 234, 0.12)';
+                badge.style.color = '#7c3aed';
+            } else if (data.statusText === 'Butuh Approval Accounting' || data.statusText === 'Butuh Approval Accouting' || data.statusText === 'APPROVAL ACCOUNTING') {
+                badge.style.backgroundColor = 'rgba(59, 130, 246, 0.12)';
+                badge.style.color = '#2563eb';
+            } else {
+                badge.style.backgroundColor = 'rgba(245, 158, 11, 0.12)';
+                badge.style.color = '#d97706';
             }
         }
 
@@ -2524,8 +2530,8 @@
             const data = stepperData[formNo];
             if (!data) continue;
 
-            // RULE 1: Formulir yang statusnya sudah didaftarkan (TELAH DIDAFTARKAN / Selesai) TIDAK MUNCUL di sheet Proses Approval
-            const isCompleted = (cs.status === 'Selesai' || data.statusText === 'TELAH DIDAFTARKAN' || (data.steps && data.steps[3] && data.steps[3].completed));
+            // RULE 1: Formulir yang statusnya sudah didaftarkan (Item Telah didaftarkan / Selesai) TIDAK MUNCUL di sheet Proses Approval
+            const isCompleted = (cs.status === 'Item Telah didaftarkan' || cs.status === 'TELAH DIDAFTARKAN' || cs.status === 'Selesai' || data.statusText === 'Item Telah didaftarkan' || data.statusText === 'TELAH DIDAFTARKAN' || (data.steps && data.steps[3] && data.steps[3].completed));
             if (isCompleted) {
                 continue;
             }
@@ -2548,7 +2554,7 @@
                 currentStageName = 'Pembuatan (User)';
             } else if (activeStepIndex === 1) {
                 stageKey = 'staff';
-                currentStageName = 'Butuh Staff';
+                currentStageName = 'Butuh Staff / Section Head';
                 statStaff++;
             } else if (activeStepIndex === 2) {
                 stageKey = 'accounting';
@@ -2564,16 +2570,26 @@
                 continue;
             }
 
-            let badgeBg = 'var(--color-warning-light)';
-            let badgeColor = 'var(--color-warning)';
+            let badgeBg = 'rgba(245, 158, 11, 0.12)';
+            let badgeColor = '#d97706';
             let badgeText = data.statusText;
 
-            if (data.statusText === 'APPROVAL ACCOUNTING') {
-                badgeBg = 'rgba(99, 102, 241, 0.15)';
-                badgeColor = 'rgb(79, 70, 229)';
-            } else if (data.statusText === 'REGISTRASI WAREHOUSE') {
-                badgeBg = 'rgba(59, 130, 246, 0.15)';
-                badgeColor = 'rgb(29, 78, 216)';
+            if (badgeText === 'Item Telah didaftarkan' || badgeText === 'TELAH DIDAFTARKAN') {
+                badgeText = 'Item Telah didaftarkan';
+                badgeBg = 'rgba(16, 185, 129, 0.15)';
+                badgeColor = '#059669';
+            } else if (badgeText === 'Butuh Approval Warehouse Consumable' || badgeText === 'REGISTRASI WAREHOUSE') {
+                badgeText = 'Butuh Approval Warehouse Consumable';
+                badgeBg = 'rgba(147, 51, 234, 0.12)';
+                badgeColor = '#7c3aed';
+            } else if (badgeText === 'Butuh Approval Accounting' || badgeText === 'Butuh Approval Accouting' || badgeText === 'APPROVAL ACCOUNTING') {
+                badgeText = 'Butuh Approval Accounting';
+                badgeBg = 'rgba(59, 130, 246, 0.12)';
+                badgeColor = '#2563eb';
+            } else {
+                badgeText = 'Butuh Approval Staff / Section Head';
+                badgeBg = 'rgba(245, 158, 11, 0.12)';
+                badgeColor = '#d97706';
             }
 
             // Generate 4-step Horizontal Stepper Visual Pills
@@ -2967,17 +2983,17 @@
 
                 steps[1].completed = true;
                 steps[1].active = false;
-                steps[1].details = name + ' (Staff - Tanggal: ' + todayStr + ')';
-                steps[1].status = 'Disetujui oleh Staff.';
+                steps[1].details = name + ' (Staff / Section Head - Tanggal: ' + todayStr + ')';
+                steps[1].status = 'Disetujui oleh Staff / Section Head.';
                 steps[1].color = 'var(--color-success)';
 
                 steps[2].active = true;
                 steps[2].details = 'Menunggu persetujuan Accounting...';
-                steps[2].status = 'Pemeriksaan & Approval Accounting.';
+                steps[2].status = 'Butuh Approval Accounting.';
                 steps[2].color = 'var(--color-primary)';
 
-                cs.status = 'Pending Accounting';
-                stepperData[csId].statusText = 'APPROVAL ACCOUNTING';
+                cs.status = 'Butuh Approval Accounting';
+                stepperData[csId].statusText = 'Butuh Approval Accounting';
                 stepperData[csId].statusClass = 'badge-primary';
             }
             else if (role === 'accounting') {
@@ -2992,11 +3008,11 @@
 
                 steps[3].active = true;
                 steps[3].details = 'Menunggu registrasi oleh Warehouse Consumable...';
-                steps[3].status = 'Proses input kode barang oleh Warehouse.';
+                steps[3].status = 'Butuh Approval Warehouse Consumable.';
                 steps[3].color = 'var(--color-primary)';
 
-                cs.status = 'Pending Warehouse';
-                stepperData[csId].statusText = 'REGISTRASI WAREHOUSE';
+                cs.status = 'Butuh Approval Warehouse Consumable';
+                stepperData[csId].statusText = 'Butuh Approval Warehouse Consumable';
                 stepperData[csId].statusClass = 'badge-info';
             }
             else if (role === 'warehouse') {
@@ -3006,11 +3022,11 @@
                 steps[3].completed = true;
                 steps[3].active = false;
                 steps[3].details = name + ' (Warehouse Consumable - Tanggal: ' + todayStr + ')';
-                steps[3].status = 'Telah didaftarkan oleh Warehouse Consumable.';
+                steps[3].status = 'Item Telah didaftarkan.';
                 steps[3].color = 'var(--color-success)';
 
-                cs.status = 'Selesai';
-                stepperData[csId].statusText = 'TELAH DIDAFTARKAN';
+                cs.status = 'Item Telah didaftarkan';
+                stepperData[csId].statusText = 'Item Telah didaftarkan';
                 stepperData[csId].statusClass = 'badge-success';
             }
 
